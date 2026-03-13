@@ -1,4 +1,4 @@
-# 🌿 Stockwellness (스탁웰니스)
+# 🌿 Stockwellness
 > **"주식 시장이 잠든 사이, 당신의 포트폴리오는 더 건강해집니다."**
 
 Stockwellness는 요동치는 장중의 소음에서 벗어나, **하루의 장이 마감된 후(Post-Market)** 자신의 투자 성과를 차분하게 복기하고 포트폴리오의 건강 상태를 점검하는 **'포트폴리오 애프터 케어(After-Care)'** 서비스입니다.
@@ -14,7 +14,7 @@ Stockwellness는 요동치는 장중의 소음에서 벗어나, **하루의 장�
 
 ---
 
-## 🛠 기술 스택 (Technical Stack)
+## 🛠 기술 스택
 
 *   **Core:** `React 19`, `Vite 6`, `TypeScript 5.9`
 *   **UI/UX:** `Tailwind CSS 4.0`, `Framer Motion`, `Radix UI`
@@ -25,9 +25,9 @@ Stockwellness는 요동치는 장중의 소음에서 벗어나, **하루의 장�
 
 ---
 
-## 🏁 시작하기 (Getting Started)
+## 🏁 시작하기
 
-### 1. 사전 요구사항 (Prerequisites)
+### 1. 사전 요구사항
 *   **Node.js:** v20.x 이상 권장
 *   **Package Manager:** `npm` (또는 `yarn`, `pnpm`)
 
@@ -55,7 +55,7 @@ npm run build
 
 ---
 
-## 📁 프로젝트 구조 (Project Structure)
+## 📁 프로젝트 구조
 
 *   `src/api/`: API 클라이언트 및 엔드포인트 함수 (Axios 기반)
 *   `src/app/components/ui/`: 아토믹 디자인 기반의 공통 UI 컴포넌트
@@ -66,7 +66,7 @@ npm run build
 
 ---
 
-## 📐 개발 가이드라인 (Development Guidelines)
+## 📐 개발 가이드라인
 
 ### 1. 컴포넌트 작성 원칙
 *   **관심사 분리:** UI 렌더링은 `components`에서, 비즈니스 로직 및 데이터 패칭은 `hooks`에서 담당합니다.
