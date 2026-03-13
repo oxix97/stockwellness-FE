@@ -13,9 +13,10 @@ export function Login() {
     localStorage.setItem("oauth_state", state);
 
     // 백엔드 인가 엔드포인트로 이동
-    // 예: /api/v1/auth/authorize/kakao?state=xyz
     const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    window.location.href = `${apiBase}/v1/auth/authorize/${type.toLowerCase()}?state=${state}`;
+    const authorizeUrl = `${apiBase}/v1/auth/authorize/${type.toLowerCase()}?state=${state}`;
+    
+    window.location.href = authorizeUrl;
   };
 
   return (
