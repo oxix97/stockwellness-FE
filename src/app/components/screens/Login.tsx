@@ -7,21 +7,16 @@ export function Login() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleMockLogin = async (type: "GOOGLE" | "KAKAO" | "NAVER") => {
-    try {
-      const response = await authApi.login({
-        email: "test@example.com",
-        nickname: "웰니스테스터",
-        loginType: type,
-      });
+  const handleSocialLogin = (type: "GOOGLE" | "KAKAO" | "NAVER") => {
+    // CSRF 방지를 위한 랜덤 state 생성 및 저장
+    const state = Math.random().toString(36).substring(2, 15);
+    localStorage.setItem("oauth_state", state);
 
-      setAuth(response);
-      toast.success(`${response.nickname}님, 환영합니다!`);
-      navigate("/");
-    } catch (error) {
-      console.error("Login failed:", error);
-      toast.error("로그인에 실패했습니다. 다시 시도해 주세요.");
-    }
+    // 백엔드 인가 엔드포인트로 이동
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+    const authorizeUrl = `${apiBase}/v1/auth/authorize/${type.toLowerCase()}?state=${state}`;
+    
+    window.location.href = authorizeUrl;
   };
 
   return (
@@ -43,14 +38,14 @@ export function Login() {
           label="카카오로 시작하기" 
           bgColor="#FEE500" 
           textColor="#191919"
-          onClick={() => handleMockLogin("KAKAO")}
+          onClick={() => handleSocialLogin("KAKAO")}
         />
         <SocialButton 
           type="NAVER" 
           label="네이버로 시작하기" 
           bgColor="#03C75A" 
           textColor="#FFFFFF"
-          onClick={() => handleMockLogin("NAVER")}
+          onClick={() => handleSocialLogin("NAVER")}
         />
         <SocialButton 
           type="GOOGLE" 
@@ -58,7 +53,7 @@ export function Login() {
           bgColor="#FFFFFF" 
           textColor="#191919"
           border
-          onClick={() => handleMockLogin("GOOGLE")}
+          onClick={() => handleSocialLogin("GOOGLE")}
         />
       </div>
 
