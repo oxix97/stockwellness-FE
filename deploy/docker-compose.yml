@@ -1,0 +1,15 @@
+services:
+  stockwellness-front:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: stockwellness-front
+    ports:
+      - "3000:80"
+    restart: always
+    networks:
+      - stockwellness-net
+
+networks:
+  wellness-net:
+    driver: bridge
