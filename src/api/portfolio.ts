@@ -1,0 +1,64 @@
+import { apiClient } from "./client";
+import { 
+  PortfolioValuationResponse, 
+  PortfolioDiversificationResponse,
+  PortfolioRebalancingResponse,
+  BacktestRequest,
+  BacktestResponse
+} from "@/types/api";
+
+/**
+ * 포트폴리오 관련 API 호출 객체
+ */
+export const portfolioApi = {
+  /**
+   * 포트폴리오 가치 평가 데이터를 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 총 자산 가치, 수익률, MDD 등 평가 데이터
+   */
+  getValuation: async (portfolioId: string): Promise<PortfolioValuationResponse> => {
+    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/valuation`);
+    return data;
+  },
+
+  /**
+   * 포트폴리오 분산도 데이터를 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 자산, 섹터, 국가별 비중 정보
+   */
+  getDiversification: async (portfolioId: string): Promise<PortfolioDiversificationResponse> => {
+    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/diversification`);
+    return data;
+  },
+
+  /**
+   * 포트폴리오 리밸런싱 추천 데이터를 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 현재 비중과 목표 비중에 따른 리밸런싱 아이템 리스트
+   */
+  getRebalancing: async (portfolioId: string): Promise<PortfolioRebalancingResponse> => {
+    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/rebalancing`);
+    return data;
+  },
+
+  /**
+   * 포트폴리오에 대한 최신 AI 조언을 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 포트폴리오 최적화 및 전략 제언 메시지
+   */
+  getAdvice: async (portfolioId: string) => {
+    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/advice/latest`);
+    return data;
+  },
+
+  /**
+   * 전략 백테스트를 실행합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @param params 백테스트 전략, 금액, 벤치마크 정보
+   * @returns 일별 결과, 수익률 등 백테스트 실행 결과
+   */
+  runBacktest: async (portfolioId: string, params: BacktestRequest): Promise<BacktestResponse> => {
+    const { data } = await apiClient.post(`/v1/portfolios/${portfolioId}/analysis/backtest`, params);
+    return data;
+  }
+};
