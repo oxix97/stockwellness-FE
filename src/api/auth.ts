@@ -6,8 +6,8 @@ import { LoginRequest, LoginResponse, ReissueRequest, ReissueResponse } from "@/
  */
 export const authApi = {
   /**
-   * 사용자 로그인을 수행합니다.
-   * @param params 로그인 정보 (이메일, 닉네임, 로그인 타입)
+   * 사용자 로그인을 수행합니다. (OAuth2)
+   * @param params 로그인 정보 (인가 코드, 상태 값, 제공자)
    * @returns 로그인 성공 시 사용자 정보 및 토큰 세트
    */
   login: async (params: LoginRequest): Promise<LoginResponse> => {

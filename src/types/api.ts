@@ -2,12 +2,12 @@
  * 인증 관련 타입
  */
 export interface LoginRequest {
-  /** 이메일 */
-  email: string;
-  /** 닉네임 */
-  nickname: string;
-  /** 로그인 유형 (GOOGLE, KAKAO, NAVER) */
-  loginType: "GOOGLE" | "KAKAO" | "NAVER";
+  /** 소셜 서비스로부터 받은 인가 코드 */
+  code: string;
+  /** CSRF 방지를 위한 상태 값 */
+  state?: string;
+  /** 소셜 로그인 제공자 (GOOGLE, KAKAO, NAVER) */
+  provider: "GOOGLE" | "KAKAO" | "NAVER";
 }
 
 export interface LoginResponse {
