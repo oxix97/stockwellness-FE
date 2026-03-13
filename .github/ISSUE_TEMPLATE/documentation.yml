@@ -1,0 +1,11 @@
+name: "📚 Documentation"
+description: "README, API 문서, 주석 수정 등 문서화 작업입니다."
+labels: ["type:docs"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "수정 내용"
+      description: "어떤 문서를 수정하나요?"
+    validations:
+      required: true

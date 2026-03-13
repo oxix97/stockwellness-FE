@@ -1,0 +1,19 @@
+name: "🔨 Refactor"
+description: "코드 구조 개선 및 가독성 향상 작업입니다."
+labels: ["type:refactor"]
+body:
+  - type: textarea
+    id: current-issue
+    attributes:
+      label: "현재 문제점"
+      description: "코드의 어떤 부분이 문제인가요?"
+      placeholder: "함수가 너무 길어서 가독성이 떨어집니다."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "개선 방안"
+      description: "어떻게 개선할 예정인가요?"
+    validations:
+      required: true

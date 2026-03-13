@@ -1,0 +1,42 @@
+name: "🐛 Bug Report"
+description: "문제가 발생했을 때 보고해주세요."
+labels: ["type:bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        정확하고 빠른 해결을 위해 상세히 작성해주세요!
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: "현상 요약"
+      description: "무슨 문제가 발생했나요?"
+      placeholder: "예: 로그인이 작동하지 않습니다."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: "재현 단계"
+      description: "어떻게 하면 해당 문제를 다시 재현할 수 있나요?"
+      placeholder: "1. 홈페이지로 이동합니다.\n2. 로그인 버튼을 누릅니다."
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: "예상 동작 및 실제 동작"
+      description: "원래 어떻게 동작해야 하며, 실제로 어떻게 동작했나요?"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "환경 정보"
+      description: "브라우저, OS 버전 등"
+      placeholder: "Chrome 123.0, macOS Sonoma"
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "스크린샷"
+      description: "문제 해결에 도움이 되는 이미지나 로그를 첨부해주세요."

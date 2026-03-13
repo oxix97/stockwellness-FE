@@ -1,0 +1,17 @@
+name: "⚡ Performance"
+description: "속도 개선, 렌더링 최적화 등 성능 향상 작업입니다."
+labels: ["type:perf"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: "성능 문제점"
+      description: "어떤 성능 문제가 있나요?"
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "최적화 방안"
+    validations:
+      required: true
