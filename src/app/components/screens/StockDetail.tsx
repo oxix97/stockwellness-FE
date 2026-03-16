@@ -5,6 +5,8 @@ import { LineChart, Line, Tooltip, ResponsiveContainer } from "recharts";
 import { useStock } from "@/hooks/use-stock";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
+import { THEME } from "@/styles/theme";
+import { formatCurrency } from "@/utils/format";
 
 const PERIODS = ["1일", "1주", "1달", "1년", "3년"];
 const PERIOD_MAP: Record<string, string> = {
@@ -100,13 +102,13 @@ function PriceSection({ ticker, latestPrice, change, changePercent, isUp, period
     <div className="bg-card px-6 py-10 border-b border-border">
       <div className="text-muted-foreground mb-2 font-bold text-lg">{ticker}</div>
       <div className="text-foreground mb-4 font-bold text-5xl">
-        ₩{latestPrice.toLocaleString()}
+        ₩{formatCurrency(latestPrice)}
       </div>
       <div className="flex items-center gap-3">
-        <span className={`${isUp ? "text-[#FF4756]" : "text-[#3182F6]"} font-bold text-xl`}>
-          {periodLabel} 전보다 {isUp ? "+" : ""}₩{Math.abs(change).toLocaleString()}
+        <span className={`${isUp ? "text-up" : "text-down"} font-bold text-xl`}>
+          {periodLabel} 전보다 {isUp ? "+" : ""}₩{formatCurrency(Math.abs(change))}
         </span>
-        <span className={`${isUp ? "text-[#FF4756]" : "text-[#3182F6]"} font-bold text-xl`}>
+        <span className={`${isUp ? "text-up" : "text-down"} font-bold text-xl`}>
           ({isUp ? "+" : ""}{changePercent}% {isUp ? "🔺" : "🔻"})
         </span>
       </div>
@@ -127,7 +129,7 @@ function ChartSection({ data, isUp }: { data: any[]; isUp: boolean }) {
             <Line
               type="monotone"
               dataKey="price"
-              stroke={isUp ? "#FF4756" : "#3182F6"}
+              stroke={isUp ? THEME.COLOR.UP : THEME.COLOR.DOWN}
               strokeWidth={4}
               dot={false}
               animationDuration={1000}
@@ -172,7 +174,7 @@ function ComparisonSection({ returns, periodLabel, isLoading, isUp }: any) {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground font-medium">종목 수익률 ({periodLabel})</span>
-              <span className={`${isUp ? "text-[#FF4756]" : "text-[#3182F6]"} font-bold text-xl`}>
+              <span className={`${isUp ? "text-up" : "text-down"} font-bold text-xl`}>
                  {returns?.stockReturnRate}%
               </span>
             </div>
