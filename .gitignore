@@ -350,4 +350,8 @@ $RECYCLE.BIN/
 # and uncomment the following lines
 # .pnp.*
 
+/.worktrees/
+/docs/
+/guidelines/
+
 # End of https://www.toptal.com/developers/gitignore/api/git,intellij+all,macos,windows,linux,yarn,node,react.worktrees/

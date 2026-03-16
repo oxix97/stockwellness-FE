@@ -4,6 +4,9 @@ import { motion } from "motion/react";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader, StockLogo } from "@/app/components/shared";
+import { formatCurrency } from "@/utils/format";
+import { PriceTrendLabel } from "@/app/components/shared/label/PriceTrendLabel";
+import { DashboardCard } from "@/app/components/shared/card/DashboardCard";
 
 // UI 테스트를 위한 가상 보유 종목 데이터
 const HOLDINGS = [
@@ -75,10 +78,10 @@ function AssetOverview({ totalValue = 0, totalReturn = 0 }: any) {
     >
       <div className="text-muted-foreground mb-3 font-medium">내 포트폴리오 총 평가금액</div>
       <div className="text-foreground mb-6 font-bold text-5xl">
-        ₩ {totalValue.toLocaleString()}
+        ₩ {formatCurrency(totalValue)}
       </div>
-      <div className={`inline-flex items-center gap-2 ${isPositive ? "bg-[#FFE5E8]" : "bg-blue-100"} px-6 py-2 rounded-full`}>
-        <span className={`${isPositive ? "text-[#FF4756]" : "text-blue-600"} font-bold text-xl`}>
+      <div className={`inline-flex items-center gap-2 ${isPositive ? "bg-up/10" : "bg-down/10"} px-6 py-2 rounded-full`}>
+        <span className={`${isPositive ? "text-up" : "text-down"} font-bold text-xl`}>
           총 수익률 {isPositive ? "+" : ""}{totalReturn}%
         </span>
       </div>
@@ -128,10 +131,12 @@ function HoldingsList({ holdings }: any) {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-foreground font-bold">₩{stock.currentPrice.toLocaleString()}</div>
-              <div className={`text-xs font-bold ${stock.isUp ? "text-[#FF4756]" : "text-[#3182F6]"}`}>
-                {stock.isUp ? "+" : ""}{stock.return}%
-              </div>
+              <div className="text-foreground font-bold">₩{formatCurrency(stock.currentPrice)}</div>
+              <PriceTrendLabel 
+                change={stock.isUp ? 1 : -1} 
+                returnRate={stock.return} 
+                className="text-xs justify-end" 
+              />
             </div>
           </motion.div>
         </Link>

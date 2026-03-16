@@ -5,6 +5,7 @@ import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader, Section } from "@/app/components/shared";
+import { formatCurrency } from "@/utils/format";
 
 const SECTORS = [
   { id: 1, icon: "💊", name: "바이오", status: "저평가 국면, 진입하기 좋은 타이밍", badge: "AI 의견" },
@@ -76,13 +77,13 @@ function AssetSummaryCard({ valuation, isLoading }: any) {
           ) : (
             <>
               <div className="text-foreground mb-3 font-bold text-4xl">
-                ₩ {totalValue.toLocaleString()}
+                ₩ {formatCurrency(totalValue)}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`${dailyGain >= 0 ? "text-[#FF4756]" : "text-blue-600"} font-bold text-lg`}>
-                  오늘 {dailyGain >= 0 ? "+" : ""}₩ {Math.abs(dailyGain).toLocaleString()}
+                <span className={`${dailyGain >= 0 ? "text-up" : "text-down"} font-bold text-lg`}>
+                  오늘 {dailyGain >= 0 ? "+" : ""}₩ {formatCurrency(Math.abs(dailyGain))}
                 </span>
-                <span className={`${dailyGain >= 0 ? "text-[#FF4756]" : "text-blue-600"} font-bold text-lg`}>
+                <span className={`${dailyGain >= 0 ? "text-up" : "text-down"} font-bold text-lg`}>
                   ({dailyReturn}% {dailyGain >= 0 ? "🔺" : "🔻"})
                 </span>
               </div>
