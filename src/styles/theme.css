@@ -84,6 +84,8 @@
   --color-ring: var(--ring);
   --color-up: var(--up-color);
   --color-down: var(--down-color);
+  --color-wellness: #2EBE7A;
+  --color-surface: #F9FAFB;
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -93,6 +95,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-card: 24px;
+  --radius-button: 16px;
 }
 
 @layer base {
