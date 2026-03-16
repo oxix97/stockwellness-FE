@@ -351,3 +351,6 @@ $RECYCLE.BIN/
 # .pnp.*
 
 # End of https://www.toptal.com/developers/gitignore/api/git,intellij+all,macos,windows,linux,yarn,node,react
+/.worktrees/
+/docs/
+/guidelines/
