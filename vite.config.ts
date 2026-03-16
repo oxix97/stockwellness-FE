@@ -67,5 +67,10 @@ export default defineConfig(({ mode }) => {
     },
     // 빌드 프로세스에 포함할 에셋 확장자 지정
     assetsInclude: ['**/*.svg', '**/*.csv'],
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/test/setup.ts',
+    },
   }
 })
