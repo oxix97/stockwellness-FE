@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
     Component: Login,
   },
   {
-    path: "/auth/:provider/callback",
+    path: "/auth/callback",
     Component: AuthCallback,
   },
   {
