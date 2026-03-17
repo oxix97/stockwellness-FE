@@ -228,3 +228,19 @@ export interface StockPriceHistoryResponse {
   /** 벤치마크 데이터 */
   benchmarks: any[];
 }
+
+/**
+ * 섹터 추천 관련 타입
+ */
+export interface RecommendedSector {
+  /** 섹터 코드 */
+  sectorCode: string;
+  /** 섹터 이름 */
+  sectorName: string;
+  /** 현재 지수/가격 */
+  currentPrice: number;
+  /** 등락률 (%) */
+  fluctuationRate: number;
+  /** 과열 여부 */
+  isOverheated: boolean;
+}
