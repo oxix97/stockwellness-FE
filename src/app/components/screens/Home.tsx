@@ -3,14 +3,28 @@ import { TrendingUp, Flame } from "lucide-react";
 import { motion } from "motion/react";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
+import { useSector } from "@/hooks/use-sector";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader, Section } from "@/app/components/shared";
 import { formatCurrency } from "@/utils/format";
-import { RecommendedSector } from "@/types/api";
+
+/**
+ * 섹터 이름에 따른 적절한 이모지를 반환합니다.
+ */
+const getSectorIcon = (name: string) => {
+  if (name.includes("바이오") || name.includes("제약")) return "💊";
+  if (name.includes("반도체") || name.includes("전기전자")) return "⚡";
+  if (name.includes("전기차") || name.includes("자동차")) return "🚗";
+  if (name.includes("금융") || name.includes("은행")) return "🏦";
+  if (name.includes("조선") || name.includes("해운")) return "🚢";
+  if (name.includes("철강") || name.includes("에너지")) return "🔥";
+  return "📈";
+};
 
 export function Home() {
   const { valuation, isLoading: isValuationLoading } = usePortfolio();
-  const { popular, recommendedSectors } = useStock();
+  const { popular } = useStock();
+  const { data: sectors, isLoading: isSectorsLoading } = useSector();
 
   return (
     <div className="min-h-full pb-20">
@@ -30,16 +44,14 @@ export function Home() {
       
       <Section title="지금 AI 어드바이저가 주목하는 섹터" icon={Flame}>
         <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-          {recommendedSectors.isLoading ? (
-            <>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="min-w-[280px]">
-                  <Skeleton className="h-[140px] w-full rounded-3xl" />
-                </div>
-              ))}
-            </>
-          ) : recommendedSectors.data?.length ? (
-            recommendedSectors.data.map((sector: RecommendedSector, index: number) => (
+          {isSectorsLoading ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} className="min-w-[280px]">
+                <Skeleton className="h-[160px] w-full rounded-3xl" />
+              </div>
+            ))
+          ) : sectors && sectors.length > 0 ? (
+            sectors.map((sector, index) => (
               <motion.div
                 key={sector.sectorCode}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -102,20 +114,25 @@ function AssetSummaryCard({ valuation, isLoading }: any) {
   );
 }
 
-function SectorCard({ sector }: { sector: RecommendedSector }) {
+function SectorCard({ sector }: any) {
   const isUp = sector.fluctuationRate >= 0;
   
   return (
-    <div className="bg-card rounded-3xl p-5 min-w-[280px] shadow-sm border border-border">
-      <div className="flex items-start justify-between mb-3">
-        <div className="text-4xl">📊</div>
-        <span className={`px-3 py-1 rounded-full text-xs font-bold ${sector.isOverheated ? "bg-red-100 text-red-600" : "bg-accent text-primary"}`}>
-          {sector.isOverheated ? "⚠️ 과열 주의" : "✅ 정상 국면"}
-        </span>
+    <div className="bg-card rounded-3xl p-5 min-w-[280px] shadow-sm border border-border h-full flex flex-col justify-between">
+      <div>
+        <div className="flex items-start justify-between mb-3">
+          <div className="text-4xl">{getSectorIcon(sector.sectorName)}</div>
+          <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sector.isOverheated ? "bg-red-100 text-red-600" : "bg-accent text-primary"}`}>
+            {sector.isOverheated ? "⚠️ 과열 주의" : "AI 추천"}
+          </span>
+        </div>
+        <div className="text-foreground mb-1 font-bold text-xl">{sector.sectorName}</div>
+        <div className={`text-sm font-semibold mb-3 ${isUp ? "text-up" : "text-down"}`}>
+          {isUp ? "+" : ""}{sector.fluctuationRate}% {isUp ? "🔺" : "🔻"}
+        </div>
       </div>
-      <div className="text-foreground mb-2 font-bold text-xl">{sector.sectorName}</div>
-      <div className={`text-sm font-semibold ${isUp ? "text-up" : "text-down"}`}>
-        {isUp ? "+" : ""}{sector.fluctuationRate}% {isUp ? "🔺" : "🔻"}
+      <div className="text-muted-foreground text-xs line-clamp-2 bg-secondary/30 p-2 rounded-xl">
+        {sector.diagnosisMessage || "현재 섹터에 대한 AI 진단 결과를 분석 중입니다."}
       </div>
     </div>
   );
