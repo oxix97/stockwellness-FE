@@ -43,10 +43,19 @@ export function useStock() {
     enabled: !!ticker,
   });
 
+  /** 
+   * 추천 섹터
+   */
+  const recommendedSectors = useQuery({
+    queryKey: ["stocks", "sectors", "recommended"],
+    queryFn: () => stockApi.getRecommendedSectors(),
+  });
+
   return {
     popular,
     useSearch,
     useHistory,
     useReturns,
+    recommendedSectors,
   };
 }
