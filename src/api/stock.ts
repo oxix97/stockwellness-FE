@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { StockPriceHistoryResponse } from "@/types/api";
+import { StockPriceHistoryResponse, RecommendedSector } from "@/types/api";
 
 /**
  * 주식 종목 관련 API 호출 객체
@@ -50,5 +50,13 @@ export const stockApi = {
       params: { period },
     });
     return data;
-  }
+  },
+
+  /**
+   * 섹터 등락률 랭킹 리스트를 조회합니다. (홈 화면 추천 섹터로 사용)
+   */
+  getRecommendedSectors: async (): Promise<RecommendedSector[]> => {
+    const { data } = await apiClient.get("/v1/sectors/ranking/fluctuation");
+    return data;
+  },
 };
