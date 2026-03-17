@@ -244,3 +244,23 @@ export interface RecommendedSector {
   /** 과열 여부 */
   isOverheated: boolean;
 }
+
+/**
+ * 보유 주식 관련 타입
+ */
+export interface HoldingStock {
+  /** 종목 코드 */
+  symbol: string;
+  /** 종목 이름 */
+  name: string;
+  /** 보유 수량 */
+  shares: number;
+  /** 현재가 */
+  currentPrice: number;
+  /** 평균 매수가 */
+  avgPrice: number;
+  /** 수익률 (%) */
+  return: number;
+  /** 상승 여부 (UI 컬러 결정용) */
+  isUp: boolean;
+}
