@@ -4,13 +4,24 @@ import {
   PortfolioDiversificationResponse,
   PortfolioRebalancingResponse,
   BacktestRequest,
-  BacktestResponse
+  BacktestResponse,
+  HoldingStock
 } from "@/types/api";
 
 /**
  * 포트폴리오 관련 API 호출 객체
  */
 export const portfolioApi = {
+  /**
+   * 사용자 포트폴리오의 보유 종목 리스트를 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 보유 종목 리스트
+   */
+  getHoldings: async (portfolioId: string): Promise<HoldingStock[]> => {
+    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/holdings`);
+    return data;
+  },
+
   /**
    * 포트폴리오 가치 평가 데이터를 조회합니다.
    * @param portfolioId 포트폴리오 ID
