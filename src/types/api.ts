@@ -264,3 +264,41 @@ export interface HoldingStock {
   /** 상승 여부 (UI 컬러 결정용) */
   isUp: boolean;
 }
+
+/**
+ * 관심 종목 관련 타입
+ */
+export interface WatchlistGroup {
+  /** 그룹 ID */
+  id: number;
+  /** 그룹 이름 */
+  name: string;
+  /** 포함된 종목 수 */
+  itemCount: number;
+}
+
+export interface WatchlistStock {
+  /** 종목 티커 */
+  ticker: string;
+  /** 종목 이름 */
+  name: string;
+  /** 현재가 */
+  currentPrice: number;
+  /** 등락률 (%) */
+  fluctuationRate: number;
+  /** 투자 메모 */
+  note: string;
+  /** RSI 지표 */
+  rsi: number;
+  /** RSI 상태 */
+  rsiStatus: string;
+  /** AI 한줄 분석 */
+  aiInsight: string;
+}
+
+export interface WatchlistItemListResponse {
+  /** 그룹 이름 */
+  groupName: string;
+  /** 종목 리스트 */
+  items: WatchlistStock[];
+}
