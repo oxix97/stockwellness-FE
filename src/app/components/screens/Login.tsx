@@ -8,13 +8,9 @@ export function Login() {
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleSocialLogin = (type: "GOOGLE" | "KAKAO" | "NAVER") => {
-    // CSRF 방지를 위한 랜덤 state 생성 및 저장
-    const state = Math.random().toString(36).substring(2, 15);
-    localStorage.setItem("oauth_state", state);
-
-    // 백엔드 인가 엔드포인트로 이동
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-    const authorizeUrl = `${apiBase}/v1/auth/authorize/${type.toLowerCase()}?state=${state}`;
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+    // Spring Security OAuth2 기본 엔드포인트 호출
+    const authorizeUrl = `${apiBase}/oauth2/authorization/${type.toLowerCase()}`;
     
     window.location.href = authorizeUrl;
   };

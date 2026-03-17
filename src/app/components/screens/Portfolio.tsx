@@ -6,19 +6,11 @@ import { Skeleton } from "@/app/components/ui";
 import { PageHeader, StockLogo } from "@/app/components/shared";
 import { formatCurrency } from "@/utils/format";
 import { PriceTrendLabel } from "@/app/components/shared/label/PriceTrendLabel";
-import { DashboardCard } from "@/app/components/shared/card/DashboardCard";
-
-// UI 테스트를 위한 가상 보유 종목 데이터
-const HOLDINGS = [
-  { symbol: "005930", name: "삼성전자", shares: 10, currentPrice: 72000, avgPrice: 68000, return: 5.88, isUp: true },
-  { symbol: "TSLA", name: "TESLA", shares: 5, currentPrice: 245.5, avgPrice: 230.0, return: 6.74, isUp: true },
-  { symbol: "000660", name: "SK하이닉스", shares: 8, currentPrice: 158000, avgPrice: 162000, return: -2.47, isUp: false },
-  { symbol: "035420", name: "NAVER", shares: 3, currentPrice: 182000, avgPrice: 175000, return: 4.0, isUp: true },
-];
+import { HoldingStock } from "@/types/api";
 
 export function Portfolio() {
   const navigate = useNavigate();
-  const { valuation, isLoading, health } = usePortfolio();
+  const { valuation, isLoading, health, holdings } = usePortfolio();
 
   if (isLoading) {
     return (
@@ -47,7 +39,16 @@ export function Portfolio() {
            <button className="text-primary text-sm font-semibold">편집</button>
         </div>
 
-        <HoldingsList holdings={HOLDINGS} />
+        {holdings && holdings.length > 0 ? (
+          <HoldingsList holdings={holdings} />
+        ) : (
+          <div className="bg-card rounded-3xl p-8 text-center shadow-sm border border-border">
+            <div className="text-muted-foreground mb-2">아직 보유한 주식이 없어요.</div>
+            <Link to="/search" className="text-primary font-bold hover:underline">
+              주식 추가하러 가기
+            </Link>
+          </div>
+        )}
         
         <motion.button
           whileTap={{ scale: 0.98 }}
@@ -114,10 +115,10 @@ function HealthDiagnosisBanner({ score }: { score: number }) {
   );
 }
 
-function HoldingsList({ holdings }: any) {
+function HoldingsList({ holdings }: { holdings: HoldingStock[] }) {
   return (
     <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
-      {holdings.map((stock: any, index: number) => (
+      {holdings.map((stock, index: number) => (
         <Link key={stock.symbol} to={`/stock/${stock.symbol}`}>
           <motion.div 
             whileTap={{ backgroundColor: "var(--color-secondary)" }}

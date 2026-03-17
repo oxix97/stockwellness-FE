@@ -228,3 +228,77 @@ export interface StockPriceHistoryResponse {
   /** 벤치마크 데이터 */
   benchmarks: any[];
 }
+
+/**
+ * 섹터 추천 관련 타입
+ */
+export interface RecommendedSector {
+  /** 섹터 코드 */
+  sectorCode: string;
+  /** 섹터 이름 */
+  sectorName: string;
+  /** 현재 지수/가격 */
+  currentPrice: number;
+  /** 등락률 (%) */
+  fluctuationRate: number;
+  /** 과열 여부 */
+  isOverheated: boolean;
+}
+
+/**
+ * 보유 주식 관련 타입
+ */
+export interface HoldingStock {
+  /** 종목 코드 */
+  symbol: string;
+  /** 종목 이름 */
+  name: string;
+  /** 보유 수량 */
+  shares: number;
+  /** 현재가 */
+  currentPrice: number;
+  /** 평균 매수가 */
+  avgPrice: number;
+  /** 수익률 (%) */
+  return: number;
+  /** 상승 여부 (UI 컬러 결정용) */
+  isUp: boolean;
+}
+
+/**
+ * 관심 종목 관련 타입
+ */
+export interface WatchlistGroup {
+  /** 그룹 ID */
+  id: number;
+  /** 그룹 이름 */
+  name: string;
+  /** 포함된 종목 수 */
+  itemCount: number;
+}
+
+export interface WatchlistStock {
+  /** 종목 티커 */
+  ticker: string;
+  /** 종목 이름 */
+  name: string;
+  /** 현재가 */
+  currentPrice: number;
+  /** 등락률 (%) */
+  fluctuationRate: number;
+  /** 투자 메모 */
+  note: string;
+  /** RSI 지표 */
+  rsi: number;
+  /** RSI 상태 */
+  rsiStatus: string;
+  /** AI 한줄 분석 */
+  aiInsight: string;
+}
+
+export interface WatchlistItemListResponse {
+  /** 그룹 이름 */
+  groupName: string;
+  /** 종목 리스트 */
+  items: WatchlistStock[];
+}

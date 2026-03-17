@@ -23,7 +23,13 @@ export function usePortfolio() {
     enabled: !!portfolioId,
   });
 
-  const isLoading = valuation.isLoading || diversification.isLoading || advice.isLoading;
+  const holdings = useQuery({
+    queryKey: ["portfolio", portfolioId, "holdings"],
+    queryFn: () => portfolioApi.getHoldings(portfolioId),
+    enabled: !!portfolioId,
+  });
+
+  const isLoading = valuation.isLoading || diversification.isLoading || advice.isLoading || holdings.isLoading;
 
   // 방사형 차트와 종합 점수를 위한 건강 지표 도출
   const getHealthScore = () => {
@@ -54,6 +60,7 @@ export function usePortfolio() {
     valuation: valuation.data,
     diversification: diversification.data,
     advice: advice.data,
+    holdings: holdings.data,
     isLoading,
     health: getHealthScore(),
   };

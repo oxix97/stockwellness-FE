@@ -6,16 +6,11 @@ import { useStock } from "@/hooks/use-stock";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader, Section } from "@/app/components/shared";
 import { formatCurrency } from "@/utils/format";
-
-const SECTORS = [
-  { id: 1, icon: "💊", name: "바이오", status: "저평가 국면, 진입하기 좋은 타이밍", badge: "AI 의견" },
-  { id: 2, icon: "⚡", name: "반도체", status: "단기 과열 주의", badge: "AI 의견" },
-  { id: 3, icon: "🚗", name: "전기차", status: "장기 성장세 유지 중", badge: "AI 의견" },
-];
+import { RecommendedSector } from "@/types/api";
 
 export function Home() {
   const { valuation, isLoading: isValuationLoading } = usePortfolio();
-  const { popular } = useStock();
+  const { popular, recommendedSectors } = useStock();
 
   return (
     <div className="min-h-full pb-20">
@@ -35,16 +30,28 @@ export function Home() {
       
       <Section title="지금 AI 어드바이저가 주목하는 섹터" icon={Flame}>
         <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-          {SECTORS.map((sector, index) => (
-            <motion.div
-              key={sector.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <SectorCard sector={sector} />
-            </motion.div>
-          ))}
+          {recommendedSectors.isLoading ? (
+            <>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="min-w-[280px]">
+                  <Skeleton className="h-[140px] w-full rounded-3xl" />
+                </div>
+              ))}
+            </>
+          ) : recommendedSectors.data?.length ? (
+            recommendedSectors.data.map((sector: RecommendedSector, index: number) => (
+              <motion.div
+                key={sector.sectorCode}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <SectorCard sector={sector} />
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-muted-foreground text-sm py-4">추천 섹터 정보를 불러올 수 없습니다.</div>
+          )}
         </div>
       </Section>
 
@@ -95,17 +102,21 @@ function AssetSummaryCard({ valuation, isLoading }: any) {
   );
 }
 
-function SectorCard({ sector }: any) {
+function SectorCard({ sector }: { sector: RecommendedSector }) {
+  const isUp = sector.fluctuationRate >= 0;
+  
   return (
     <div className="bg-card rounded-3xl p-5 min-w-[280px] shadow-sm border border-border">
       <div className="flex items-start justify-between mb-3">
-        <div className="text-4xl">{sector.icon}</div>
-        <span className="bg-accent text-primary px-3 py-1 rounded-full text-xs font-bold">
-          {sector.badge}
+        <div className="text-4xl">📊</div>
+        <span className={`px-3 py-1 rounded-full text-xs font-bold ${sector.isOverheated ? "bg-red-100 text-red-600" : "bg-accent text-primary"}`}>
+          {sector.isOverheated ? "⚠️ 과열 주의" : "✅ 정상 국면"}
         </span>
       </div>
-      <div className="text-foreground mb-2 font-bold text-xl">{sector.name}</div>
-      <div className="text-muted-foreground text-sm">{sector.status}</div>
+      <div className="text-foreground mb-2 font-bold text-xl">{sector.sectorName}</div>
+      <div className={`text-sm font-semibold ${isUp ? "text-up" : "text-down"}`}>
+        {isUp ? "+" : ""}{sector.fluctuationRate}% {isUp ? "🔺" : "🔻"}
+      </div>
     </div>
   );
 }
