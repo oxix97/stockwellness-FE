@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { TrendingUp, Flame } from "lucide-react";
 import { motion } from "motion/react";
+import { useAuthStore } from "@/store/auth";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
@@ -23,6 +24,7 @@ const getSectorIcon = (name: string) => {
 
 export function Home() {
   const { valuation, isLoading: isValuationLoading } = usePortfolio();
+  const portfolioId = useAuthStore((state) => state.portfolioId);
   const { popular } = useStock();
   const { data: sectors, isLoading: isSectorsLoading } = useSector();
 
@@ -40,7 +42,9 @@ export function Home() {
          </motion.div>
       </div>
 
-      <AssetSummaryCard valuation={valuation} isLoading={isValuationLoading} />
+      {portfolioId && (
+        <AssetSummaryCard valuation={valuation} isLoading={isValuationLoading} />
+      )}
       
       <Section title="지금 AI 어드바이저가 주목하는 섹터" icon={Flame}>
         <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">

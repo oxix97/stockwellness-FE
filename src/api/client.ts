@@ -18,7 +18,11 @@ apiClient.interceptors.request.use((config) => {
 
 // 응답 인터셉터: 토큰 갱신 또는 글로벌 에러 처리
 apiClient.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // 서버의 공통 응답 구조(Envelope)에서 실제 데이터만 추출
+        // 만약 data 필드가 존재하면 그 안의 값을 반환하고, 아니면 response.data 전체를 반환
+        return response.data?.data !== undefined ? response.data.data : response.data;
+    },
     async (error) => {
         const originalRequest = error.config;
 

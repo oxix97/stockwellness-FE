@@ -2,16 +2,25 @@ import { apiClient } from "./client";
 import { 
   PortfolioValuationResponse, 
   PortfolioDiversificationResponse,
-  PortfolioRebalancingResponse,
+  PortfolioRebalancingResponse, 
   BacktestRequest,
   BacktestResponse,
-  HoldingStock
+  HoldingStock,
+  PortfolioResponse
 } from "@/types/api";
 
 /**
  * 포트폴리오 관련 API 호출 객체
  */
 export const portfolioApi = {
+  /**
+   * 사용자의 모든 포트폴리오 목록을 조회합니다.
+   * @returns 포트폴리오 리스트
+   */
+  getMyPortfolios: async (): Promise<PortfolioResponse[]> => {
+    const { data } = await apiClient.get("/v1/portfolios");
+    return data;
+  },
   /**
    * 사용자 포트폴리오의 보유 종목 리스트를 조회합니다.
    * @param portfolioId 포트폴리오 ID

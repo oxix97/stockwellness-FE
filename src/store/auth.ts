@@ -27,6 +27,11 @@ interface UserState {
         refreshToken: string
     }) => void;
     /**
+     * 활성 포트폴리오 ID를 설정합니다.
+     * @param id 포트폴리오 ID (문자열 혹은 숫자)
+     */
+    setPortfolioId: (id: string | null) => void;
+    /**
      * 로그아웃을 수행하고 모든 상태를 초기화합니다.
      */
     logout: () => void;
@@ -41,7 +46,7 @@ export const useAuthStore = create<UserState>()(
             memberId: null,
             email: null,
             nickname: null,
-            portfolioId: "1", // 현재는 기본값으로 설정, 실제로는 로그인 후 가져와야 함
+            portfolioId: null, // 초기값 null
             accessToken: null,
             setAuth: (data) => {
                 set({
@@ -53,6 +58,7 @@ export const useAuthStore = create<UserState>()(
                 localStorage.setItem("accessToken", data.accessToken);
                 localStorage.setItem("refreshToken", data.refreshToken);
             },
+            setPortfolioId: (id) => set({ portfolioId: id }),
             logout: () => {
                 set({
                     memberId: null,

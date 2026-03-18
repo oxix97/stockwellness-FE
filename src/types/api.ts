@@ -141,6 +141,24 @@ export interface PortfolioRebalancingResponse {
   items: RebalancingItem[];
 }
 
+export interface PortfolioItemResponse {
+  symbol: string;
+  quantity: number;
+  purchasePrice: number;
+  currency: string;
+  assetType: string;
+  purchaseAmount: number;
+  targetWeight: number;
+}
+
+export interface PortfolioResponse {
+  id: number;
+  name: string;
+  description: string;
+  totalPurchaseAmount: number;
+  items: PortfolioItemResponse[];
+}
+
 /**
  * 섹터 관련 타입
  */

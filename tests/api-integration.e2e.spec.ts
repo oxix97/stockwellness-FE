@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const REAL_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJpZWVqbzcxNkBuYXZlci5jb20iLCJsb2dpblR5cGUiOiJLQUtBTyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzczNzMwNjE3LCJleHAiOjE3NzM3MzQyMTd9.HwL9V3iMjOcLYQRvgHZwnJQElLgX97nq4wK_cK96ifc';
+const REAL_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJpZWVqbzcxNkBuYXZlci5jb20iLCJsb2dpblR5cGUiOiJLQUtBTyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzczODI2NzEyLCJleHAiOjE3NzM4MzAzMTJ9.CNzyCDwQ0UJFF1PFsJSHT1IxqYRTyWqld13lqcsqomQ';
 
 test.describe('Real API Integration Tests', () => {
   
