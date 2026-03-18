@@ -12,7 +12,7 @@ export function Search() {
   const { popular, useSearch } = useStock();
   const { data: searchResults, isLoading: isSearching } = useSearch(query);
 
-  const results = searchResults?.content || [];
+  const results = searchResults?.pages.flatMap(page => page.content) || [];
 
   return (
     <div className="min-h-full pb-20">
