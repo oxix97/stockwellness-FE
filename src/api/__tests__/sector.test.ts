@@ -7,4 +7,9 @@ describe("sectorApi", () => {
     expect(sectorApi.getFluctuationRanking).toBeDefined();
     expect(sectorApi.getSectorDetail).toBeDefined();
   });
+
+  it("should have getSupplyRanking function defined", () => {
+    expect(sectorApi.getSupplyRanking).toBeDefined();
+    expect(typeof sectorApi.getSupplyRanking).toBe("function");
+  });
 });
