@@ -27,16 +27,26 @@ export function useSector() {
   const isLoading = ranking.isLoading || details.some((d) => d.isLoading);
 
   // 랭킹 데이터에 상세 진단 메시지와 주도주 정보를 결합
+  // 개별 detail 쿼리 실패 시에도 랭킹 데이터는 유지하고 부분 데이터를 반환
   const combinedData =
     ranking.data?.map((item, index) => ({
       ...item,
-      diagnosisMessage: details[index]?.data?.diagnosisMessage ?? "",
-      leadingStocks: details[index]?.data?.leadingStocks ?? [],
+      diagnosisMessage:
+        details[index]?.isError
+          ? "진단 정보를 불러오지 못했습니다."
+          : details[index]?.data?.diagnosisMessage ?? "",
+      leadingStocks:
+        details[index]?.isError
+          ? []
+          : details[index]?.data?.leadingStocks ?? [],
+      detailLoading: details[index]?.isLoading ?? false,
+      detailError: details[index]?.isError ?? false,
     })) ?? [];
 
   return {
     data: combinedData,
     isLoading,
-    isError: ranking.isError || details.some((d) => d.isError),
+    isError: ranking.isError,
+    isPartialError: details.some((d) => d.isError),
   };
 }
