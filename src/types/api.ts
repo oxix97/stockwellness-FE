@@ -1,4 +1,24 @@
 /**
+ * 백엔드 공통 응답 구조 (Java 21 record 대응)
+ */
+export interface FieldError {
+  field: string;
+  value: string;
+  reason: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;       // @JsonProperty("success") 반영
+  status: number;         // HTTP 상태 코드
+  code: string;           // 서비스 내부 코드
+  message: string;        // 응답 메시지
+  data: T;                // 실제 비즈니스 데이터
+  timestamp: string;      // 응답 생성 시간 (ISO-8601)
+  traceId: string | null; // 에러 추적용 ID
+  errors: FieldError[];   // 상세 필드 에러 목록
+}
+
+/**
  * 인증 관련 타입
  */
 export interface LoginRequest {
@@ -139,13 +159,59 @@ export interface SectorRankingItem {
 
 export type SectorRankingResponse = SectorRankingItem[];
 
+/** 섹터 수급 랭킹 아이템 */
+export interface SectorSupplyItem {
+  /** 섹터 코드 */
+  sectorCode: string;
+  /** 섹터 이름 */
+  sectorName: string;
+  /** 외국인 순매수 금액 */
+  netForeignBuyAmount: number;
+  /** 기관 순매수 금액 */
+  netInstBuyAmount: number;
+  /** 외국인 연속 매수 일수 */
+  foreignConsecutiveBuyDays: number;
+  /** 기관 연속 매수 일수 */
+  instConsecutiveBuyDays: number;
+}
+
+export type SectorSupplyResponse = SectorSupplyItem[];
+
 export interface TechnicalIndicators {
   /** 5일 이동평균선 */
   ma5: number | null;
   /** 20일 이동평균선 */
   ma20: number | null;
+  /** 60일 이동평균선 */
+  ma60: number | null;
+  /** 120일 이동평균선 */
+  ma120: number | null;
   /** 14일 상대강도지수 (RSI) */
   rsi14: number | null;
+  /** MACD */
+  macd: number | null;
+  /** MACD 시그널 */
+  macdSignal: number | null;
+  /** 볼린저 밴드 상단 */
+  bollingerUpper: number | null;
+  /** 볼린저 밴드 중간 */
+  bollingerMid: number | null;
+  /** 볼린저 밴드 하단 */
+  bollingerLower: number | null;
+  /** ADX (추세 강도) */
+  adx: number | null;
+  /** +DI */
+  plusDi: number | null;
+  /** -DI */
+  minusDi: number | null;
+  /** 이동평균선 정배열 상태 */
+  alignmentStatus: string | null;
+  /** 골든 크로스 여부 */
+  isGoldenCross: boolean | null;
+  /** 데드 크로스 여부 */
+  isDeadCross: boolean | null;
+  /** MACD 크로스 여부 */
+  isMacdCross: boolean | null;
 }
 
 /** 섹터 내 주도주 정보 */
@@ -241,7 +307,61 @@ export interface StockPriceHistoryResponse {
   /** 주가 이력 리스트 */
   prices: PricePoint[];
   /** 벤치마크 데이터 */
-  benchmarks: any[];
+  benchmarks: PricePoint[];
+}
+
+/**
+ * 주식 검색 결과 타입
+ */
+export interface StockSearchResult {
+  /** 티커 */
+  ticker: string;
+  /** 종목명 */
+  name: string;
+  /** 섹터명 */
+  sectorName: string;
+  /** 마켓 타입 (KOSPI, KOSDAQ 등) */
+  marketType: string;
+  /** 종목 상태 (ACTIVE, HALTED 등) */
+  status: string;
+}
+
+/**
+ * 주식 검색 응답 타입 (Slice 구조 반영 - 무한 스크롤 적합)
+ */
+export interface StockSearchResponse {
+  /** 검색 결과 리스트 */
+  content: StockSearchResult[];
+  /** 현재 페이지 번호 (0부터 시작) */
+  number: number;
+  /** 페이지 사이즈 */
+  size: number;
+  /** 현재 페이지 엘리먼트 수 */
+  numberOfElements: number;
+  /** 마지막 페이지 여부 */
+  last: boolean;
+  /** 첫 번째 페이지 여부 */
+  first: boolean;
+  /** 다음 페이지 존재 여부 (Slice 핵심) */
+  hasNext: boolean;
+  /** 결과 비어있음 여부 */
+  empty: boolean;
+}
+
+/**
+ * 신규 상장 종목 타입
+ */
+export interface NewListingStock {
+  /** 티커 */
+  ticker: string;
+  /** 종목명 */
+  name: string;
+  /** 마켓 타입 (KOSPI, KOSDAQ 등) */
+  marketType: string;
+  /** 섹터명 */
+  sectorName: string;
+  /** 종목 상태 */
+  status: string;
 }
 
 /**
