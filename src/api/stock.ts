@@ -22,7 +22,7 @@ export const stockApi = {
    * @returns 인기 검색어(티커/종목명) 리스트
    */
   getPopularSearch: async (): Promise<string[]> => {
-    const data = await apiClient.get<string[]>("/v1/stocks/popular");
+    const data = await apiClient.get<string[]>("/v1/stocks/popular-search");
     return data as unknown as string[];
   },
 
