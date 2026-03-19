@@ -9,6 +9,7 @@ interface JwtPayload {
   sub: string; // memberId
   email: string;
   nickname: string;
+  joinedDate?: string;
   // ... 기타 클레임들
 }
 
@@ -51,6 +52,7 @@ export function AuthCallback() {
           nickname: decoded.nickname || "사용자",
           accessToken,
           refreshToken,
+          joinedDate: decoded.joinedDate || "",
         });
 
         // 3. 포트폴리오 정보 동적 동기화

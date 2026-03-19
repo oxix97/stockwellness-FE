@@ -8,6 +8,7 @@ import {
   PortfolioItemResponse,
   PortfolioResponse,
   CorrelationMatrix,
+  CreatePortfolioRequest,
 } from "@/types/api";
 
 /**
@@ -20,6 +21,15 @@ export const portfolioApi = {
    */
   getMyPortfolios: async (): Promise<PortfolioResponse[]> => {
     const { data } = await apiClient.get("/v1/portfolios");
+    return data;
+  },
+
+  /**
+   * 포트폴리오를 생성합니다.
+   * @returns 생성된 포트폴리오의 ID
+   */
+  create: async (body: CreatePortfolioRequest): Promise<number> => {
+    const { data } = await apiClient.post("/v1/portfolios", body);
     return data;
   },
   /**

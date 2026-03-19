@@ -14,7 +14,7 @@ import { usePortfolio } from "@/hooks/use-portfolio";
 
 export function More() {
   const navigate = useNavigate();
-  const { nickname, logout } = useAuthStore();
+  const { nickname, logout, joinedDate } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { holdings, valuation } = usePortfolio();
 
@@ -60,7 +60,14 @@ export function More() {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 pt-6 border-t border-primary/10">
-            <MetricItem label="가입일" value={/* TODO: 백엔드 사용자 프로필 API 연동 후 대체 */ "2024.01"} />
+            <MetricItem
+              label="가입일"
+              value={
+                joinedDate
+                  ? new Date(joinedDate).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit" }).replace(". ", ".").replace(".", "").slice(0, 7)
+                  : "2024.01"
+              }
+            />
             <MetricItem label="보유 종목" value={`${holdings?.length ?? "-"}개`} />
             <MetricItem
               label="총 수익률"

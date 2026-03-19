@@ -41,6 +41,8 @@ export interface LoginResponse {
   accessToken: string;
   /** 리프레시 토큰 */
   refreshToken: string;
+  /** 가입일 (ISO-8601) */
+  joinedDate: string;
 }
 
 export interface ReissueRequest {
@@ -458,6 +460,21 @@ export interface WatchlistItemListResponse {
 
 /** 포트폴리오 종목 간 상관관계 행렬 (ticker → ticker → 상관계수) */
 export type CorrelationMatrix = Record<string, Record<string, number>>;
+
+export interface CreatePortfolioItemRequest {
+  symbol: string;
+  quantity: number;
+  purchasePrice: number;
+  currency: string;
+  assetType: string;
+  targetWeight: number;
+}
+
+export interface CreatePortfolioRequest {
+  name: string;
+  description: string;
+  items: CreatePortfolioItemRequest[];
+}
 
 export interface CreateWatchlistGroupRequest {
   name: string;

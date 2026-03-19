@@ -15,6 +15,8 @@ interface UserState {
     portfolioId: string | null;
     /** 액세스 토큰 */
     accessToken: string | null;
+    /** 가입일 (ISO-8601) */
+    joinedDate: string | null;
     /**
      * 인증 정보를 설정합니다. (로그인 시 사용)
      * @param data 사용자 정보 및 토큰 세트
@@ -24,7 +26,8 @@ interface UserState {
         email: string;
         nickname: string;
         accessToken: string;
-        refreshToken: string
+        refreshToken: string;
+        joinedDate: string;
     }) => void;
     /**
      * 활성 포트폴리오 ID를 설정합니다.
@@ -46,14 +49,16 @@ export const useAuthStore = create<UserState>()(
             memberId: null,
             email: null,
             nickname: null,
-            portfolioId: null, // 초기값 null
+            portfolioId: null,
             accessToken: null,
+            joinedDate: null,
             setAuth: (data) => {
                 set({
                     memberId: data.memberId,
                     email: data.email,
                     nickname: data.nickname,
                     accessToken: data.accessToken,
+                    joinedDate: data.joinedDate,
                 });
                 localStorage.setItem("accessToken", data.accessToken);
                 localStorage.setItem("refreshToken", data.refreshToken);
@@ -65,6 +70,7 @@ export const useAuthStore = create<UserState>()(
                     email: null,
                     nickname: null,
                     accessToken: null,
+                    joinedDate: null,
                 });
                 localStorage.clear();
             },
