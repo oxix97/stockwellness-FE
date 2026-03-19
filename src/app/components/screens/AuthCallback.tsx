@@ -6,11 +6,10 @@ import { portfolioApi } from "@/api/portfolio";
 import { jwtDecode } from "jwt-decode";
 
 interface JwtPayload {
-  sub: string; // memberId
-  email: string;
-  nickname: string;
+  sub: string;       // memberId
+  email?: string;
+  nickname?: string; // JWT에 포함되지 않을 수 있음
   joinedDate?: string;
-  // ... 기타 클레임들
 }
 
 /**
