@@ -319,15 +319,37 @@ export interface PricePoint {
   adjClose: number;
   /** 거래량 */
   volume: number;
+  /** 거래대금 */
+  transactionAmt?: number | null;
+  /** 5일 이동평균선 */
+  ma5?: number | null;
+  /** 20일 이동평균선 */
+  ma20?: number | null;
+  /** 60일 이동평균선 */
+  ma60?: number | null;
+  /** 120일 이동평균선 */
+  ma120?: number | null;
+}
+
+/** 벤치마크 수익률 포인트 */
+export interface BenchmarkPoint {
+  /** 날짜 */
+  date: string;
+  /** 수익률 (%) */
+  returnRate: number;
 }
 
 export interface StockPriceHistoryResponse {
   /** 종목 코드 */
   ticker: string;
+  /** 종목명 */
+  stockName?: string;
+  /** 벤치마크 이름 (ex: KOSPI) */
+  benchmarkName?: string;
   /** 주가 이력 리스트 */
   prices: PricePoint[];
-  /** 벤치마크 데이터 */
-  benchmarks: PricePoint[];
+  /** 벤치마크 수익률 리스트 */
+  benchmarks: BenchmarkPoint[];
 }
 
 /**

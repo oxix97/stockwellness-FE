@@ -63,9 +63,9 @@ export function useStock() {
    * @param ticker 종목 티커
    * @param period 조회 기간
    */
-  const useHistory = (ticker: string, period: string) => useQuery<StockPriceHistoryResponse>({
-    queryKey: ["stocks", ticker, "history", period],
-    queryFn: () => stockApi.getPriceHistory(ticker, period),
+  const useHistory = (ticker: string, period: string, frequency = "DAILY") => useQuery<StockPriceHistoryResponse>({
+    queryKey: ["stocks", ticker, "history", period, frequency],
+    queryFn: () => stockApi.getPriceHistory(ticker, period, frequency),
     enabled: !!ticker,
   });
 
