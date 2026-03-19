@@ -358,3 +358,8 @@ $RECYCLE.BIN/
 /test-results/
 /playwright-report/
 /test-results/
+/CLAUDE.md
+/report.md
+/plan.md
+/openapi3.yaml
+/apidoc.md
