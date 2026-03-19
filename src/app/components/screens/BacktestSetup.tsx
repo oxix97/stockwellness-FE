@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { ChevronLeft, Plus, X, FlaskConical } from "lucide-react";
 import { Root as SliderRoot, Track as SliderTrack, Range as SliderRange, Thumb as SliderThumb } from "@radix-ui/react-slider";
+import { usePortfolio } from "@/hooks/use-portfolio";
 
 interface PortfolioItem {
   symbol: string;
@@ -44,17 +45,27 @@ const benchmarks = [
 
 export function BacktestSetup() {
   const navigate = useNavigate();
+  const { holdings } = usePortfolio();
   const [initialAmount, setInitialAmount] = useState(10000000);
   const [selectedStrategy, setSelectedStrategy] = useState<"DCA" | "LUMP_SUM">("LUMP_SUM");
   const [selectedPeriod, setSelectedPeriod] = useState("1y");
   const [selectedRebalancing, setSelectedRebalancing] = useState("none");
   const [selectedBenchmark, setSelectedBenchmark] = useState("KOSPI");
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([
-    { symbol: "005930", name: "삼성전자", weight: 40 },
-    { symbol: "000660", name: "SK하이닉스", weight: 30 },
-    { symbol: "KODEX200", name: "KODEX 200", weight: 30 },
-  ]);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [showAddStock, setShowAddStock] = useState(false);
+
+  // 보유 종목을 초기 포트폴리오로 설정
+  useEffect(() => {
+    if (holdings && holdings.length > 0) {
+      setPortfolio(
+        holdings.map((item) => ({
+          symbol: item.symbol,
+          name: item.symbol, // PortfolioItemResponse에 name 미제공 — symbol로 대체
+          weight: item.targetWeight,
+        }))
+      );
+    }
+  }, [holdings]);
 
   const totalWeight = portfolio.reduce((sum, item) => sum + item.weight, 0);
   const isValid = totalWeight === 100;
