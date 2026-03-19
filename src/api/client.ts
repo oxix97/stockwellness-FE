@@ -36,9 +36,10 @@ apiClient.interceptors.response.use(
                     const {data} = await axios.post("/api/v1/auth/reissue", {
                         refreshToken,
                     });
-                    localStorage.setItem("accessToken", data.accessToken);
-                    localStorage.setItem("refreshToken", data.refreshToken);
-                    originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+                    const tokens = data.data;
+                    localStorage.setItem("accessToken", tokens.accessToken);
+                    localStorage.setItem("refreshToken", tokens.refreshToken);
+                    originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
                     return apiClient(originalRequest);
                 } catch (refreshError) {
                     // 갱신 실패 시 사용자 로그아웃
