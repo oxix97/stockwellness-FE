@@ -4,10 +4,11 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
+import { CorrelationMatrix } from "@/types/api";
 
 export function HealthDiagnosis() {
   const navigate = useNavigate();
-  const { health, advice, isLoading } = usePortfolio();
+  const { health, advice, correlation, isLoading } = usePortfolio();
 
   if (isLoading) {
     return (
@@ -26,6 +27,8 @@ export function HealthDiagnosis() {
       <ScoreCard score={health.overallScore} adviceContent={advice?.content} />
 
       <RadarSection data={health.radarData} />
+
+      {correlation && <CorrelationSection matrix={correlation} />}
 
       <PrescriptionSection advice={advice} onBacktest={() => navigate("/backtest/setup")} />
     </div>
@@ -75,6 +78,77 @@ function RadarSection({ data }: { data: any[] }) {
             />
           </RadarChart>
         </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function CorrelationSection({ matrix }: { matrix: CorrelationMatrix }) {
+  const tickers = Object.keys(matrix);
+
+  const getColor = (value: number) => {
+    if (value >= 0.7) return "bg-[#FF4756] text-white";
+    if (value >= 0.3) return "bg-[#FF4756]/40 text-foreground";
+    if (value >= -0.3) return "bg-secondary text-foreground";
+    if (value >= -0.7) return "bg-[#3182F6]/40 text-foreground";
+    return "bg-[#3182F6] text-white";
+  };
+
+  return (
+    <div className="px-6 py-10 bg-card border-b border-border">
+      <div className="text-foreground mb-2 font-bold text-xl">종목 간 상관관계</div>
+      <div className="text-muted-foreground text-sm mb-6">
+        빨간색일수록 양의 상관, 파란색일수록 음의 상관을 나타냅니다.
+      </div>
+      {/* 스크롤 힌트: 우측 페이드 */}
+      <div className="relative">
+        <div className="overflow-x-auto">
+          <div className="inline-grid gap-1" style={{ gridTemplateColumns: `64px repeat(${tickers.length}, 56px)` }}>
+            {/* 헤더 행 */}
+            <div />
+            {tickers.map((ticker) => (
+              <div key={ticker} className="text-center text-xs font-bold text-muted-foreground truncate px-1">
+                {ticker}
+              </div>
+            ))}
+            {/* 데이터 행 — 하삼각형만 표시 (대각선 포함) */}
+            {tickers.map((rowTicker, rowIdx) => (
+              <>
+                <div key={rowTicker} className="text-xs font-bold text-muted-foreground flex items-center truncate">
+                  {rowTicker}
+                </div>
+                {tickers.map((colTicker, colIdx) => {
+                  // 대각선: 항상 1.0 — 별도 스타일
+                  if (rowIdx === colIdx) {
+                    return (
+                      <div
+                        key={colTicker}
+                        className="h-14 rounded-lg flex items-center justify-center text-xs font-bold bg-primary/10 text-primary"
+                      >
+                        1.00
+                      </div>
+                    );
+                  }
+                  // 상삼각형: 빈 셀로 처리 (대칭이므로 생략)
+                  if (colIdx > rowIdx) {
+                    return <div key={colTicker} className="h-14" />;
+                  }
+                  const value = matrix[rowTicker]?.[colTicker] ?? 0;
+                  return (
+                    <div
+                      key={colTicker}
+                      className={`h-14 rounded-lg flex items-center justify-center text-xs font-bold ${getColor(value)}`}
+                    >
+                      {value.toFixed(2)}
+                    </div>
+                  );
+                })}
+              </>
+            ))}
+          </div>
+        </div>
+        {/* 우측 페이드 스크롤 힌트 */}
+        <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-card to-transparent" />
       </div>
     </div>
   );

@@ -24,12 +24,18 @@ export function usePortfolio() {
   });
 
   const holdings = useQuery({
-    queryKey: ["portfolio", portfolioId, "holdings"],
+    queryKey: ["portfolio", portfolioId, "detail"],
     queryFn: () => portfolioApi.getHoldings(portfolioId!),
     enabled: !!portfolioId,
   });
 
-  const isLoading = (!!portfolioId) && (valuation.isLoading || diversification.isLoading || advice.isLoading || holdings.isLoading);
+  const correlation = useQuery({
+    queryKey: ["portfolio", portfolioId, "correlation"],
+    queryFn: () => portfolioApi.getCorrelation(portfolioId!),
+    enabled: !!portfolioId,
+  });
+
+  const isLoading = (!!portfolioId) && (valuation.isLoading || diversification.isLoading || advice.isLoading || holdings.isLoading || correlation.isLoading);
 
   // 방사형 차트와 종합 점수를 위한 건강 지표 도출
   const getHealthScore = () => {
@@ -61,6 +67,7 @@ export function usePortfolio() {
     diversification: diversification.data,
     advice: advice.data,
     holdings: holdings.data,
+    correlation: correlation.data,
     isLoading,
     health: getHealthScore(),
   };

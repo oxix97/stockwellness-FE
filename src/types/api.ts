@@ -456,6 +456,9 @@ export interface WatchlistItemListResponse {
   items: WatchlistStock[];
 }
 
+/** 포트폴리오 종목 간 상관관계 행렬 (ticker → ticker → 상관계수) */
+export type CorrelationMatrix = Record<string, Record<string, number>>;
+
 export interface CreateWatchlistGroupRequest {
   name: string;
 }
