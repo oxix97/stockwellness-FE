@@ -1,12 +1,14 @@
 import { apiClient } from "./client";
-import { 
-  PortfolioValuationResponse, 
+import {
+  PortfolioValuationResponse,
   PortfolioDiversificationResponse,
-  PortfolioRebalancingResponse, 
+  PortfolioRebalancingResponse,
   BacktestRequest,
   BacktestResponse,
-  HoldingStock,
-  PortfolioResponse
+  PortfolioItemResponse,
+  PortfolioResponse,
+  CorrelationMatrix,
+  CreatePortfolioRequest,
 } from "@/types/api";
 
 /**
@@ -21,14 +23,23 @@ export const portfolioApi = {
     const { data } = await apiClient.get("/v1/portfolios");
     return data;
   },
+
   /**
-   * 사용자 포트폴리오의 보유 종목 리스트를 조회합니다.
+   * 포트폴리오를 생성합니다.
+   * @returns 생성된 포트폴리오의 ID
+   */
+  create: async (body: CreatePortfolioRequest): Promise<number> => {
+    const { data } = await apiClient.post("/v1/portfolios", body);
+    return data;
+  },
+  /**
+   * 포트폴리오 상세 조회에서 보유 종목 리스트를 반환합니다.
    * @param portfolioId 포트폴리오 ID
    * @returns 보유 종목 리스트
    */
-  getHoldings: async (portfolioId: string): Promise<HoldingStock[]> => {
-    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/holdings`);
-    return data;
+  getHoldings: async (portfolioId: string): Promise<PortfolioItemResponse[]> => {
+    const { data } = await apiClient.get<PortfolioResponse>(`/v1/portfolios/${portfolioId}`);
+    return data.items;
   },
 
   /**
@@ -80,5 +91,15 @@ export const portfolioApi = {
   runBacktest: async (portfolioId: string, params: BacktestRequest): Promise<BacktestResponse> => {
     const { data } = await apiClient.post(`/v1/portfolios/${portfolioId}/analysis/backtest`, params);
     return data;
-  }
+  },
+
+  /**
+   * 포트폴리오 종목 간 상관관계 행렬을 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 종목 간 상관계수 행렬
+   */
+  getCorrelation: async (portfolioId: string): Promise<CorrelationMatrix> => {
+    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/correlation`);
+    return data;
+  },
 };

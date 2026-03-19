@@ -10,11 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
+import { usePortfolio } from "@/hooks/use-portfolio";
 
 export function More() {
   const navigate = useNavigate();
-  const { nickname, logout } = useAuthStore();
+  const { nickname, logout, joinedDate } = useAuthStore();
   const { theme, setTheme } = useTheme();
+  const { holdings, valuation } = usePortfolio();
 
   const handleLogout = () => {
     logout();
@@ -58,9 +60,24 @@ export function More() {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 pt-6 border-t border-primary/10">
-            <MetricItem label="가입일" value="2024.01" />
-            <MetricItem label="보유 종목" value="4개" />
-            <MetricItem label="총 수익률" value="+8.5%" highlight />
+            <MetricItem
+              label="가입일"
+              value={
+                joinedDate
+                  ? new Date(joinedDate).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit" }).replace(". ", ".").replace(".", "").slice(0, 7)
+                  : "2024.01"
+              }
+            />
+            <MetricItem label="보유 종목" value={`${holdings?.length ?? "-"}개`} />
+            <MetricItem
+              label="총 수익률"
+              value={
+                valuation?.totalReturnRate != null
+                  ? `${valuation.totalReturnRate >= 0 ? "+" : ""}${valuation.totalReturnRate.toFixed(1)}%`
+                  : "-"
+              }
+              highlight
+            />
           </div>
         </div>
       </div>

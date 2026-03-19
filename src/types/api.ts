@@ -41,6 +41,8 @@ export interface LoginResponse {
   accessToken: string;
   /** 리프레시 토큰 */
   refreshToken: string;
+  /** 가입일 (ISO-8601) */
+  joinedDate: string;
 }
 
 export interface ReissueRequest {
@@ -317,15 +319,37 @@ export interface PricePoint {
   adjClose: number;
   /** 거래량 */
   volume: number;
+  /** 거래대금 */
+  transactionAmt?: number | null;
+  /** 5일 이동평균선 */
+  ma5?: number | null;
+  /** 20일 이동평균선 */
+  ma20?: number | null;
+  /** 60일 이동평균선 */
+  ma60?: number | null;
+  /** 120일 이동평균선 */
+  ma120?: number | null;
+}
+
+/** 벤치마크 수익률 포인트 */
+export interface BenchmarkPoint {
+  /** 날짜 */
+  date: string;
+  /** 수익률 (%) */
+  returnRate: number;
 }
 
 export interface StockPriceHistoryResponse {
   /** 종목 코드 */
   ticker: string;
+  /** 종목명 */
+  stockName?: string;
+  /** 벤치마크 이름 (ex: KOSPI) */
+  benchmarkName?: string;
   /** 주가 이력 리스트 */
   prices: PricePoint[];
-  /** 벤치마크 데이터 */
-  benchmarks: PricePoint[];
+  /** 벤치마크 수익률 리스트 */
+  benchmarks: BenchmarkPoint[];
 }
 
 /**
@@ -454,4 +478,35 @@ export interface WatchlistItemListResponse {
   groupName: string;
   /** 종목 리스트 */
   items: WatchlistStock[];
+}
+
+/** 포트폴리오 종목 간 상관관계 행렬 (ticker → ticker → 상관계수) */
+export type CorrelationMatrix = Record<string, Record<string, number>>;
+
+export interface CreatePortfolioItemRequest {
+  symbol: string;
+  quantity: number;
+  purchasePrice: number;
+  currency: string;
+  assetType: string;
+  targetWeight: number;
+}
+
+export interface CreatePortfolioRequest {
+  name: string;
+  description: string;
+  items: CreatePortfolioItemRequest[];
+}
+
+export interface CreateWatchlistGroupRequest {
+  name: string;
+}
+
+export interface AddWatchlistItemRequest {
+  ticker: string;
+  note?: string;
+}
+
+export interface UpdateWatchlistItemNoteRequest {
+  note: string;
 }

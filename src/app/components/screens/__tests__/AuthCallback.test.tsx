@@ -46,9 +46,9 @@ describe("AuthCallback Component", () => {
 
   it("should show error if accessToken or refreshToken is missing", async () => {
     render(
-      <MemoryRouter initialEntries={["/auth/kakao/callback?accessToken=only_access"]}>
+      <MemoryRouter initialEntries={["/auth/callback?accessToken=only_access"]}>
         <Routes>
-          <Route path="/auth/:provider/callback" element={<AuthCallback />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </MemoryRouter>
     );
@@ -66,9 +66,9 @@ describe("AuthCallback Component", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/auth/kakao/callback?accessToken=bad&refreshToken=bad"]}>
+      <MemoryRouter initialEntries={["/auth/callback?accessToken=bad&refreshToken=bad"]}>
         <Routes>
-          <Route path="/auth/:provider/callback" element={<AuthCallback />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </MemoryRouter>
     );
@@ -84,9 +84,9 @@ describe("AuthCallback Component", () => {
     (portfolioApi.getMyPortfolios as any).mockResolvedValue(mockPortfolios);
 
     render(
-      <MemoryRouter initialEntries={["/auth/kakao/callback?accessToken=valid_at&refreshToken=valid_rt"]}>
+      <MemoryRouter initialEntries={["/auth/callback?accessToken=valid_at&refreshToken=valid_rt"]}>
         <Routes>
-          <Route path="/auth/:provider/callback" element={<AuthCallback />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </MemoryRouter>
     );

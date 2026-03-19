@@ -41,7 +41,7 @@ export const sectorApi = {
    * @returns 섹터 상세 인사이트, 기술적 지표, 주도주 정보
    */
   getSectorDetail: async (sectorCode: string, date?: string): Promise<SectorDetailResponse> => {
-    const data = await apiClient.get(`/v1/sectors/${sectorCode}`, { 
+    const data = await apiClient.get(`/v1/sectors/${sectorCode}/detail`, {
       params: { date } 
     });
     return data as unknown as SectorDetailResponse;

@@ -21,7 +21,7 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
       // 실제 카카오 리다이렉트 대신 우리 서비스의 콜백으로 직접 리다이렉트 시뮬레이션
       route.fulfill({
         status: 302,
-        headers: { Location: `/auth/kakao/callback?code=mock_code&state=${state}` }
+        headers: { Location: `/auth/callback?code=mock_code&state=${state}` }
       });
     });
 
@@ -57,7 +57,7 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
 
   test('E2E-02: CSRF Security Validation Failure', async ({ page }) => {
     // 1. 직접 잘못된 state를 가진 콜백 URL로 접근
-    await page.goto('/auth/kakao/callback?code=some_code&state=wrong_state');
+    await page.goto('/auth/callback?code=some_code&state=wrong_state');
 
     // 2. 검증: 보안 에러 토스트 확인
     await expect(page.getByText('보안 검증에 실패했습니다. 다시 시도해 주세요.')).toBeVisible();
@@ -77,7 +77,7 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
       capturedState = new URL(route.request().url()).searchParams.get('state');
       route.fulfill({
         status: 302,
-        headers: { Location: `/auth/kakao/callback?code=error_code&state=${capturedState}` }
+        headers: { Location: `/auth/callback?code=error_code&state=${capturedState}` }
       });
     });
 

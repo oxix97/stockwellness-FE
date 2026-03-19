@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { Skeleton } from "@/app/components/ui";
+import { toast } from "sonner";
 
 export function Watchlist() {
-  const { groups, useGroupItems } = useWatchlist();
+  const { groups, useGroupItems, createGroup, removeItem } = useWatchlist();
   const [activeGroup, setActiveGroup] = useState<number | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
 
   // 첫 번째 그룹이 로드되면 기본 활성화
   useEffect(() => {
@@ -17,6 +20,28 @@ export function Watchlist() {
 
   const itemsQuery = useGroupItems(activeGroup);
   const stocks = itemsQuery.data?.items || [];
+
+  const handleCreateGroup = () => {
+    const name = newGroupName.trim();
+    if (!name) return;
+    createGroup.mutate(name, {
+      onSuccess: () => {
+        setNewGroupName("");
+        setIsCreating(false);
+        toast.success("그룹이 생성되었습니다.");
+      },
+      onError: () => toast.error("그룹 생성에 실패했습니다."),
+    });
+  };
+
+  const handleRemoveItem = (e: React.MouseEvent, ticker: string) => {
+    e.preventDefault();
+    if (activeGroup === null) return;
+    removeItem.mutate({ groupId: activeGroup, ticker }, {
+      onSuccess: () => toast.success("종목이 삭제되었습니다."),
+      onError: () => toast.error("종목 삭제에 실패했습니다."),
+    });
+  };
 
   return (
     <div className="min-h-full">
@@ -49,10 +74,39 @@ export function Watchlist() {
                   <span style={{ fontSize: '15px', fontWeight: 600 }}>{group.name}</span>
                 </button>
               ))}
-              <button className="flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap bg-secondary text-secondary-foreground">
-                <Plus className="w-4 h-4" />
-                <span style={{ fontSize: '15px', fontWeight: 600 }}>새 그룹</span>
-              </button>
+
+              {isCreating ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCreateGroup();
+                      if (e.key === "Escape") { setIsCreating(false); setNewGroupName(""); }
+                    }}
+                    placeholder="그룹 이름"
+                    className="px-4 py-3 rounded-full bg-secondary text-foreground outline-none"
+                    style={{ fontSize: '15px', width: '120px' }}
+                  />
+                  <button
+                    onClick={handleCreateGroup}
+                    disabled={createGroup.isPending}
+                    className="px-4 py-3 rounded-full bg-primary text-primary-foreground"
+                    style={{ fontSize: '15px', fontWeight: 600 }}
+                  >
+                    추가
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className="flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap bg-secondary text-secondary-foreground"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span style={{ fontSize: '15px', fontWeight: 600 }}>새 그룹</span>
+                </button>
+              )}
             </>
           )}
         </div>
@@ -86,20 +140,28 @@ export function Watchlist() {
                       <div className="text-muted-foreground text-sm">{stock.ticker}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-foreground mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
-                      {["NVDA", "MSFT", "AAPL"].includes(stock.ticker)
-                        ? `$${stock.currentPrice}`
-                        : `₩${stock.currentPrice.toLocaleString()}`}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-foreground mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
+                        {stock.currency === "USD"
+                          ? `$${stock.currentPrice}`
+                          : `₩${stock.currentPrice.toLocaleString()}`}
+                      </div>
+                      <div
+                        className={`text-sm font-medium ${
+                          stock.fluctuationRate >= 0 ? "text-[#FF4756]" : "text-[#3182F6]"
+                        }`}
+                      >
+                        {stock.fluctuationRate >= 0 ? "+" : ""}
+                        {stock.fluctuationRate}%
+                      </div>
                     </div>
-                    <div
-                      className={`text-sm font-medium ${
-                        stock.fluctuationRate >= 0 ? "text-[#FF4756]" : "text-[#3182F6]"
-                      }`}
+                    <button
+                      onClick={(e) => handleRemoveItem(e, stock.ticker)}
+                      className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                     >
-                      {stock.fluctuationRate >= 0 ? "+" : ""}
-                      {stock.fluctuationRate}%
-                    </div>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </Link>

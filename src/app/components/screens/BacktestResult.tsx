@@ -156,7 +156,7 @@ export function BacktestResult() {
           <MetricCard label="연평균 수익률" value={`${metrics?.cagr}%`} sub="CAGR" color="text-primary" />
           <MetricCard label="최대 낙폭" value={`${metrics?.mdd}%`} sub="MDD" color="text-[#FF4756]" />
           <MetricCard label="위험 대비 수익" value={metrics?.sharpeRatio} sub="샤프 지수" />
-          <MetricCard label="시장 민감도" value="1.12" sub="Beta" />
+          <MetricCard label="시장 민감도" value={metrics?.beta ?? "-"} sub="Beta" />
         </div>
       </div>
     </div>

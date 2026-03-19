@@ -1,16 +1,93 @@
 import { Link, useNavigate } from "react-router";
-import { Activity } from "lucide-react";
+import { Activity, Plus } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
 import { usePortfolio } from "@/hooks/use-portfolio";
+import { portfolioApi } from "@/api/portfolio";
+import { useAuthStore } from "@/store/auth";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader, StockLogo } from "@/app/components/shared";
 import { formatCurrency } from "@/utils/format";
-import { PriceTrendLabel } from "@/app/components/shared/label/PriceTrendLabel";
-import { HoldingStock } from "@/types/api";
+import { PortfolioItemResponse } from "@/types/api";
+import { toast } from "sonner";
 
 export function Portfolio() {
   const navigate = useNavigate();
+  const portfolioId = useAuthStore((state) => state.portfolioId);
+  const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
   const { valuation, isLoading, health, holdings } = usePortfolio();
+  const [isCreating, setIsCreating] = useState(false);
+  const [portfolioName, setPortfolioName] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const handleCreate = async () => {
+    const name = portfolioName.trim();
+    if (!name) return;
+    setIsCreating(true);
+    try {
+      const newId = await portfolioApi.create({ name, description: "", items: [] });
+      setPortfolioId(String(newId));
+      setShowCreateModal(false);
+      toast.success("포트폴리오가 생성되었습니다.");
+    } catch {
+      toast.error("포트폴리오 생성에 실패했습니다.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  if (!portfolioId) {
+    return (
+      <div className="min-h-full flex flex-col items-center justify-center px-6 pb-20">
+        <div className="text-6xl mb-6">📊</div>
+        <div className="text-foreground font-bold text-2xl mb-2 text-center">
+          포트폴리오를 만들어보세요
+        </div>
+        <div className="text-muted-foreground text-center mb-10 font-medium">
+          나만의 포트폴리오를 구성하고<br />건강 진단부터 백테스트까지 활용해보세요.
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold text-lg shadow-lg"
+        >
+          <Plus className="w-5 h-5" />
+          포트폴리오 만들기
+        </button>
+
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+            <div className="bg-card w-full rounded-t-3xl p-6">
+              <div className="text-foreground font-bold text-xl mb-6">포트폴리오 이름</div>
+              <input
+                autoFocus
+                value={portfolioName}
+                onChange={(e) => setPortfolioName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                placeholder="예) 내 첫 포트폴리오"
+                className="w-full bg-secondary rounded-2xl px-5 py-4 text-foreground outline-none mb-4"
+                style={{ fontSize: "16px" }}
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 py-4 rounded-2xl bg-secondary text-foreground font-bold"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleCreate}
+                  disabled={isCreating || !portfolioName.trim()}
+                  className="flex-1 py-4 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-50"
+                >
+                  {isCreating ? "생성 중..." : "만들기"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -115,29 +192,24 @@ function HealthDiagnosisBanner({ score }: { score: number }) {
   );
 }
 
-function HoldingsList({ holdings }: { holdings: HoldingStock[] }) {
+function HoldingsList({ holdings }: { holdings: PortfolioItemResponse[] }) {
   return (
     <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
       {holdings.map((stock, index: number) => (
         <Link key={stock.symbol} to={`/stock/${stock.symbol}`}>
-          <motion.div 
+          <motion.div
             whileTap={{ backgroundColor: "var(--color-secondary)" }}
             className={`px-6 py-5 flex items-center justify-between active:bg-accent transition-colors ${index !== holdings.length - 1 ? "border-b border-border" : ""}`}
           >
             <div className="flex items-center gap-4">
-              <StockLogo name={stock.name} />
+              <StockLogo name={stock.symbol} />
               <div>
-                <div className="text-foreground font-bold">{stock.name}</div>
-                <div className="text-muted-foreground text-xs font-medium">{stock.shares}주</div>
+                <div className="text-foreground font-bold">{stock.symbol}</div>
+                <div className="text-muted-foreground text-xs font-medium">{stock.quantity}주</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-foreground font-bold">₩{formatCurrency(stock.currentPrice)}</div>
-              <PriceTrendLabel 
-                change={stock.isUp ? 1 : -1} 
-                returnRate={stock.return} 
-                className="text-xs justify-end" 
-              />
+              <div className="text-foreground font-bold">₩{formatCurrency(stock.purchasePrice)}</div>
             </div>
           </motion.div>
         </Link>

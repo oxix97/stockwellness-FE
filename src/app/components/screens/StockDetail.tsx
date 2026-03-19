@@ -1,44 +1,88 @@
 import { useState, useMemo } from "react";
 import { useParams } from "react-router";
-import { Heart, CandlestickChart } from "lucide-react";
-import { LineChart, Line, Tooltip, ResponsiveContainer } from "recharts";
+import { Heart } from "lucide-react";
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Customized } from "recharts";
 import { useStock } from "@/hooks/use-stock";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
-import { THEME } from "@/styles/theme";
 import { formatCurrency } from "@/utils/format";
 
-const PERIODS = ["1일", "1주", "1달", "1년", "3년"];
-const PERIOD_MAP: Record<string, string> = {
-  "1일": "1W", "1주": "1W", "1달": "1M", "1년": "1Y", "3년": "ALL",
+const PERIODS = ["일봉", "주봉", "월봉"];
+const PERIOD_CONFIG: Record<string, { period: string; frequency: string }> = {
+  "일봉": { period: "3M",  frequency: "DAILY"   },
+  "주봉": { period: "6M",  frequency: "WEEKLY"  },
+  "월봉": { period: "ALL", frequency: "MONTHLY" },
 };
 
 export function StockDetail() {
   const { symbol } = useParams();
-  const [periodLabel, setPeriodLabel] = useState("1년");
+  const [periodLabel, setPeriodLabel] = useState("일봉");
   const [isFavorite, setIsFavorite] = useState(false);
   const { useHistory, useReturns } = useStock();
 
   const ticker = symbol || "";
-  const apiPeriod = PERIOD_MAP[periodLabel] || "1Y";
+  const { period: apiPeriod, frequency: apiFrequency } = PERIOD_CONFIG[periodLabel] || PERIOD_CONFIG["일봉"];
 
-  const history = useHistory(ticker, apiPeriod);
-  const returns = useReturns(ticker, apiPeriod);
+  const history = useHistory(ticker, apiPeriod, apiFrequency);
+  // 어제 대비 오늘 계산용 — 항상 최근 일봉 2개 필요
+  const dailyHistory = useHistory(ticker, "1M", "DAILY");
 
-  const { chartData, latestPrice, change, changePercent, isUp } = useMemo(() => {
+  // 수익률 비교: 기간 고정 호출
+  const returns1W  = useReturns(ticker, "1W");
+  const returns1M  = useReturns(ticker, "1M");
+  const returns3M  = useReturns(ticker, "3M");
+  const returns1Y  = useReturns(ticker, "1Y");
+
+  const stockName = history.data?.stockName;
+  const benchmarkName = history.data?.benchmarkName;
+
+  const dailyRate = useMemo(() => {
+    const prices = dailyHistory.data?.prices || [];
+    if (prices.length < 2) return null;
+    const prev = prices[prices.length - 2].close;
+    const today = prices[prices.length - 1].close;
+    if (!prev) return null;
+    return ((today - prev) / prev) * 100;
+  }, [dailyHistory.data]);
+
+  const { candleData, latestPrice } = useMemo(() => {
     const prices = history.data?.prices || [];
-    if (prices.length === 0) return { chartData: [], latestPrice: 0, change: 0, changePercent: "0", isUp: true };
+    const benchmarks = history.data?.benchmarks || [];
+    if (prices.length === 0) return { candleData: [], latestPrice: 0 };
 
     const first = prices[0].close;
     const latest = prices[prices.length - 1].close;
-    const diff = latest - first;
-    
+
+    // 전체 가격 범위 (최소 몸통 높이 계산용)
+    const allPrices = prices.flatMap((p) => [p.high, p.low]);
+    const priceRange = Math.max(...allPrices) - Math.min(...allPrices);
+    const minBodyHeight = priceRange * 0.003;
+
+    // 벤치마크: {date, returnRate}를 날짜 기준 Map으로 만들어 빠르게 조회
+    const benchmarkMap = new Map(benchmarks.map((b) => [b.date, b.returnRate]));
+
     return {
-      chartData: prices.map(p => ({ time: p.date, price: p.close })),
+      candleData: prices.map((p) => {
+        const returnRate = benchmarkMap.get(p.date);
+        return {
+          date: p.date,
+          open: p.open,
+          close: p.close,
+          high: p.high,
+          low: p.low,
+          // 스택드 바 방식: bodyLow(투명 베이스) + bodyHeight(색상 몸통)
+          bodyLow: Math.min(p.open, p.close),
+          bodyHeight: Math.max(Math.abs(p.close - p.open), minBodyHeight),
+          isUp: p.close >= p.open,
+          volume: p.volume,
+          ma5: p.ma5 ?? null,
+          ma20: p.ma20 ?? null,
+          ma60: p.ma60 ?? null,
+          // 벤치마크 수익률을 종목 시작가 기준으로 정규화
+          benchmark: returnRate != null ? first * (1 + returnRate / 100) : null,
+        };
+      }),
       latestPrice: latest,
-      change: diff,
-      changePercent: ((diff / first) * 100).toFixed(2),
-      isUp: diff >= 0
     };
   }, [history.data]);
 
@@ -53,7 +97,7 @@ export function StockDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background">
       <header className="bg-card px-6 py-4 flex items-center justify-between border-b border-border">
         <PageHeader showBack />
         <button onClick={() => setIsFavorite(!isFavorite)} className="p-2 -mr-2">
@@ -61,16 +105,14 @@ export function StockDetail() {
         </button>
       </header>
 
-      <PriceSection 
-        ticker={ticker} 
-        latestPrice={latestPrice} 
-        change={change} 
-        changePercent={changePercent} 
-        isUp={isUp} 
-        periodLabel={periodLabel} 
+      <PriceSection
+        ticker={ticker}
+        stockName={stockName}
+        latestPrice={latestPrice}
+        dailyRate={dailyRate}
       />
 
-      <div className="bg-card px-6 py-4 flex gap-2 overflow-x-auto border-b border-border scrollbar-hide">
+      <div className="bg-card px-6 py-4 flex gap-2 border-b border-border">
         {PERIODS.map((p) => (
           <button
             key={p}
@@ -84,12 +126,19 @@ export function StockDetail() {
         ))}
       </div>
 
-      <ChartSection data={chartData} isUp={isUp} />
+      <ChartSection data={candleData} periodLabel={periodLabel} benchmarkName={benchmarkName} />
 
-      <ComparisonSection returns={returns.data} periodLabel={periodLabel} isLoading={returns.isLoading} isUp={isUp} />
+      <ComparisonSection
+        returnsData={[
+          { label: "1주",  data: returns1W.data,  isLoading: returns1W.isLoading  },
+          { label: "1달",  data: returns1M.data,  isLoading: returns1M.isLoading  },
+          { label: "3달",  data: returns3M.data,  isLoading: returns3M.isLoading  },
+          { label: "1년",  data: returns1Y.data,  isLoading: returns1Y.isLoading  },
+        ]}
+      />
 
-      <div className="fixed bottom-20 left-0 right-0 px-6 py-4 bg-background/80 backdrop-blur-md">
-        <button className="w-full bg-primary text-primary-foreground rounded-2xl py-5 text-xl font-bold shadow-2xl active:scale-95 transition-transform">
+      <div className="px-6 pb-12 pt-2">
+        <button className="w-full bg-primary text-primary-foreground rounded-2xl py-5 text-xl font-bold shadow-lg active:scale-95 transition-transform">
           내 포트폴리오에 담기
         </button>
       </div>
@@ -97,95 +146,219 @@ export function StockDetail() {
   );
 }
 
-function PriceSection({ ticker, latestPrice, change, changePercent, isUp, periodLabel }: any) {
+function PriceSection({ ticker, stockName, latestPrice, dailyRate }: any) {
+  const isUp = dailyRate != null && dailyRate >= 0;
   return (
     <div className="bg-card px-6 py-10 border-b border-border">
-      <div className="text-muted-foreground mb-2 font-bold text-lg">{ticker}</div>
-      <div className="text-foreground mb-4 font-bold text-5xl">
+      <div className="text-muted-foreground mb-1 font-medium text-sm">{ticker}</div>
+      {stockName && <div className="text-foreground mb-2 font-bold text-lg">{stockName}</div>}
+      <div className="text-foreground mb-2 font-bold text-5xl">
         ₩{formatCurrency(latestPrice)}
       </div>
-      <div className="flex items-center gap-3">
-        <span className={`${isUp ? "text-up" : "text-down"} font-bold text-xl`}>
-          {periodLabel} 전보다 {isUp ? "+" : ""}₩{formatCurrency(Math.abs(change))}
-        </span>
-        <span className={`${isUp ? "text-up" : "text-down"} font-bold text-xl`}>
-          ({isUp ? "+" : ""}{changePercent}% {isUp ? "🔺" : "🔻"})
-        </span>
-      </div>
+      {dailyRate != null && (
+        <div className={`font-bold text-lg ${isUp ? "text-up" : "text-down"}`}>
+          어제보다 {isUp ? "+" : ""}{dailyRate.toFixed(2)}%
+        </div>
+      )}
     </div>
   );
 }
 
-function ChartSection({ data, isUp }: { data: any[]; isUp: boolean }) {
+/** 캔들 wick(꼬리) 렌더링 — Customized로 high~low 선을 직접 그림 */
+function CandleWicks({ data, xAxisMap, yAxisMap }: any) {
+  const xAxis = xAxisMap && (Object.values(xAxisMap)[0] as any);
+  const yAxis = yAxisMap && (Object.values(yAxisMap)[0] as any);
+  const xScale = xAxis?.scale;
+  const yScale = yAxis?.scale;
+  if (!xScale || !yScale) return null;
+
+  const bandwidth = xScale.bandwidth ? xScale.bandwidth() : 10;
+  const offset = bandwidth / 2;
+
+  return (
+    <g>
+      {(data as any[]).map((d: any, i: number) => {
+        const x = xScale(d.date);
+        if (x == null) return null;
+        const cx = x + offset;
+        const yHigh = yScale(d.high);
+        const yLow = yScale(d.low);
+        const yBodyTop = yScale(Math.max(d.open, d.close));
+        const yBodyBottom = yScale(Math.min(d.open, d.close));
+        const color = d.isUp ? "#FF4756" : "#3182F6";
+        return (
+          <g key={i}>
+            {/* 위 꼬리 */}
+            <line x1={cx} y1={yHigh} x2={cx} y2={yBodyTop} stroke={color} strokeWidth={1} />
+            {/* 아래 꼬리 */}
+            <line x1={cx} y1={yBodyBottom} x2={cx} y2={yLow} stroke={color} strokeWidth={1} />
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+function ChartSection({ data, periodLabel, benchmarkName }: any) {
+  const labelMap: Record<string, string> = { "일봉": "일봉", "주봉": "주봉", "월봉": "월봉" };
+  const maxVolume = Math.max(...data.map((d: any) => d.volume || 0), 1);
+  const interval = Math.floor(data.length / 4);
+
   return (
     <div className="bg-card px-6 py-10">
-      <div className="h-72">
+      <div className="mb-4">
+        <span className="text-muted-foreground text-sm font-bold">{labelMap[periodLabel]}</span>
+      </div>
+      {/* 범례 */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-[10px] font-bold">
+        <span className="flex items-center gap-1">
+          <span className="w-4 h-0.5 inline-block rounded" style={{ backgroundColor: "#F59E0B" }} />
+          <span className="text-muted-foreground">MA5</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-4 h-0.5 inline-block rounded" style={{ backgroundColor: "#8B5CF6" }} />
+          <span className="text-muted-foreground">MA20</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-4 h-0.5 inline-block rounded" style={{ backgroundColor: "#3B82F6" }} />
+          <span className="text-muted-foreground">MA60</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <svg width="16" height="4" viewBox="0 0 16 4"><line x1="0" y1="2" x2="16" y2="2" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4 2" /></svg>
+          <span className="text-muted-foreground">{benchmarkName || "벤치마크"}</span>
+        </span>
+      </div>
+
+      {/* 캔들 + 라인 차트 */}
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <Tooltip
-              content={<CustomTooltip isUp={isUp} />}
-              cursor={{ stroke: '#9CA3AF', strokeWidth: 1, strokeDasharray: '5 5' }}
+          <ComposedChart data={data} margin={{ left: 0, right: 0 }}>
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 9, fontWeight: 500 }}
+              stroke="#9CA3AF"
+              interval={interval}
+              tickFormatter={(v) => v.slice(5)}
             />
+            <YAxis hide domain={["auto", "auto"]} />
+            <Tooltip content={<CandleTooltip />} cursor={{ stroke: "#9CA3AF", strokeWidth: 1, strokeDasharray: "4 4" }} />
+
+            {/* 투명 베이스: bodyLow 위치까지 올려줌 */}
+            <Bar dataKey="bodyLow" stackId="candle" fill="transparent" stroke="none" isAnimationActive={false} maxBarSize={10} />
+            {/* 캔들 몸통: bodyLow에서 bodyHeight만큼 */}
+            <Bar dataKey="bodyHeight" stackId="candle" isAnimationActive={false} maxBarSize={10} radius={[1, 1, 1, 1]}>
+              {data.map((entry: any, i: number) => (
+                <Cell key={i} fill={entry.isUp ? "#FF4756" : "#3182F6"} />
+              ))}
+            </Bar>
+
+            {/* wick(꼬리) */}
+            <Customized component={(props: any) => <CandleWicks {...props} data={data} />} />
+
+            {/* MA 라인들 */}
+            <Line type="monotone" dataKey="ma5"  stroke="#F59E0B" strokeWidth={1} dot={false} animationDuration={0} connectNulls />
+            <Line type="monotone" dataKey="ma20" stroke="#8B5CF6" strokeWidth={1} dot={false} animationDuration={0} connectNulls />
+            <Line type="monotone" dataKey="ma60" stroke="#3B82F6" strokeWidth={1} dot={false} animationDuration={0} connectNulls />
+
+            {/* 벤치마크 라인 — 회색 점선 */}
             <Line
               type="monotone"
-              dataKey="price"
-              stroke={isUp ? THEME.COLOR.UP : THEME.COLOR.DOWN}
-              strokeWidth={4}
+              dataKey="benchmark"
+              stroke="#9CA3AF"
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
               dot={false}
-              animationDuration={1000}
+              animationDuration={600}
+              connectNulls
             />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex justify-end mt-6">
-        <button className="flex items-center gap-2 text-muted-foreground font-semibold hover:text-primary transition-colors">
-          <CandlestickChart className="w-5 h-5" />
-          <span>캔들로 보기</span>
-        </button>
+
+      {/* 거래량 패널 */}
+      <div className="h-16 mt-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={{ left: 0, right: 0 }}>
+            <XAxis dataKey="date" hide />
+            <YAxis hide domain={[0, maxVolume * 1.2]} />
+            <Tooltip content={<CandleTooltip />} cursor={{ stroke: "#9CA3AF", strokeWidth: 1, strokeDasharray: "4 4" }} />
+            <Bar dataKey="volume" isAnimationActive={false} maxBarSize={10} radius={[1, 1, 0, 0]}>
+              {data.map((entry: any, i: number) => (
+                <Cell key={i} fill={entry.isUp ? "#FF475640" : "#3182F640"} />
+              ))}
+            </Bar>
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
+      <div className="text-[9px] text-muted-foreground mt-0.5 font-medium">거래량</div>
     </div>
   );
 }
 
-function CustomTooltip({ active, payload, isUp }: any) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-card/95 backdrop-blur-md border border-border p-4 rounded-2xl shadow-2xl">
-        <div className="text-muted-foreground text-[10px] font-bold uppercase mb-1">
-          {new Date(payload[0].payload.time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-        </div>
-        <div className={`text-xl font-bold ${isUp ? "text-[#FF4756]" : "text-[#3182F6]"}`}>
-          ₩{payload[0].value.toLocaleString()}
-        </div>
+function CandleTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="bg-card/95 backdrop-blur-md border border-border p-4 rounded-2xl shadow-2xl min-w-[160px]">
+      <div className="text-muted-foreground text-[10px] font-bold uppercase mb-2">{d.date}</div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-bold">
+        <span className="text-muted-foreground">시가</span>
+        <span className="text-foreground text-right">₩{d.open?.toLocaleString()}</span>
+        <span className="text-muted-foreground">고가</span>
+        <span className="text-[#FF4756] text-right">₩{d.high?.toLocaleString()}</span>
+        <span className="text-muted-foreground">저가</span>
+        <span className="text-[#3182F6] text-right">₩{d.low?.toLocaleString()}</span>
+        <span className="text-muted-foreground">종가</span>
+        <span className={`${d.isUp ? "text-[#FF4756]" : "text-[#3182F6]"} text-right`}>₩{d.close?.toLocaleString()}</span>
       </div>
-    );
-  }
-  return null;
+      {d.volume != null && (
+        <div className="mt-2 pt-2 border-t border-border grid grid-cols-2 gap-x-4 text-xs font-bold">
+          <span className="text-muted-foreground">거래량</span>
+          <span className="text-foreground text-right">{d.volume?.toLocaleString()}</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function ComparisonSection({ returns, periodLabel, isLoading, isUp }: any) {
+function ComparisonSection({ returnsData }: any) {
   return (
     <div className="px-6 py-10">
       <div className="bg-card rounded-3xl p-8 shadow-sm border border-border">
-        <div className="text-foreground mb-8 font-bold text-2xl">수익률 비교</div>
-        {isLoading ? (
-          <Skeleton className="h-24 w-full rounded-2xl" />
-        ) : (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground font-medium">종목 수익률 ({periodLabel})</span>
-              <span className={`${isUp ? "text-up" : "text-down"} font-bold text-xl`}>
-                 {returns?.stockReturnRate}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center border-t border-border pt-6">
-              <span className="text-muted-foreground font-medium">벤치마크 ({returns?.period})</span>
-              <span className="text-foreground font-bold text-xl">
-                 {returns?.benchmarkReturnRate}%
-              </span>
-            </div>
-          </div>
-        )}
+        <div className="text-foreground mb-6 font-bold text-2xl">수익률 비교</div>
+        {/* 헤더 */}
+        <div className="grid grid-cols-3 text-xs font-bold text-muted-foreground mb-3">
+          <span>기간</span>
+          <span className="text-center">종목</span>
+          <span className="text-right">벤치마크</span>
+        </div>
+        <div className="space-y-3">
+          {returnsData.map(({ label, data, isLoading }: any) => {
+            const stockRate = data?.stockReturnRate;
+            const benchRate = data?.benchmarkReturnRate;
+            const isUp = stockRate != null && stockRate >= 0;
+            return (
+              <div key={label} className="grid grid-cols-3 items-center py-3 border-t border-border">
+                <span className="text-muted-foreground font-medium text-sm">{label}</span>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-4 w-12 mx-auto rounded" />
+                    <Skeleton className="h-4 w-12 ml-auto rounded" />
+                  </>
+                ) : (
+                  <>
+                    <span className={`text-center font-bold text-sm ${isUp ? "text-up" : "text-down"}`}>
+                      {stockRate != null ? `${stockRate > 0 ? "+" : ""}${stockRate}%` : "-"}
+                    </span>
+                    <span className="text-right font-bold text-sm text-foreground">
+                      {benchRate != null ? `${benchRate > 0 ? "+" : ""}${benchRate}%` : "-"}
+                    </span>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
