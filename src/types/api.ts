@@ -455,3 +455,16 @@ export interface WatchlistItemListResponse {
   /** 종목 리스트 */
   items: WatchlistStock[];
 }
+
+export interface CreateWatchlistGroupRequest {
+  name: string;
+}
+
+export interface AddWatchlistItemRequest {
+  ticker: string;
+  note?: string;
+}
+
+export interface UpdateWatchlistItemNoteRequest {
+  note: string;
+}
