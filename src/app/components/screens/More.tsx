@@ -68,7 +68,7 @@ export function More() {
                   : "2024.01"
               }
             />
-            <MetricItem label="보유 종목" value={`${holdings?.length ?? "-"}개`} />
+            <MetricItem label="보유 종목" value={`${holdings?.items?.length ?? "-"}개`} />
             <MetricItem
               label="총 수익률"
               value={

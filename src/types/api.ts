@@ -7,15 +7,26 @@ export interface FieldError {
   reason: string;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;       // @JsonProperty("success") 반영
-  status: number;         // HTTP 상태 코드
-  code: string;           // 서비스 내부 코드
-  message: string;        // 응답 메시지
-  data: T;                // 실제 비즈니스 데이터
-  timestamp: string;      // 응답 생성 시간 (ISO-8601)
-  traceId: string | null; // 에러 추적용 ID
-  errors: FieldError[];   // 상세 필드 에러 목록
+/** 성공 응답 래퍼 — 백엔드 실제 구조 */
+export interface SuccessEnvelope<T> {
+  success: boolean;
+  status: number;
+  code: string;
+  message: string;
+  data: T;
+  timestamp: string;
+  traceId: string | null;
+  errors: FieldError[];
+}
+
+/** 에러 응답 래퍼 */
+export interface ErrorEnvelope {
+  status: number;
+  code: string;
+  message: string;
+  timestamp: string;
+  traceId: string | null;
+  errors: FieldError[];
 }
 
 /**
@@ -472,7 +483,7 @@ export interface CreatePortfolioItemRequest {
   quantity: number;
   purchasePrice: number;
   currency: string;
-  assetType: string;
+  assetType: "STOCK" | "CASH";
   targetWeight: number;
 }
 
