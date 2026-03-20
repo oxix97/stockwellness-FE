@@ -11,8 +11,7 @@ export interface MarketIndex {
 
 /**
  * 시장 지수 데이터 훅 (KOSPI / KOSDAQ / S&P500).
- * 백엔드 API: GET /v1/market/indexes
- * — 엔드포인트 확정 후 연동 (#67 참고)
+ * BE: GET /api/v1/market/indexes — MarketIndexService → LoadBenchmarkPort
  */
 export function useMarketIndex() {
   return useQuery<MarketIndex[]>({

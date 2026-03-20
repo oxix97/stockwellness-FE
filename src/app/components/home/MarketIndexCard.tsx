@@ -4,7 +4,6 @@ import { useMarketIndex, MarketIndex } from "@/hooks/use-market-index";
 
 /**
  * Task #67 — 시장 인덱스 미니카드 (KOSPI / KOSDAQ / S&P500)
- * 백엔드 GET /v1/market/indexes 연동 전까지 로딩/에러 상태로 표시
  */
 export function MarketIndexSection() {
   const { data, isLoading } = useMarketIndex();

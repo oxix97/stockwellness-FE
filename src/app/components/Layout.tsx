@@ -4,6 +4,7 @@ import { Home, Star, Wallet, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { AppBar } from "./AppBar";
 import { GlobalSearch } from "./GlobalSearch";
+import { useMe } from "@/hooks/use-member";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "홈", size: 24 },
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
 export function Layout() {
   const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  useMe(); // 재진입 시 서버에서 최신 프로필 조회 → Zustand 갱신
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

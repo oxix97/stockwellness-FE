@@ -15,7 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/app/components/ui";
 import { usePortfolio } from "@/hooks/use-portfolio";
-import { apiClient } from "@/api/client";
+import { memberApi } from "@/api/member";
 
 /**
  * Task #84 ~ #87 — 마이 탭 완성
@@ -39,7 +39,7 @@ export function More() {
 
   const handleWithdraw = async () => {
     try {
-      await apiClient.delete("/v1/members/me");
+      await memberApi.withdraw();
       logout();
       navigate("/login");
       toast.success("탈퇴되었습니다.");
@@ -222,7 +222,7 @@ function NicknameEditModal({
     if (!trimmed) return;
     setSaving(true);
     try {
-      await apiClient.put("/v1/members/me", { nickname: trimmed });
+      await memberApi.updateProfile(trimmed);
       setNickname(trimmed);
       toast.success("닉네임이 변경되었습니다.");
       onClose();
