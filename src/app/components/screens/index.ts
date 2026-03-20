@@ -5,6 +5,7 @@ export * from "./HealthDiagnosis";
 export * from "./Home";
 export * from "./Login";
 export * from "./More";
+export * from "./NotificationSettings";
 export * from "./Portfolio";
 export * from "./Search";
 export * from "./StockDetail";

@@ -34,6 +34,8 @@ interface UserState {
      * @param id 포트폴리오 ID (문자열 혹은 숫자)
      */
     setPortfolioId: (id: string | null) => void;
+    /** 닉네임을 변경합니다. */
+    setNickname: (nickname: string) => void;
     /**
      * 로그아웃을 수행하고 모든 상태를 초기화합니다.
      */
@@ -64,6 +66,7 @@ export const useAuthStore = create<UserState>()(
                 localStorage.setItem("refreshToken", data.refreshToken);
             },
             setPortfolioId: (id) => set({ portfolioId: id }),
+            setNickname: (nickname) => set({ nickname }),
             logout: () => {
                 set({
                     memberId: null,
