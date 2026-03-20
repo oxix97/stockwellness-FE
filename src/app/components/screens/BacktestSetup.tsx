@@ -56,9 +56,9 @@ export function BacktestSetup() {
 
   // 보유 종목을 초기 포트폴리오로 설정
   useEffect(() => {
-    if (holdings && holdings.length > 0) {
+    if (holdings && holdings.items.length > 0) {
       setPortfolio(
-        holdings.map((item) => ({
+        holdings.items.map((item) => ({
           symbol: item.symbol,
           name: item.symbol, // PortfolioItemResponse에 name 미제공 — symbol로 대체
           weight: item.targetWeight,
