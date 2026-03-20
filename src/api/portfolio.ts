@@ -5,7 +5,6 @@ import {
   PortfolioRebalancingResponse,
   BacktestRequest,
   BacktestResponse,
-  PortfolioItemResponse,
   PortfolioResponse,
   CorrelationMatrix,
   CreatePortfolioRequest,
@@ -37,9 +36,9 @@ export const portfolioApi = {
    * @param portfolioId 포트폴리오 ID
    * @returns 보유 종목 리스트
    */
-  getHoldings: async (portfolioId: string): Promise<PortfolioItemResponse[]> => {
+  getHoldings: async (portfolioId: string): Promise<PortfolioResponse> => {
     const { data } = await apiClient.get<PortfolioResponse>(`/v1/portfolios/${portfolioId}`);
-    return data.items;
+    return data;
   },
 
   /**
