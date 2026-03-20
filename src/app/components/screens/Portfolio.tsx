@@ -116,8 +116,8 @@ export function Portfolio() {
            <button className="text-primary text-sm font-semibold">편집</button>
         </div>
 
-        {holdings && holdings.items.length > 0 ? (
-          <HoldingsList holdings={holdings.items} />
+        {holdings && (holdings.items?.length ?? 0) > 0 ? (
+          <HoldingsList holdings={holdings.items ?? []} />
         ) : (
           <div className="bg-card rounded-3xl p-8 text-center shadow-sm border border-border">
             <div className="text-muted-foreground mb-2">아직 보유한 주식이 없어요.</div>

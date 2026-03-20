@@ -7,10 +7,16 @@ export interface FieldError {
   reason: string;
 }
 
-/** 성공 응답 래퍼 — 백엔드 실제 구조: { data, timestamp } */
+/** 성공 응답 래퍼 — 백엔드 실제 구조 */
 export interface SuccessEnvelope<T> {
+  success: boolean;
+  status: number;
+  code: string;
+  message: string;
   data: T;
   timestamp: string;
+  traceId: string | null;
+  errors: FieldError[];
 }
 
 /** 에러 응답 래퍼 */
