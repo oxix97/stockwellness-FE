@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import { Layout } from "@/app/components/Layout";
 import {
   Home,
@@ -6,6 +6,7 @@ import {
   Portfolio,
   Watchlist,
   More,
+  NotificationSettings,
   StockDetail,
   HealthDiagnosis,
   BacktestSetup,
@@ -20,10 +21,11 @@ export const router = createBrowserRouter([
     Component: Layout,
     children: [
       { index: true, Component: Home },
-      { path: "search", Component: Search },
+      { path: "search", element: <Navigate to="/" replace /> },
       { path: "portfolio", Component: Portfolio },
       { path: "watchlist", Component: Watchlist },
       { path: "more", Component: More },
+      { path: "more/notifications", Component: NotificationSettings },
     ],
   },
   {

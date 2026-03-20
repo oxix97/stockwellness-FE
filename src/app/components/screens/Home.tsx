@@ -1,17 +1,19 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import { TrendingUp, Flame } from "lucide-react";
+import { Flame, TrendingUp, BarChart2, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
 import { Skeleton } from "@/app/components/ui";
-import { PageHeader, Section } from "@/app/components/shared";
-import { formatCurrency } from "@/utils/format";
+import { Section } from "@/app/components/shared";
+import { formatCurrency, formatPercent } from "@/utils/format";
+import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
+import { SectorBottomSheet } from "@/app/components/home/SectorBottomSheet";
+import { SupplyDemandSection } from "@/app/components/home/SupplyDemandSection";
+import { NewListingsSection } from "@/app/components/home/NewListingsSection";
 
-/**
- * 섹터 이름에 따른 적절한 이모지를 반환합니다.
- */
 const getSectorIcon = (name: string) => {
   if (name.includes("바이오") || name.includes("제약")) return "💊";
   if (name.includes("반도체") || name.includes("전기전자")) return "⚡";
@@ -25,145 +27,184 @@ const getSectorIcon = (name: string) => {
 export function Home() {
   const { valuation, isLoading: isValuationLoading } = usePortfolio();
   const portfolioId = useAuthStore((state) => state.portfolioId);
+  const nickname = useAuthStore((state) => state.nickname);
   const { popular } = useStock();
   const { data: sectors, isLoading: isSectorsLoading } = useSector();
 
+  // 섹터 바텀시트 상태
+  const [selectedSector, setSelectedSector] = useState<(typeof sectors)[number] | null>(null);
+
   return (
-    <div className="min-h-full pb-20">
-      <PageHeader logo showNotifications />
-      
-      <div className="px-6 py-4">
-         <motion.div 
-           initial={{ opacity: 0, x: -20 }}
-           animate={{ opacity: 1, x: 0 }}
-           className="text-foreground font-bold text-3xl leading-tight"
-         >
-           투자자님,<br />오늘의 증시는 맑음이에요 ☀️
-         </motion.div>
+    <div className="min-h-full pb-6">
+      {/* 인사 */}
+      <div className="px-4 py-4">
+        <motion.p
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-foreground font-bold text-2xl leading-snug"
+        >
+          {nickname ?? "투자자"}님,<br />오늘의 증시는 맑음이에요 ☀️
+        </motion.p>
       </div>
 
+      {/* 시장 인덱스 미니카드 */}
+      <Section title="시장 현황" icon={BarChart2}>
+        <MarketIndexSection />
+      </Section>
+
+      {/* 포트폴리오 수익률 요약 (포트폴리오 있을 때만) */}
       {portfolioId && (
-        <AssetSummaryCard valuation={valuation} isLoading={isValuationLoading} />
+        <div className="px-4 mb-2">
+          <AssetSummaryCard valuation={valuation} isLoading={isValuationLoading} />
+        </div>
       )}
-      
-      <Section title="지금 AI 어드바이저가 주목하는 섹터" icon={Flame}>
-        <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
-          {isSectorsLoading ? (
-            [1, 2, 3].map((i) => (
-              <div key={i} className="min-w-[280px]">
-                <Skeleton className="h-[160px] w-full rounded-3xl" />
-              </div>
-            ))
-          ) : sectors && sectors.length > 0 ? (
-            sectors.map((sector, index) => (
-              <motion.div
-                key={sector.sectorCode}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <SectorCard sector={sector} />
-              </motion.div>
-            ))
-          ) : (
-            <div className="text-muted-foreground text-sm py-4">추천 섹터 정보를 불러올 수 없습니다.</div>
-          )}
+
+      {/* 섹터 트렌드 캐러셀 */}
+      <Section title="AI가 주목하는 섹터" icon={Flame}>
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          {isSectorsLoading
+            ? [1, 2, 3].map((i) => (
+                <div key={i} className="min-w-[240px]">
+                  <Skeleton className="h-[140px] w-full rounded-2xl" />
+                </div>
+              ))
+            : sectors?.map((sector, index) => (
+                <motion.div
+                  key={sector.sectorCode}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.08 }}
+                  className="min-w-[240px]"
+                >
+                  <SectorCard
+                    sector={sector}
+                    onTap={() => setSelectedSector(sector)}
+                  />
+                </motion.div>
+              ))}
         </div>
       </Section>
 
+      {/* 수급 상위 섹터 */}
+      <Section title="기관·외국인 수급 상위" icon={Zap}>
+        <SupplyDemandSection />
+      </Section>
+
+      {/* 신규 상장 */}
+      <Section title="신규 상장" icon={TrendingUp}>
+        <NewListingsSection />
+      </Section>
+
+      {/* 인기 검색 */}
       <Section title="실시간 인기 검색" icon={TrendingUp}>
         <TrendingList stocks={popular.data} isLoading={popular.isLoading} />
       </Section>
+
+      {/* 섹터 바텀시트 */}
+      <SectorBottomSheet
+        sector={selectedSector}
+        onClose={() => setSelectedSector(null)}
+      />
     </div>
   );
 }
 
 function AssetSummaryCard({ valuation, isLoading }: any) {
-  const totalValue = valuation?.currentTotalValue ?? 0;
-  const dailyGain = valuation?.dailyProfitLoss ?? 0;
-  const dailyReturn = valuation?.dailyReturnRate ?? 0;
+  const totalReturn = valuation?.totalReturnRate ?? 0;
+  const totalProfitLoss = valuation?.totalProfitLoss ?? 0;
+  const isUp = totalReturn >= 0;
 
   return (
-    <div className="px-6 py-6">
-      <Link to="/portfolio">
-        <motion.div 
-          whileTap={{ scale: 0.98 }}
-          whileHover={{ y: -2 }}
-          className="bg-card rounded-3xl p-6 shadow-sm border border-border transition-all"
-        >
-          <div className="text-muted-foreground mb-2 font-medium">현재 내 자산</div>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-48" />
-              <Skeleton className="h-6 w-32" />
+    <Link to="/portfolio">
+      <motion.div
+        whileTap={{ scale: 0.98 }}
+        className="bg-card rounded-2xl p-4 shadow-sm border border-border"
+      >
+        <div className="text-muted-foreground text-xs mb-1 font-medium">내 포트폴리오 수익률</div>
+        {isLoading ? (
+          <div className="space-y-1.5">
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-5 w-24" />
+          </div>
+        ) : (
+          <>
+            <div
+              className="font-bold text-3xl tabular-nums"
+              style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
+            >
+              {isUp ? "+" : ""}
+              {totalReturn.toFixed(2)}%
             </div>
-          ) : (
-            <>
-              <div className="text-foreground mb-3 font-bold text-4xl">
-                ₩ {formatCurrency(totalValue)}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`${dailyGain >= 0 ? "text-up" : "text-down"} font-bold text-lg`}>
-                  오늘 {dailyGain >= 0 ? "+" : ""}₩ {formatCurrency(Math.abs(dailyGain))}
-                </span>
-                <span className={`${dailyGain >= 0 ? "text-up" : "text-down"} font-bold text-lg`}>
-                  ({dailyReturn}% {dailyGain >= 0 ? "🔺" : "🔻"})
-                </span>
-              </div>
-            </>
-          )}
-        </motion.div>
-      </Link>
-    </div>
+            <div
+              className="text-sm font-medium tabular-nums"
+              style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
+            >
+              {isUp ? "+" : "-"}₩{formatCurrency(Math.abs(totalProfitLoss))}
+            </div>
+          </>
+        )}
+      </motion.div>
+    </Link>
   );
 }
 
-function SectorCard({ sector }: any) {
+function SectorCard({ sector, onTap }: { sector: any; onTap: () => void }) {
   const isUp = sector.fluctuationRate >= 0;
-  
+
   return (
-    <div className="bg-card rounded-3xl p-5 min-w-[280px] shadow-sm border border-border h-full flex flex-col justify-between">
+    <button
+      onClick={onTap}
+      className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex flex-col justify-between h-[140px] text-left"
+    >
+      <div className="flex items-start justify-between">
+        <span className="text-3xl">{getSectorIcon(sector.sectorName)}</span>
+        <span
+          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+            sector.isOverheated
+              ? "bg-red-100 text-red-600"
+              : "bg-primary/10 text-primary"
+          }`}
+        >
+          {sector.isOverheated ? "⚠️ 과열" : "AI 추천"}
+        </span>
+      </div>
       <div>
-        <div className="flex items-start justify-between mb-3">
-          <div className="text-4xl">{getSectorIcon(sector.sectorName)}</div>
-          <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sector.isOverheated ? "bg-red-100 text-red-600" : "bg-accent text-primary"}`}>
-            {sector.isOverheated ? "⚠️ 과열 주의" : "AI 추천"}
-          </span>
-        </div>
-        <div className="text-foreground mb-1 font-bold text-xl">{sector.sectorName}</div>
-        <div className={`text-sm font-semibold mb-3 ${isUp ? "text-up" : "text-down"}`}>
-          {isUp ? "+" : ""}{sector.fluctuationRate}% {isUp ? "🔺" : "🔻"}
-        </div>
+        <p className="text-foreground font-bold text-base">{sector.sectorName}</p>
+        <p
+          className="text-sm font-semibold tabular-nums"
+          style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
+        >
+          {formatPercent(sector.fluctuationRate)}
+        </p>
       </div>
-      <div className="text-muted-foreground text-xs line-clamp-2 bg-secondary/30 p-2 rounded-xl">
-        {sector.diagnosisMessage || "현재 섹터에 대한 AI 진단 결과를 분석 중입니다."}
-      </div>
-    </div>
+    </button>
   );
 }
 
 function TrendingList({ stocks, isLoading }: any) {
   if (isLoading) {
     return (
-      <div className="bg-card rounded-3xl p-6 border border-border space-y-4">
-        {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+      <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
+        {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-3xl p-6 shadow-sm border border-border overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border overflow-hidden">
       {stocks?.map((name: string, index: number) => (
-        <Link key={name} to={`/search?keyword=${name}`}>
-          <motion.div 
+        <Link key={name} to={`/stock/${encodeURIComponent(name)}`}>
+          <motion.div
             whileTap={{ backgroundColor: "var(--color-secondary)" }}
-            className={`flex items-center justify-between py-4 px-2 -mx-2 rounded-xl transition-colors ${index !== stocks.length - 1 ? "border-b border-border" : ""}`}
+            className={`flex items-center justify-between py-3.5 px-4 ${
+              index !== stocks.length - 1 ? "border-b border-border" : ""
+            }`}
           >
-            <div className="flex items-center gap-4">
-              <span className="text-primary font-bold text-lg min-w-[24px]">{index + 1}</span>
-              <span className="text-foreground font-semibold">{name}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-primary font-bold text-sm w-5">{index + 1}</span>
+              <span className="text-foreground font-medium text-sm">{name}</span>
             </div>
-            <TrendingUp className="w-5 h-5 text-muted-foreground opacity-50" />
+            <TrendingUp className="w-4 h-4 text-muted-foreground opacity-40" />
           </motion.div>
         </Link>
       ))}

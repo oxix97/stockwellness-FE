@@ -1,17 +1,24 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { motion } from "motion/react";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { Skeleton } from "@/app/components/ui";
+import { WatchlistItemCard } from "@/app/components/watchlist/WatchlistItemCard";
 import { toast } from "sonner";
 
+/**
+ * Task #71 ~ #74 — 관심 탭 고도화
+ * - RSI 뱃지 + AI 진단 (WatchlistItemCard)
+ * - 메모 아코디언, 스와이프 삭제
+ * - 빈 상태 개선
+ */
 export function Watchlist() {
-  const { groups, useGroupItems, createGroup, removeItem } = useWatchlist();
+  const { groups, useGroupItems, createGroup } = useWatchlist();
   const [activeGroup, setActiveGroup] = useState<number | null>(null);
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
 
-  // 첫 번째 그룹이 로드되면 기본 활성화
   useEffect(() => {
     if (groups.data && groups.data.length > 0 && activeGroup === null) {
       setActiveGroup(groups.data[0].id);
@@ -19,7 +26,7 @@ export function Watchlist() {
   }, [groups.data, activeGroup]);
 
   const itemsQuery = useGroupItems(activeGroup);
-  const stocks = itemsQuery.data?.items || [];
+  const stocks = itemsQuery.data?.items ?? [];
 
   const handleCreateGroup = () => {
     const name = newGroupName.trim();
@@ -34,49 +41,39 @@ export function Watchlist() {
     });
   };
 
-  const handleRemoveItem = (e: React.MouseEvent, ticker: string) => {
-    e.preventDefault();
-    if (activeGroup === null) return;
-    removeItem.mutate({ groupId: activeGroup, ticker }, {
-      onSuccess: () => toast.success("종목이 삭제되었습니다."),
-      onError: () => toast.error("종목 삭제에 실패했습니다."),
-    });
+  const handleToggleExpand = (ticker: string) => {
+    setExpandedTicker((prev) => (prev === ticker ? null : ticker));
   };
 
   return (
-    <div className="min-h-full">
-      {/* 헤더 */}
-      <header className="bg-card px-6 pt-8 pb-6 border-b border-border">
-        <div className="text-foreground" style={{ fontSize: '28px', fontWeight: 700 }}>
-          {itemsQuery.data?.groupName || "내 관심 종목"}
-        </div>
-      </header>
-
-      {/* 그룹 칩 */}
-      <div className="px-6 py-6 bg-card border-b border-border">
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+    <div className="min-h-full pb-6">
+      {/* 그룹 칩 탭 */}
+      <div className="px-4 pt-4 pb-3">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {groups.isLoading ? (
-            <div className="flex gap-2">
-               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-28 rounded-full" />)}
-            </div>
+            [1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-24 rounded-full shrink-0" />)
           ) : (
             <>
               {groups.data?.map((group) => (
                 <button
                   key={group.id}
-                  onClick={() => setActiveGroup(group.id)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap transition-all ${
+                  onClick={() => {
+                    setActiveGroup(group.id);
+                    setExpandedTicker(null);
+                  }}
+                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
                     activeGroup === group.id
-                      ? "bg-primary text-primary-foreground shadow-lg"
+                      ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-secondary-foreground"
                   }`}
                 >
-                  <span style={{ fontSize: '15px', fontWeight: 600 }}>{group.name}</span>
+                  {group.name}
+                  <span className="ml-1.5 text-[11px] opacity-60">{group.itemCount}</span>
                 </button>
               ))}
 
               {isCreating ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <input
                     autoFocus
                     value={newGroupName}
@@ -86,14 +83,12 @@ export function Watchlist() {
                       if (e.key === "Escape") { setIsCreating(false); setNewGroupName(""); }
                     }}
                     placeholder="그룹 이름"
-                    className="px-4 py-3 rounded-full bg-secondary text-foreground outline-none"
-                    style={{ fontSize: '15px', width: '120px' }}
+                    className="px-3 py-2 rounded-full bg-secondary text-foreground outline-none text-sm w-28"
                   />
                   <button
                     onClick={handleCreateGroup}
                     disabled={createGroup.isPending}
-                    className="px-4 py-3 rounded-full bg-primary text-primary-foreground"
-                    style={{ fontSize: '15px', fontWeight: 600 }}
+                    className="px-3 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
                   >
                     추가
                   </button>
@@ -101,10 +96,10 @@ export function Watchlist() {
               ) : (
                 <button
                   onClick={() => setIsCreating(true)}
-                  className="flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap bg-secondary text-secondary-foreground"
+                  className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-full bg-secondary text-secondary-foreground text-sm"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span style={{ fontSize: '15px', fontWeight: 600 }}>새 그룹</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  그룹
                 </button>
               )}
             </>
@@ -113,71 +108,62 @@ export function Watchlist() {
       </div>
 
       {/* 종목 리스트 */}
-      <div className="px-6 py-6">
-        <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
-          {itemsQuery.isLoading ? (
-            <div className="p-4 space-y-4">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
-            </div>
-          ) : (
-            stocks.map((stock, index) => (
-              <Link key={stock.ticker} to={`/stock/${stock.ticker}`}>
-                <div
-                  className={`px-6 py-5 flex items-center justify-between ${
-                    index !== stocks.length - 1 ? "border-b border-border" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center">
-                      <span className="text-primary" style={{ fontSize: '18px', fontWeight: 700 }}>
-                        {stock.name[0]}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="text-foreground mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
-                        {stock.name}
-                      </div>
-                      <div className="text-muted-foreground text-sm">{stock.ticker}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="text-foreground mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
-                        {stock.currency === "USD"
-                          ? `$${stock.currentPrice}`
-                          : `₩${stock.currentPrice.toLocaleString()}`}
-                      </div>
-                      <div
-                        className={`text-sm font-medium ${
-                          stock.fluctuationRate >= 0 ? "text-[#FF4756]" : "text-[#3182F6]"
-                        }`}
-                      >
-                        {stock.fluctuationRate >= 0 ? "+" : ""}
-                        {stock.fluctuationRate}%
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => handleRemoveItem(e, stock.ticker)}
-                      className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
-
-        {!itemsQuery.isLoading && stocks.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📊</div>
-            <div className="text-muted-foreground">
-              아직 관심 종목이 없어요
-            </div>
+      <div className="px-4">
+        {itemsQuery.isLoading ? (
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="px-4 py-4 border-b border-border last:border-0">
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
           </div>
+        ) : stocks.length > 0 ? (
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
+            {stocks.map((stock, index) => (
+              <WatchlistItemCard
+                key={stock.ticker}
+                stock={stock}
+                groupId={activeGroup!}
+                isLast={index === stocks.length - 1}
+                isExpanded={expandedTicker === stock.ticker}
+                onToggleExpand={() => handleToggleExpand(stock.ticker)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState />
         )}
       </div>
     </div>
+  );
+}
+
+/** Task #74 — 빈 상태 개선 */
+function EmptyState() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-20 text-center"
+    >
+      <div className="text-5xl mb-5">📊</div>
+      <p className="text-foreground font-semibold text-base mb-2">
+        관심 종목을 추가해<br />AI 진단을 받아보세요
+      </p>
+      <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+        RSI 뱃지와 AI 한줄 분석이<br />매일 자동으로 업데이트됩니다
+      </p>
+      <button
+        onClick={() => {
+          // GlobalSearch 오버레이 열기 — AppBar의 검색 버튼과 동일한 동작
+          // Layout에서 관리하는 상태이므로 AppBar의 검색 버튼을 programmatic하게 트리거
+          document.querySelector<HTMLButtonElement>('[aria-label="검색"]')?.click();
+        }}
+        className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold text-sm"
+      >
+        <Search className="w-4 h-4" />
+        첫 종목 추가하기
+      </button>
+    </motion.div>
   );
 }

@@ -1,219 +1,167 @@
-import { Link, useNavigate } from "react-router";
-import { Activity, Plus } from "lucide-react";
-import { motion } from "motion/react";
 import { useState } from "react";
+import { Link } from "react-router";
+import { Activity, ChevronDown } from "lucide-react";
+import { motion } from "motion/react";
 import { usePortfolio } from "@/hooks/use-portfolio";
-import { portfolioApi } from "@/api/portfolio";
 import { useAuthStore } from "@/store/auth";
-import { Skeleton } from "@/app/components/ui";
-import { PageHeader, StockLogo } from "@/app/components/shared";
-import { formatCurrency } from "@/utils/format";
-import { PortfolioItemResponse } from "@/types/api";
-import { toast } from "sonner";
+import { Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui";
+import { formatCurrency, formatPercent } from "@/utils/format";
+import { PortfolioWizard } from "@/app/components/portfolio/wizard/PortfolioWizard";
+import { CompositionTab } from "@/app/components/portfolio/tabs/CompositionTab";
+import { SimulationTab } from "@/app/components/portfolio/tabs/SimulationTab";
+import { RebalancingTab } from "@/app/components/portfolio/tabs/RebalancingTab";
 
+/**
+ * Task #80 ~ #83 — 포트폴리오 탭 메인 뷰
+ */
 export function Portfolio() {
-  const navigate = useNavigate();
   const portfolioId = useAuthStore((state) => state.portfolioId);
-  const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
-  const { valuation, isLoading, health, holdings } = usePortfolio();
-  const [isCreating, setIsCreating] = useState(false);
-  const [portfolioName, setPortfolioName] = useState("");
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { valuation, isLoading, health } = usePortfolio();
+  const [showWizard, setShowWizard] = useState(false);
 
-  const handleCreate = async () => {
-    const name = portfolioName.trim();
-    if (!name) return;
-    setIsCreating(true);
-    try {
-      const newId = await portfolioApi.create({ name, description: "", items: [] });
-      setPortfolioId(String(newId));
-      setShowCreateModal(false);
-      toast.success("포트폴리오가 생성되었습니다.");
-    } catch {
-      toast.error("포트폴리오 생성에 실패했습니다.");
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
+  // ── 빈 상태 ────────────────────────────────────────────
   if (!portfolioId) {
     return (
-      <div className="min-h-full flex flex-col items-center justify-center px-6 pb-20">
-        <div className="text-6xl mb-6">📊</div>
-        <div className="text-foreground font-bold text-2xl mb-2 text-center">
-          포트폴리오를 만들어보세요
+      <>
+        <div className="min-h-full flex flex-col items-center justify-center px-6 pb-20 text-center">
+          <div className="text-6xl mb-6">📊</div>
+          <p className="text-foreground font-bold text-xl mb-2">
+            나만의 자산 배분 포트폴리오를<br />만들어보세요
+          </p>
+          <p className="text-muted-foreground text-sm mb-10 leading-relaxed">
+            백테스트와 AI 분석으로<br />내 전략의 과거 성과를 확인하세요
+          </p>
+          <button
+            onClick={() => setShowWizard(true)}
+            className="bg-primary text-white px-8 py-4 rounded-2xl font-bold"
+          >
+            📊 포트폴리오 만들기
+          </button>
         </div>
-        <div className="text-muted-foreground text-center mb-10 font-medium">
-          나만의 포트폴리오를 구성하고<br />건강 진단부터 백테스트까지 활용해보세요.
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold text-lg shadow-lg"
-        >
-          <Plus className="w-5 h-5" />
-          포트폴리오 만들기
-        </button>
-
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-            <div className="bg-card w-full rounded-t-3xl p-6">
-              <div className="text-foreground font-bold text-xl mb-6">포트폴리오 이름</div>
-              <input
-                autoFocus
-                value={portfolioName}
-                onChange={(e) => setPortfolioName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                placeholder="예) 내 첫 포트폴리오"
-                className="w-full bg-secondary rounded-2xl px-5 py-4 text-foreground outline-none mb-4"
-                style={{ fontSize: "16px" }}
-              />
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-4 rounded-2xl bg-secondary text-foreground font-bold"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleCreate}
-                  disabled={isCreating || !portfolioName.trim()}
-                  className="flex-1 py-4 rounded-2xl bg-primary text-primary-foreground font-bold disabled:opacity-50"
-                >
-                  {isCreating ? "생성 중..." : "만들기"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        {showWizard && <PortfolioWizard onClose={() => setShowWizard(false)} />}
+      </>
     );
   }
 
+  // ── 로딩 ───────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-10 w-32" />
-        <Skeleton className="h-40 w-full rounded-3xl" />
-        <Skeleton className="h-48 w-full rounded-3xl" />
+      <div className="p-4 space-y-4">
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <Skeleton className="h-10 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-2xl" />
       </div>
     );
   }
 
+  // ── AI 건강 뱃지 ──────────────────────────────────────
+  const score = health.overallScore;
+  const healthBadge =
+    score >= 70
+      ? { label: "✅ 안정적", color: "bg-green-50 text-green-700" }
+      : score >= 40
+      ? { label: "⚠️ 주의", color: "bg-amber-50 text-amber-700" }
+      : { label: "🔴 위험", color: "bg-red-50 text-red-700" };
+
   return (
-    <div className="min-h-full pb-20">
-      <PageHeader title="내 주식" />
+    <div className="min-h-full pb-6">
+      {/* 요약부 — 즉시 렌더링 */}
+      <div className="px-4 pt-4 pb-3 border-b border-border bg-card">
+        {/* 스위처 */}
+        <button className="flex items-center gap-1 mb-3">
+          <span className="text-foreground font-semibold text-sm">내 포트폴리오</span>
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        </button>
 
-      <AssetOverview 
-        totalValue={valuation?.currentTotalValue} 
-        totalReturn={valuation?.totalReturnRate} 
-      />
+        {/* 총 자산 */}
+        <p className="text-muted-foreground text-xs mb-0.5">총 자산</p>
+        <p className="text-foreground font-bold text-[28px] tabular-nums mb-1">
+          ₩{formatCurrency(valuation?.currentTotalValue ?? 0)}
+        </p>
 
-      <div className="px-6 py-6">
-        <HealthDiagnosisBanner score={health.overallScore} />
-        
-        <div className="flex justify-between items-center mb-4 mt-8 px-2">
-           <h2 className="text-xl font-bold text-foreground">보유 주식</h2>
-           <button className="text-primary text-sm font-semibold">편집</button>
-        </div>
-
-        {holdings && (holdings.items?.length ?? 0) > 0 ? (
-          <HoldingsList holdings={holdings.items ?? []} />
-        ) : (
-          <div className="bg-card rounded-3xl p-8 text-center shadow-sm border border-border">
-            <div className="text-muted-foreground mb-2">아직 보유한 주식이 없어요.</div>
-            <Link to="/search" className="text-primary font-bold hover:underline">
-              주식 추가하러 가기
-            </Link>
-          </div>
-        )}
-        
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate("/backtest/setup")}
-          className="w-full bg-card rounded-3xl p-5 mt-6 shadow-sm border border-border flex items-center justify-between hover:bg-accent transition-colors"
-        >
-          <div className="flex items-center gap-4">
-            <div className="text-3xl">🧪</div>
-            <div className="text-left">
-              <div className="text-foreground font-bold">전략 백테스트</div>
-              <div className="text-muted-foreground text-sm">내 전략의 과거 성과는?</div>
-            </div>
-          </div>
-          <span className="text-primary text-2xl">→</span>
-        </motion.button>
-      </div>
-    </div>
-  );
-}
-
-function AssetOverview({ totalValue = 0, totalReturn = 0 }: any) {
-  const isPositive = totalReturn >= 0;
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="px-6 py-10 bg-card border-b border-border text-center"
-    >
-      <div className="text-muted-foreground mb-3 font-medium">내 포트폴리오 총 평가금액</div>
-      <div className="text-foreground mb-6 font-bold text-5xl">
-        ₩ {formatCurrency(totalValue)}
-      </div>
-      <div className={`inline-flex items-center gap-2 ${isPositive ? "bg-up/10" : "bg-down/10"} px-6 py-2 rounded-full`}>
-        <span className={`${isPositive ? "text-up" : "text-down"} font-bold text-xl`}>
-          총 수익률 {isPositive ? "+" : ""}{totalReturn}%
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
-function HealthDiagnosisBanner({ score }: { score: number }) {
-  return (
-    <Link to="/health-diagnosis">
-      <motion.div 
-        whileTap={{ scale: 0.98 }}
-        whileHover={{ y: -2 }}
-        className="bg-gradient-to-r from-[#D1FAE5] to-[#A7F3D0] rounded-3xl p-6 shadow-sm border border-primary/20 transition-all"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Activity className="w-6 h-6 text-primary" />
-              <span className="text-foreground font-bold text-xl">건강 진단</span>
-            </div>
-            <div className="text-foreground opacity-80 mb-1">내 포트폴리오 건강 점수는</div>
-            <div className="text-primary font-bold text-4xl">{score}점</div>
-            <div className="text-muted-foreground mt-4 text-sm font-medium">진단 리포트 보기 👉</div>
-          </div>
-          <div className="text-6xl">🩺</div>
-        </div>
-      </motion.div>
-    </Link>
-  );
-}
-
-function HoldingsList({ holdings }: { holdings: PortfolioItemResponse[] }) {
-  return (
-    <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
-      {holdings.map((stock, index: number) => (
-        <Link key={stock.symbol} to={`/stock/${stock.symbol}`}>
-          <motion.div
-            whileTap={{ backgroundColor: "var(--color-secondary)" }}
-            className={`px-6 py-5 flex items-center justify-between active:bg-accent transition-colors ${index !== holdings.length - 1 ? "border-b border-border" : ""}`}
+        {/* 수익 */}
+        <div className="flex items-center gap-3 mb-3">
+          <span
+            className="text-sm font-semibold tabular-nums"
+            style={{ color: (valuation?.totalReturnRate ?? 0) >= 0 ? "#2EBE7A" : "#EF4444" }}
           >
-            <div className="flex items-center gap-4">
-              <StockLogo name={stock.symbol} />
+            {formatPercent(valuation?.totalReturnRate ?? 0)} 누적
+          </span>
+          <span className="text-muted-foreground text-xs">|</span>
+          <span
+            className="text-xs tabular-nums"
+            style={{ color: (valuation?.dailyReturnRate ?? 0) >= 0 ? "#2EBE7A" : "#EF4444" }}
+          >
+            오늘 {formatPercent(valuation?.dailyReturnRate ?? 0)}
+          </span>
+        </div>
+
+        {/* 지표 + 건강 뱃지 */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">
+            Sharpe{" "}
+            <span className="text-foreground font-semibold tabular-nums">
+              {(valuation?.sharpeRatio ?? 0).toFixed(2)}
+            </span>
+          </span>
+          <span className="text-muted-foreground text-xs">|</span>
+          <span className="text-xs text-muted-foreground">
+            MDD{" "}
+            <span className="text-foreground font-semibold tabular-nums">
+              {(valuation?.mdd ?? 0).toFixed(1)}%
+            </span>
+          </span>
+          <span
+            className={`ml-auto text-[11px] font-semibold px-2.5 py-1 rounded-full ${healthBadge.color}`}
+          >
+            {healthBadge.label}
+          </span>
+        </div>
+      </div>
+
+      {/* 3탭 */}
+      <Tabs defaultValue="composition">
+        <TabsList className="w-full rounded-none border-b border-border bg-card h-11 px-4 justify-start gap-4">
+          <TabsTrigger value="composition" className="text-sm px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full">
+            구성/비중
+          </TabsTrigger>
+          <TabsTrigger value="simulation" className="text-sm px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full">
+            시뮬레이션
+          </TabsTrigger>
+          <TabsTrigger value="rebalancing" className="text-sm px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full">
+            AI 리밸런싱
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="composition" className="mt-0">
+          <CompositionTab />
+        </TabsContent>
+        <TabsContent value="simulation" className="mt-0">
+          <SimulationTab />
+        </TabsContent>
+        <TabsContent value="rebalancing" className="mt-0">
+          <RebalancingTab />
+        </TabsContent>
+      </Tabs>
+
+      {/* 건강 진단 바로가기 */}
+      <div className="px-4 mt-2">
+        <Link to="/health-diagnosis">
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 border border-primary/20 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <Activity className="w-5 h-5 text-primary" />
               <div>
-                <div className="text-foreground font-bold">{stock.symbol}</div>
-                <div className="text-muted-foreground text-xs font-medium">{stock.quantity}주</div>
+                <p className="text-foreground font-semibold text-sm">포트폴리오 건강 진단</p>
+                <p className="text-muted-foreground text-xs">점수 {score}점 · 리포트 보기</p>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-foreground font-bold">₩{formatCurrency(stock.purchasePrice)}</div>
-            </div>
+            <span className="text-primary text-xl">→</span>
           </motion.div>
         </Link>
-      ))}
+      </div>
     </div>
   );
 }

@@ -1,21 +1,28 @@
+import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router";
-import { Home, Search, Wallet, Star, Menu } from "lucide-react";
+import { Home, Star, Wallet, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { AppBar } from "./AppBar";
+import { GlobalSearch } from "./GlobalSearch";
+
+const NAV_ITEMS = [
+  { path: "/", icon: Home, label: "홈", size: 24 },
+  { path: "/watchlist", icon: Star, label: "관심", size: 24 },
+  { path: "/portfolio", icon: Wallet, label: "포트폴리오", size: 28 },
+  { path: "/more", icon: User, label: "마이", size: 24 },
+];
 
 export function Layout() {
   const location = useLocation();
-
-  const navItems = [
-    { path: "/", icon: Home, label: "홈" },
-    { path: "/search", icon: Search, label: "검색" },
-    { path: "/portfolio", icon: Wallet, label: "내 주식" },
-    { path: "/watchlist", icon: Star, label: "관심" },
-    { path: "/more", icon: Menu, label: "전체" },
-  ];
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <main className="flex-1 overflow-y-auto pb-32">
+      {/* 전체 탭 공통 앱바 */}
+      <AppBar onSearchOpen={() => setIsSearchOpen(true)} />
+
+      {/* 메인 콘텐츠 — 앱바(pt-14) + 하단 네비(pb-20) 여백 확보 */}
+      <main className="flex-1 overflow-y-auto pt-14 pb-20">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -29,9 +36,10 @@ export function Layout() {
         </AnimatePresence>
       </main>
 
+      {/* 하단 네비게이션 — 4탭 */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-lg border-t border-border z-50 pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center h-16">
-          {navItems.map((item) => {
+          {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
@@ -41,7 +49,8 @@ export function Layout() {
                 className="flex flex-col items-center justify-center flex-1 h-full relative"
               >
                 <Icon
-                  className={`w-6 h-6 mb-1 transition-colors duration-200 ${
+                  style={{ width: item.size, height: item.size }}
+                  className={`mb-1 transition-colors duration-200 ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 />
@@ -63,6 +72,13 @@ export function Layout() {
           })}
         </div>
       </nav>
+
+      {/* 전체화면 검색 오버레이 */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <GlobalSearch onClose={() => setIsSearchOpen(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
