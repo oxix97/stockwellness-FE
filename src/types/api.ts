@@ -472,7 +472,7 @@ export interface CreatePortfolioItemRequest {
   quantity: number;
   purchasePrice: number;
   currency: string;
-  assetType: string;
+  assetType: "STOCK" | "CASH";
   targetWeight: number;
 }
 
