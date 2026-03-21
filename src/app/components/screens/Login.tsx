@@ -7,7 +7,7 @@ export function Login() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleSocialLogin = (type: "GOOGLE" | "KAKAO" | "NAVER") => {
+  const handleSocialLogin = (type: "GOOGLE" | "KAKAO") => {
     const apiBase = import.meta.env.VITE_API_BASE_URL || "";
     // Spring Security OAuth2 기본 엔드포인트 호출
     const authorizeUrl = `${apiBase}/oauth2/authorization/${type.toLowerCase()}`;
@@ -29,24 +29,17 @@ export function Login() {
       </div>
 
       <div className="space-y-4">
-        <SocialButton 
-          type="KAKAO" 
-          label="카카오로 시작하기" 
-          bgColor="#FEE500" 
+        <SocialButton
+          type="KAKAO"
+          label="카카오로 시작하기"
+          bgColor="#FEE500"
           textColor="#191919"
           onClick={() => handleSocialLogin("KAKAO")}
         />
-        <SocialButton 
-          type="NAVER" 
-          label="네이버로 시작하기" 
-          bgColor="#03C75A" 
-          textColor="#FFFFFF"
-          onClick={() => handleSocialLogin("NAVER")}
-        />
-        <SocialButton 
-          type="GOOGLE" 
-          label="구글로 시작하기" 
-          bgColor="#FFFFFF" 
+        <SocialButton
+          type="GOOGLE"
+          label="구글로 시작하기"
+          bgColor="#FFFFFF"
           textColor="#191919"
           border
           onClick={() => handleSocialLogin("GOOGLE")}
