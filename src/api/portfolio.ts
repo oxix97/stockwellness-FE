@@ -19,8 +19,8 @@ export const portfolioApi = {
    * @returns 포트폴리오 리스트
    */
   getMyPortfolios: async (): Promise<PortfolioResponse[]> => {
-    const { data } = await apiClient.get("/v1/portfolios");
-    return data;
+    const data = await apiClient.get("/v1/portfolios");
+    return data as unknown as PortfolioResponse[];
   },
 
   /**
@@ -28,8 +28,8 @@ export const portfolioApi = {
    * @returns 생성된 포트폴리오의 ID
    */
   create: async (body: CreatePortfolioRequest): Promise<number> => {
-    const { data } = await apiClient.post("/v1/portfolios", body);
-    return data;
+    const data = await apiClient.post("/v1/portfolios", body);
+    return data as unknown as number;
   },
   /**
    * 포트폴리오 상세 조회에서 보유 종목 리스트를 반환합니다.
@@ -37,8 +37,8 @@ export const portfolioApi = {
    * @returns 보유 종목 리스트
    */
   getHoldings: async (portfolioId: string): Promise<PortfolioResponse> => {
-    const { data } = await apiClient.get<PortfolioResponse>(`/v1/portfolios/${portfolioId}`);
-    return data;
+    const data = await apiClient.get(`/v1/portfolios/${portfolioId}`);
+    return data as unknown as PortfolioResponse;
   },
 
   /**
@@ -47,8 +47,8 @@ export const portfolioApi = {
    * @returns 총 자산 가치, 수익률, MDD 등 평가 데이터
    */
   getValuation: async (portfolioId: string): Promise<PortfolioValuationResponse> => {
-    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/valuation`);
-    return data;
+    const data = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/valuation`);
+    return data as unknown as PortfolioValuationResponse;
   },
 
   /**
@@ -57,8 +57,8 @@ export const portfolioApi = {
    * @returns 자산, 섹터, 국가별 비중 정보
    */
   getDiversification: async (portfolioId: string): Promise<PortfolioDiversificationResponse> => {
-    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/diversification`);
-    return data;
+    const data = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/diversification`);
+    return data as unknown as PortfolioDiversificationResponse;
   },
 
   /**
@@ -67,8 +67,8 @@ export const portfolioApi = {
    * @returns 현재 비중과 목표 비중에 따른 리밸런싱 아이템 리스트
    */
   getRebalancing: async (portfolioId: string): Promise<PortfolioRebalancingResponse> => {
-    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/rebalancing`);
-    return data;
+    const data = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/rebalancing`);
+    return data as unknown as PortfolioRebalancingResponse;
   },
 
   /**
@@ -77,7 +77,7 @@ export const portfolioApi = {
    * @returns 포트폴리오 최적화 및 전략 제언 메시지
    */
   getAdvice: async (portfolioId: string) => {
-    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/advice/latest`);
+    const data = await apiClient.get(`/v1/portfolios/${portfolioId}/advice/latest`);
     return data;
   },
 
@@ -88,8 +88,8 @@ export const portfolioApi = {
    * @returns 일별 결과, 수익률 등 백테스트 실행 결과
    */
   runBacktest: async (portfolioId: string, params: BacktestRequest): Promise<BacktestResponse> => {
-    const { data } = await apiClient.post(`/v1/portfolios/${portfolioId}/analysis/backtest`, params);
-    return data;
+    const data = await apiClient.post(`/v1/portfolios/${portfolioId}/analysis/backtest`, params);
+    return data as unknown as BacktestResponse;
   },
 
   /**
@@ -98,7 +98,7 @@ export const portfolioApi = {
    * @returns 종목 간 상관계수 행렬
    */
   getCorrelation: async (portfolioId: string): Promise<CorrelationMatrix> => {
-    const { data } = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/correlation`);
-    return data;
+    const data = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/correlation`);
+    return data as unknown as CorrelationMatrix;
   },
 };
