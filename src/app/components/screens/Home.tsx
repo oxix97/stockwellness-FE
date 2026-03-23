@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
+import { useMarketIndex } from "@/hooks/use-market-index";
 import { Skeleton } from "@/app/components/ui";
 import { Section } from "@/app/components/shared";
 import { formatCurrency, formatPercent } from "@/utils/format";
@@ -13,6 +14,13 @@ import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
 import { SectorBottomSheet } from "@/app/components/home/SectorBottomSheet";
 import { SupplyDemandSection } from "@/app/components/home/SupplyDemandSection";
 import { NewListingsSection } from "@/app/components/home/NewListingsSection";
+
+function getMarketGreeting(kospiRate: number | null): { text: string; emoji: string } {
+  if (kospiRate == null) return { text: "오늘의 증시를 불러오는 중이에요", emoji: "📊" };
+  if (kospiRate >= 0.5) return { text: "오늘의 증시는 맑음이에요", emoji: "☀️" };
+  if (kospiRate <= -0.5) return { text: "오늘의 증시는 비가 내려요", emoji: "🌧️" };
+  return { text: "오늘의 증시는 흐림이에요", emoji: "⛅" };
+}
 
 const getSectorIcon = (name: string) => {
   if (name.includes("바이오") || name.includes("제약")) return "💊";
@@ -31,6 +39,11 @@ export function Home() {
   const nickname = useAuthStore((state) => state.nickname);
   const { popular } = useStock();
   const { data: sectors, isLoading: isSectorsLoading } = useSector();
+  const { data: marketIndexes } = useMarketIndex();
+
+  // KOSPI 등락률 기반 인사말
+  const kospiRate = marketIndexes?.find((m) => m.name === "KOSPI")?.fluctuationRate ?? null;
+  const greeting = getMarketGreeting(kospiRate);
 
   // 섹터 바텀시트 상태
   const [selectedSector, setSelectedSector] = useState<(typeof sectors)[number] | null>(null);
@@ -44,7 +57,7 @@ export function Home() {
           animate={{ opacity: 1, x: 0 }}
           className="text-foreground font-bold text-2xl leading-snug"
         >
-          {nickname ?? "투자자"}님,<br />오늘의 증시는 맑음이에요 ☀️
+          {nickname ?? "투자자"}님,<br />{greeting.text} {greeting.emoji}
         </motion.p>
         <div className="flex items-center gap-3 shrink-0 self-start mt-1">
           {/* LIVE 배지 */}
