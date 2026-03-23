@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Activity, ChevronDown } from "lucide-react";
+import { Activity, ChevronDown, FlaskConical } from "lucide-react";
 import { motion } from "motion/react";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useAuthStore } from "@/store/auth";
@@ -119,6 +119,39 @@ export function Portfolio() {
         </div>
       </div>
 
+      {/* 건강 진단 배너 + 시뮬레이션 CTA — 탭 상단 고정 */}
+      <div className="px-4 pt-3 pb-0 bg-background border-b border-border sticky top-0 z-10 space-y-2">
+        <Link to="/health-diagnosis">
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-3.5 border border-primary/20 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <Activity className="w-5 h-5 text-primary shrink-0" />
+              <div>
+                <p className="text-foreground font-semibold text-sm">포트폴리오 건강 진단</p>
+                <p className="text-muted-foreground text-xs">점수 {score}점 · 리포트 보기</p>
+              </div>
+            </div>
+            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${healthBadge.color}`}>
+              {healthBadge.label}
+            </span>
+          </motion.div>
+        </Link>
+        <Link to="/backtest/setup">
+          <motion.div
+            whileTap={{ scale: 0.98 }}
+            className="bg-primary/5 rounded-2xl p-3.5 border border-primary/20 flex items-center justify-between mb-3"
+          >
+            <div className="flex items-center gap-3">
+              <FlaskConical className="w-5 h-5 text-primary shrink-0" />
+              <p className="text-foreground font-semibold text-sm">포트폴리오 시뮬레이션</p>
+            </div>
+            <span className="text-primary text-sm font-bold">시작 →</span>
+          </motion.div>
+        </Link>
+      </div>
+
       {/* 3탭 */}
       <Tabs defaultValue="composition">
         <TabsList className="w-full rounded-none border-b border-border bg-card h-11 px-4 justify-start gap-4">
@@ -144,24 +177,6 @@ export function Portfolio() {
         </TabsContent>
       </Tabs>
 
-      {/* 건강 진단 바로가기 */}
-      <div className="px-4 mt-2">
-        <Link to="/health-diagnosis">
-          <motion.div
-            whileTap={{ scale: 0.98 }}
-            className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 border border-primary/20 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Activity className="w-5 h-5 text-primary" />
-              <div>
-                <p className="text-foreground font-semibold text-sm">포트폴리오 건강 진단</p>
-                <p className="text-muted-foreground text-xs">점수 {score}점 · 리포트 보기</p>
-              </div>
-            </div>
-            <span className="text-primary text-xl">→</span>
-          </motion.div>
-        </Link>
-      </div>
     </div>
   );
 }
