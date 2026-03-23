@@ -28,7 +28,14 @@ export function More() {
   const navigate = useNavigate();
   const { nickname, logout, joinedDate, setAuth } = useAuthStore();
   const { theme, setTheme } = useTheme();
-  const { holdings, valuation } = usePortfolio();
+  const { holdings, valuation, health } = usePortfolio();
+
+  const investorType =
+    health.overallScore >= 70
+      ? "안정형 투자자"
+      : health.overallScore >= 40
+      ? "균형형 투자자"
+      : "공격형 투자자";
   const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const handleLogout = () => {
@@ -60,7 +67,7 @@ export function More() {
             <div>
               <p className="text-foreground font-bold text-lg">{nickname ?? "투자자"}님</p>
               <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-semibold">
-                안정형 투자자
+                {investorType}
               </span>
             </div>
           </div>
