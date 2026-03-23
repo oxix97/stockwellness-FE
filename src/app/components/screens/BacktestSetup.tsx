@@ -31,10 +31,10 @@ const strategies = [
 ];
 
 const rebalancing = [
-  { id: "none", label: "안 함" },
-  { id: "monthly", label: "매월" },
-  { id: "quarterly", label: "매 분기" },
-  { id: "yearly", label: "매년" },
+  { id: "NONE", label: "안 함" },
+  { id: "MONTHLY", label: "매월" },
+  { id: "QUARTERLY", label: "매 분기" },
+  { id: "YEARLY", label: "매년" },
 ];
 
 const benchmarks = [
@@ -49,7 +49,7 @@ export function BacktestSetup() {
   const [initialAmount, setInitialAmount] = useState(10000000);
   const [selectedStrategy, setSelectedStrategy] = useState<"DCA" | "LUMP_SUM">("LUMP_SUM");
   const [selectedPeriod, setSelectedPeriod] = useState("1y");
-  const [selectedRebalancing, setSelectedRebalancing] = useState("none");
+  const [selectedRebalancing, setSelectedRebalancing] = useState("NONE");
   const [selectedBenchmark, setSelectedBenchmark] = useState("KOSPI");
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [showAddStock, setShowAddStock] = useState(false);
@@ -97,6 +97,7 @@ export function BacktestSetup() {
           // 추가 로컬 정보
           period: selectedPeriod,
           portfolio,
+          rebalancingPeriod: selectedRebalancing,
         },
       });
     }
