@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { Activity } from "lucide-react";
-import { XAxis, YAxis, Tooltip, ResponsiveContainer, ComposedChart, Line } from "recharts";
+import { Activity, Sparkles } from "lucide-react";
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
 import { useBacktest } from "@/hooks/use-backtest";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
@@ -10,7 +10,7 @@ export function BacktestResult() {
   const navigate = useNavigate();
   const location = useLocation();
   const config = location.state || {};
-  
+
   const { run, data, isLoading, metrics, isError } = useBacktest();
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function BacktestResult() {
         <div className="text-6xl mb-4">😵‍💫</div>
         <div className="text-xl font-bold mb-2">결과를 불러오지 못했어요</div>
         <div className="text-muted-foreground mb-8">서버 상태를 확인하거나 다시 시도해 주세요.</div>
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold"
         >
@@ -88,66 +88,10 @@ export function BacktestResult() {
       </div>
 
       {/* 차트 섹션 */}
-      <div className="px-6 py-10 bg-card border-b border-border">
-        <div className="flex items-center gap-2 mb-8">
-          <Activity className="w-6 h-6 text-primary" />
-          <div className="text-foreground font-bold text-xl">자산 성장 추이</div>
-        </div>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={backtestData}>
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 10, fontWeight: 500 }}
-                stroke="#9CA3AF"
-                interval={Math.floor(backtestData.length / 5)}
-              />
-              <YAxis
-                tick={{ fontSize: 10, fontWeight: 500 }}
-                stroke="#9CA3AF"
-                hide
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#FFFFFF",
-                  border: "none",
-                  borderRadius: "16px",
-                  boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                  fontSize: "12px",
-                }}
-                formatter={(value: number) => `₩${value.toLocaleString()}`}
-              />
-              <Line
-                type="monotone"
-                dataKey="benchmarkReturnRate"
-                stroke="#9CA3AF"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={false}
-                name="벤치마크"
-              />
-              <Line
-                type="monotone"
-                dataKey="totalValue"
-                stroke="#2EBE7A"
-                strokeWidth={4}
-                dot={false}
-                name="내 포트폴리오"
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-1 bg-primary rounded-full"></div>
-            <span className="text-sm text-muted-foreground font-medium">내 포트폴리오</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-0.5 bg-muted-foreground border-dashed border-t"></div>
-            <span className="text-sm text-muted-foreground font-medium">벤치마크</span>
-          </div>
-        </div>
-      </div>
+      <ChartSection backtestData={backtestData} />
+
+      {/* AI 코멘트 카드 */}
+      <AiCommentCard metrics={metrics} config={config} />
 
       {/* 성과 지표 */}
       <div className="px-6 py-10">
@@ -158,6 +102,151 @@ export function BacktestResult() {
           <MetricCard label="위험 대비 수익" value={metrics?.sharpeRatio} sub="샤프 지수" />
           <MetricCard label="시장 민감도" value={metrics?.beta ?? "-"} sub="Beta" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ChartSection({ backtestData }: { backtestData: any[] }) {
+  // MDD 기간 계산: 최고점 → 최저점
+  const mddPeriod = useMemo(() => {
+    if (backtestData.length === 0) return { start: "", end: "" };
+    let peak = backtestData[0].totalValue;
+    let peakDate = backtestData[0].date;
+    let mdd = 0;
+    let mddStart = peakDate;
+    let mddEnd = peakDate;
+    for (const r of backtestData) {
+      if (r.totalValue > peak) {
+        peak = r.totalValue;
+        peakDate = r.date;
+      }
+      const drawdown = (r.totalValue - peak) / peak;
+      if (drawdown < mdd) {
+        mdd = drawdown;
+        mddStart = peakDate;
+        mddEnd = r.date;
+      }
+    }
+    return { start: mddStart, end: mddEnd };
+  }, [backtestData]);
+
+  return (
+    <div className="px-6 py-10 bg-card border-b border-border">
+      <div className="flex items-center gap-2 mb-8">
+        <Activity className="w-6 h-6 text-primary" />
+        <div className="text-foreground font-bold text-xl">자산 성장 추이</div>
+      </div>
+      <div className="h-72">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={backtestData}>
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 10, fontWeight: 500 }}
+              stroke="#9CA3AF"
+              interval={Math.floor(backtestData.length / 5)}
+            />
+            <YAxis
+              tick={{ fontSize: 10, fontWeight: 500 }}
+              stroke="#9CA3AF"
+              hide
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#FFFFFF",
+                border: "none",
+                borderRadius: "16px",
+                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                fontSize: "12px",
+              }}
+              formatter={(value: number) => `₩${value.toLocaleString()}`}
+            />
+            {/* MDD 음영 영역 */}
+            {mddPeriod.start && mddPeriod.end && mddPeriod.start !== mddPeriod.end && (
+              <ReferenceArea
+                x1={mddPeriod.start}
+                x2={mddPeriod.end}
+                fill="#FF4756"
+                fillOpacity={0.08}
+                strokeOpacity={0}
+              />
+            )}
+            <Line
+              type="monotone"
+              dataKey="benchmarkReturnRate"
+              stroke="#9CA3AF"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={false}
+              name="벤치마크"
+            />
+            <Line
+              type="monotone"
+              dataKey="totalValue"
+              stroke="#2EBE7A"
+              strokeWidth={4}
+              dot={false}
+              name="내 포트폴리오"
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-1 bg-primary rounded-full"></div>
+          <span className="text-sm text-muted-foreground font-medium">내 포트폴리오</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-muted-foreground border-dashed border-t"></div>
+          <span className="text-sm text-muted-foreground font-medium">벤치마크</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-2 rounded-sm bg-[#FF4756]/20 border border-[#FF4756]/30"></div>
+          <span className="text-sm text-muted-foreground font-medium">최대 낙폭 구간</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AiCommentCard({ metrics, config }: { metrics: any; config: any }) {
+  const comment = useMemo(() => {
+    const { totalReturn, mdd, sharpeRatio, outperformance, cagr } = metrics;
+    const lines: string[] = [];
+
+    if (totalReturn >= 0) {
+      lines.push(`이 포트폴리오는 시뮬레이션 기간 동안 ${totalReturn}%의 수익을 기록했어요.`);
+    } else {
+      lines.push(`이 포트폴리오는 시뮬레이션 기간 동안 ${Math.abs(totalReturn)}%의 손실을 기록했어요.`);
+    }
+
+    if (outperformance > 5) {
+      lines.push(`${config.benchmarkTicker} 대비 ${outperformance}%p 초과 성과를 달성해 우수한 종목 선택이 돋보여요.`);
+    } else if (outperformance < -5) {
+      lines.push(`${config.benchmarkTicker} 대비 ${Math.abs(outperformance)}%p 부진해 자산 배분 전략을 재검토해볼 만해요.`);
+    }
+
+    if (sharpeRatio >= 1) {
+      lines.push(`샤프 지수 ${sharpeRatio}로 위험 대비 수익 효율이 양호한 편이에요.`);
+    } else if (sharpeRatio < 0.5) {
+      lines.push(`샤프 지수 ${sharpeRatio}로 변동성 대비 수익 개선 여지가 있어요.`);
+    }
+
+    if (Math.abs(mdd) > 30) {
+      lines.push(`최대 낙폭(MDD) ${mdd}%로 변동성이 크니 분산 투자 비중을 높이는 것을 고려해보세요.`);
+    }
+
+    return lines.join(" ");
+  }, [metrics, config]);
+
+  return (
+    <div className="px-6 py-6 border-b border-border">
+      <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-3xl p-5 border border-primary/20">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <span className="text-foreground font-bold text-sm">AI 성과 코멘트</span>
+        </div>
+        <p className="text-foreground/80 text-sm leading-relaxed">{comment}</p>
       </div>
     </div>
   );
