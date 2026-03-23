@@ -80,5 +80,7 @@ export function useBacktest() {
     isLoading: mutation.isPending,
     isError: mutation.isError,
     metrics: getMetrics(mutation.data),
+    /** BE Spring AI 연동 완료 시 제공되는 AI 코멘트. null이면 클라이언트 룰 기반 사용 */
+    aiComment: mutation.data?.aiComment ?? null,
   };
 }

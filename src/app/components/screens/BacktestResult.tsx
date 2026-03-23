@@ -11,7 +11,7 @@ export function BacktestResult() {
   const location = useLocation();
   const config = location.state || {};
 
-  const { run, data, isLoading, metrics, isError } = useBacktest();
+  const { run, data, isLoading, metrics, isError, aiComment } = useBacktest();
 
   useEffect(() => {
     if (config.strategy) {
@@ -110,7 +110,7 @@ export function BacktestResult() {
       <ChartSection backtestData={backtestData} />
 
       {/* AI 코멘트 카드 */}
-      <AiCommentCard metrics={metrics} config={config} />
+      <AiCommentCard metrics={metrics} config={config} apiComment={aiComment} />
 
       {/* 성과 지표 */}
       <div className="px-6 py-10">
@@ -244,9 +244,20 @@ function ChartSection({ backtestData }: { backtestData: any[] }) {
   );
 }
 
-function AiCommentCard({ metrics, config }: { metrics: any; config: any }) {
+function AiCommentCard({
+  metrics,
+  config,
+  apiComment,
+}: {
+  metrics: any;
+  config: any;
+  apiComment?: string | null;
+}) {
+  // API 코멘트가 있으면 우선 사용, 없으면 클라이언트 룰 기반 fallback
   const comment = useMemo(() => {
-    const { totalReturn, mdd, sharpeRatio, outperformance, cagr } = metrics;
+    if (apiComment) return apiComment;
+
+    const { totalReturn, mdd, sharpeRatio, outperformance } = metrics;
     const lines: string[] = [];
 
     if (totalReturn >= 0) {
@@ -272,7 +283,7 @@ function AiCommentCard({ metrics, config }: { metrics: any; config: any }) {
     }
 
     return lines.join(" ");
-  }, [metrics, config]);
+  }, [apiComment, metrics, config]);
 
   return (
     <div className="px-6 py-6 border-b border-border">
