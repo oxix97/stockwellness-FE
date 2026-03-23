@@ -1,22 +1,9 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
-import { ChevronLeft, Plus, X, FlaskConical } from "lucide-react";
-import { Root as SliderRoot, Track as SliderTrack, Range as SliderRange, Thumb as SliderThumb } from "@radix-ui/react-slider";
+import { useState, useMemo } from "react";
+import { useNavigate, Navigate } from "react-router";
+import { ChevronLeft, FlaskConical } from "lucide-react";
 import { usePortfolio } from "@/hooks/use-portfolio";
-
-interface PortfolioItem {
-  symbol: string;
-  name: string;
-  weight: number;
-}
-
-const presetStocks = [
-  { symbol: "005930", name: "삼성전자" },
-  { symbol: "000660", name: "SK하이닉스" },
-  { symbol: "035420", name: "NAVER" },
-  { symbol: "TSLA", name: "TESLA" },
-  { symbol: "KODEX200", name: "KODEX 200" },
-];
+import { useAuthStore } from "@/store/auth";
+import { Skeleton, Slider } from "@/app/components/ui";
 
 const periods = [
   { id: "1y", label: "최근 1년" },
@@ -30,76 +17,64 @@ const strategies = [
   { id: "LUMP_SUM", label: "거치식 (Lump Sum)", description: "한 번에 전액 투자" },
 ];
 
-const rebalancing = [
-  { id: "none", label: "안 함" },
-  { id: "monthly", label: "매월" },
-  { id: "quarterly", label: "매 분기" },
-  { id: "yearly", label: "매년" },
-];
-
 const benchmarks = [
   { id: "KOSPI", label: "코스피" },
   { id: "KOSPI200", label: "코스피 200" },
   { id: "KOSDAQ", label: "코스닥" },
+  { id: "SPY", label: "S&P 500" },
 ];
 
 export function BacktestSetup() {
   const navigate = useNavigate();
-  const { holdings } = usePortfolio();
-  const [initialAmount, setInitialAmount] = useState(10000000);
+  const portfolioId = useAuthStore((s) => s.portfolioId);
+  const { holdings, isLoading } = usePortfolio();
+
+  // ── 훅은 조건부 return 이전에 모두 선언 ──────────────────
+  const [initialAmount, setInitialAmount] = useState(10_000_000);
   const [selectedStrategy, setSelectedStrategy] = useState<"DCA" | "LUMP_SUM">("LUMP_SUM");
   const [selectedPeriod, setSelectedPeriod] = useState("1y");
-  const [selectedRebalancing, setSelectedRebalancing] = useState("none");
   const [selectedBenchmark, setSelectedBenchmark] = useState("KOSPI");
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-  const [showAddStock, setShowAddStock] = useState(false);
+  const [weights, setWeights] = useState<Record<string, number>>({});
 
-  // 보유 종목을 초기 포트폴리오로 설정
-  useEffect(() => {
-    if (holdings && (holdings.items?.length ?? 0) > 0) {
-      setPortfolio(
-        (holdings.items ?? []).map((item) => ({
-          symbol: item.symbol,
-          name: item.symbol, // PortfolioItemResponse에 name 미제공 — symbol로 대체
-          weight: item.targetWeight,
-        }))
-      );
-    }
-  }, [holdings]);
+  // 포트폴리오 로드 완료 후 초기 비중 설정
+  const portfolioItems = holdings?.items ?? [];
+  const initializedWeights = useMemo(() => {
+    if (portfolioItems.length === 0) return {};
+    return Object.fromEntries(portfolioItems.map((item) => [item.symbol, item.targetWeight ?? 0]));
+  }, [portfolioItems]);
 
-  const totalWeight = portfolio.reduce((sum, item) => sum + item.weight, 0);
-  const isValid = totalWeight === 100;
+  const activeWeights = Object.keys(weights).length > 0 ? weights : initializedWeights;
+  const totalWeight = Math.round(Object.values(activeWeights).reduce((s, v) => s + v, 0) * 10) / 10;
+  const canStart = portfolioItems.length > 0 && Math.abs(totalWeight - 100) < 0.5;
 
-  const updateWeight = (index: number, newWeight: number) => {
-    const updated = [...portfolio];
-    updated[index].weight = newWeight;
-    setPortfolio(updated);
+  const handleWeightChange = (symbol: string, value: number) => {
+    setWeights((prev) => ({ ...(Object.keys(prev).length > 0 ? prev : initializedWeights), [symbol]: value }));
   };
 
-  const removeStock = (index: number) => {
-    setPortfolio(portfolio.filter((_, i) => i !== index));
-  };
+  if (!portfolioId) return <Navigate to="/portfolio" replace />;
 
-  const addStock = (stock: typeof presetStocks[0]) => {
-    if (!portfolio.find((p) => p.symbol === stock.symbol)) {
-      setPortfolio([...portfolio, { ...stock, weight: 0 }]);
-    }
-    setShowAddStock(false);
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-6 space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-40 w-full rounded-3xl" />
+        <Skeleton className="h-32 w-full rounded-3xl" />
+        <Skeleton className="h-32 w-full rounded-3xl" />
+      </div>
+    );
+  }
 
   const handleStartBacktest = () => {
-    if (isValid) {
-      navigate("/backtest/result", {
-        state: {
-          strategy: selectedStrategy,
-          amount: initialAmount,
-          benchmarkTicker: selectedBenchmark,
-          // 추가 로컬 정보
-          period: selectedPeriod,
-          portfolio,
-        },
-      });
-    }
+    if (!canStart) return;
+    navigate("/backtest/result", {
+      state: {
+        strategy: selectedStrategy,
+        amount: initialAmount,
+        benchmarkTicker: selectedBenchmark,
+        period: selectedPeriod,
+        weights: activeWeights,
+      },
+    });
   };
 
   return (
@@ -112,10 +87,10 @@ export function BacktestSetup() {
         <div className="flex-1 text-center text-foreground font-bold text-lg">
           포트폴리오 시뮬레이션
         </div>
-        <div className="w-10"></div>
+        <div className="w-10" />
       </header>
 
-      {/* 히어로 메시지 */}
+      {/* 히어로 */}
       <div className="px-6 py-10 bg-card border-b border-border">
         <div className="text-foreground mb-3 font-bold text-3xl leading-tight">
           이대로 과거로<br />돌아간다면? 🔮
@@ -125,21 +100,25 @@ export function BacktestSetup() {
         </div>
       </div>
 
-      {/* 전략 선택 */}
+      {/* 투자 전략 */}
       <div className="px-6 py-8 border-b border-border">
         <div className="text-foreground mb-4 font-bold text-xl">투자 전략</div>
         <div className="grid grid-cols-2 gap-4">
           {strategies.map((strategy) => (
             <button
               key={strategy.id}
-              onClick={() => setSelectedStrategy(strategy.id as any)}
+              onClick={() => setSelectedStrategy(strategy.id as "DCA" | "LUMP_SUM")}
               className={`p-5 rounded-3xl text-left transition-all border-2 ${
                 selectedStrategy === strategy.id
                   ? "border-primary bg-primary/5 shadow-md"
                   : "border-border bg-card"
               }`}
             >
-              <div className={`font-bold mb-1 ${selectedStrategy === strategy.id ? "text-primary" : "text-foreground"}`}>
+              <div
+                className={`font-bold mb-1 ${
+                  selectedStrategy === strategy.id ? "text-primary" : "text-foreground"
+                }`}
+              >
                 {strategy.label}
               </div>
               <div className="text-muted-foreground text-xs leading-tight">
@@ -150,36 +129,36 @@ export function BacktestSetup() {
         </div>
       </div>
 
-      {/* 초기 투자 금액 */}
+      {/* 초기 투자금액 */}
       <div className="px-6 py-8 border-b border-border">
-        <div className="text-foreground mb-4 font-bold text-xl">초기 투자금액</div>
+        <div className="text-foreground mb-4 font-bold text-xl">
+          {selectedStrategy === "DCA" ? "월 투자금액" : "초기 투자금액"}
+        </div>
         <div className="bg-secondary/50 rounded-3xl p-8 text-right">
           <input
             type="number"
+            min="1"
             value={initialAmount}
-            onChange={(e) => setInitialAmount(Number(e.target.value))}
+            onChange={(e) => setInitialAmount(Math.max(1, Number(e.target.value)))}
             className="w-full bg-transparent text-foreground text-right outline-none font-bold text-4xl"
           />
           <div className="text-muted-foreground mt-2 font-bold">원</div>
         </div>
       </div>
 
-      {/* 기간 선택 */}
+      {/* 시뮬레이션 기간 */}
       <div className="px-6 py-6 border-b border-border">
-        <div className="text-foreground mb-4" style={{ fontSize: '18px', fontWeight: 700 }}>
-          시뮬레이션 기간
-        </div>
+        <div className="text-foreground mb-4 font-bold text-[18px]">시뮬레이션 기간</div>
         <div className="grid grid-cols-2 gap-3">
           {periods.map((period) => (
             <button
               key={period.id}
               onClick={() => setSelectedPeriod(period.id)}
-              className={`py-4 rounded-2xl transition-all ${
+              className={`py-4 rounded-2xl transition-all font-semibold text-base ${
                 selectedPeriod === period.id
                   ? "bg-primary text-primary-foreground shadow-lg"
                   : "bg-card text-foreground border border-border"
               }`}
-              style={{ fontSize: '16px', fontWeight: 600 }}
             >
               {period.label}
             </button>
@@ -187,101 +166,52 @@ export function BacktestSetup() {
         </div>
       </div>
 
-      {/* 포트폴리오 설정 */}
+      {/* 자산 구성 및 비중 — 슬라이더 편집 */}
       <div className="px-6 py-6 border-b border-border">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-foreground" style={{ fontSize: '18px', fontWeight: 700 }}>
-            자산 구성 및 비중
+          <div className="text-foreground font-bold text-[18px]">자산 구성 및 비중</div>
+          <span className={`text-sm font-bold tabular-nums ${Math.abs(totalWeight - 100) < 0.5 ? "text-primary" : "text-destructive"}`}>
+            합계 {totalWeight}%
+          </span>
+        </div>
+        {portfolioItems.length === 0 ? (
+          <div className="text-muted-foreground text-sm text-center py-6">
+            포트폴리오에 종목이 없습니다.
           </div>
-          <div
-            className={`px-3 py-1 rounded-full text-sm font-medium ${
-              isValid ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-            }`}
-          >
-            합계: {totalWeight}%
+        ) : (
+          <div className="space-y-4">
+            {portfolioItems.map((item) => {
+              const w = activeWeights[item.symbol] ?? 0;
+              return (
+                <div key={item.symbol} className="bg-card rounded-2xl px-4 py-4 border border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-foreground font-bold text-sm">{item.symbol}</p>
+                    <span className="text-primary font-bold text-sm tabular-nums w-12 text-right">{w}%</span>
+                  </div>
+                  <Slider
+                    value={[w]}
+                    onValueChange={([v]) => handleWeightChange(item.symbol, v)}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              );
+            })}
           </div>
-        </div>
-
-        <div className="space-y-4 mb-4">
-          {portfolio.map((item, index) => (
-            <div key={item.symbol} className="bg-card rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <div className="text-foreground mb-1" style={{ fontSize: '16px', fontWeight: 600 }}>
-                    {item.name}
-                  </div>
-                  <div className="text-muted-foreground text-sm">{item.symbol}</div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-primary" style={{ fontSize: '24px', fontWeight: 700 }}>
-                    {item.weight}%
-                  </div>
-                  <button
-                    onClick={() => removeStock(index)}
-                    className="p-1 text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              <SliderRoot
-                value={[item.weight]}
-                onValueChange={([value]) => updateWeight(index, value)}
-                max={100}
-                step={5}
-                className="relative flex items-center w-full h-5"
-              >
-                <SliderTrack className="relative h-2 grow rounded-full bg-secondary">
-                  <SliderRange className="absolute h-full rounded-full bg-primary" />
-                </SliderTrack>
-                <SliderThumb className="block w-6 h-6 bg-primary rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-primary" />
-              </SliderRoot>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={() => setShowAddStock(true)}
-          className="w-full py-4 bg-secondary text-foreground rounded-2xl flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span style={{ fontSize: '16px', fontWeight: 600 }}>종목 추가</span>
-        </button>
-      </div>
-
-      {/* 리밸런싱 */}
-      <div className="px-6 py-6 border-b border-border">
-        <div className="text-foreground mb-4" style={{ fontSize: '18px', fontWeight: 700 }}>
-          리밸런싱 주기
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {rebalancing.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => setSelectedRebalancing(option.id)}
-              className={`py-3 rounded-2xl transition-all ${
-                selectedRebalancing === option.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-foreground border border-border"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        )}
       </div>
 
       {/* 벤치마크 */}
       <div className="px-6 py-6">
-        <div className="text-foreground mb-4" style={{ fontSize: '18px', fontWeight: 700 }}>
-          벤치마크 (비교 대상)
-        </div>
-        <div className="flex gap-3">
+        <div className="text-foreground mb-4 font-bold text-[18px]">벤치마크 (비교 대상)</div>
+        <div className="grid grid-cols-2 gap-3">
           {benchmarks.map((option) => (
             <button
               key={option.id}
               onClick={() => setSelectedBenchmark(option.id)}
-              className={`flex-1 py-3 rounded-2xl transition-all ${
+              className={`py-3 rounded-2xl transition-all ${
                 selectedBenchmark === option.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-card text-foreground border border-border"
@@ -297,9 +227,9 @@ export function BacktestSetup() {
       <div className="fixed bottom-0 left-0 right-0 px-6 py-4 bg-background border-t border-border">
         <button
           onClick={handleStartBacktest}
-          disabled={!isValid}
+          disabled={!canStart}
           className={`w-full rounded-2xl py-4 flex items-center justify-center gap-2 shadow-lg ${
-            isValid
+            canStart
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground cursor-not-allowed"
           }`}
@@ -308,41 +238,6 @@ export function BacktestSetup() {
           <span className="text-lg font-bold">시뮬레이션 시작하기</span>
         </button>
       </div>
-
-      {/* 종목 추가 모달 */}
-      {showAddStock && (
-        <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-          <div className="bg-card w-full rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div className="text-foreground" style={{ fontSize: '20px', fontWeight: 700 }}>
-                종목 추가
-              </div>
-              <button onClick={() => setShowAddStock(false)}>
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {presetStocks.map((stock) => (
-                <button
-                  key={stock.symbol}
-                  onClick={() => addStock(stock)}
-                  disabled={portfolio.some((p) => p.symbol === stock.symbol)}
-                  className={`w-full p-4 rounded-2xl text-left ${
-                    portfolio.some((p) => p.symbol === stock.symbol)
-                      ? "bg-muted text-muted-foreground cursor-not-allowed"
-                      : "bg-secondary text-foreground hover:bg-primary/10"
-                  }`}
-                >
-                  <div className="text-foreground" style={{ fontSize: '16px', fontWeight: 600 }}>
-                    {stock.name}
-                  </div>
-                  <div className="text-muted-foreground text-sm">{stock.symbol}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
