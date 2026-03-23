@@ -64,7 +64,7 @@ export function More() {
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 pt-4 border-t border-primary/10">
+          <div className="grid grid-cols-3 pt-4 border-t border-primary/10 divide-x divide-primary/10">
             <MetricItem
               label="가입일"
               value={
@@ -83,7 +83,16 @@ export function More() {
                   ? `${valuation.totalReturnRate >= 0 ? "+" : ""}${valuation.totalReturnRate.toFixed(1)}%`
                   : "—"
               }
-              highlight={!!valuation?.totalReturnRate}
+              highlight={
+                valuation?.totalReturnRate != null
+                  ? valuation.totalReturnRate >= 0
+                  : false
+              }
+              negative={
+                valuation?.totalReturnRate != null
+                  ? valuation.totalReturnRate < 0
+                  : false
+              }
             />
           </div>
         </div>
@@ -303,18 +312,20 @@ function MenuItem({
 }
 
 function MetricItem({
-  label, value, highlight,
+  label, value, highlight, negative,
 }: {
   label: string;
   value: string;
   highlight?: boolean;
+  negative?: boolean;
 }) {
+  const color = negative ? "text-[#FF4756]" : highlight ? "text-primary" : "text-foreground";
   return (
-    <div>
-      <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide mb-1">
+    <div className="flex flex-col items-center text-center px-2">
+      <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide mb-1.5">
         {label}
       </p>
-      <p className={`font-bold text-sm ${highlight ? "text-primary" : "text-foreground"}`}>
+      <p className={`font-bold text-sm tabular-nums ${color}`}>
         {value}
       </p>
     </div>
