@@ -17,6 +17,13 @@ const strategies = [
   { id: "LUMP_SUM", label: "거치식 (Lump Sum)", description: "한 번에 전액 투자" },
 ];
 
+const rebalancing = [
+  { id: "NONE", label: "안 함" },
+  { id: "MONTHLY", label: "매월" },
+  { id: "QUARTERLY", label: "매 분기" },
+  { id: "YEARLY", label: "매년" },
+];
+
 const benchmarks = [
   { id: "KOSPI", label: "코스피" },
   { id: "KOSPI200", label: "코스피 200" },
@@ -33,6 +40,7 @@ export function BacktestSetup() {
   const [initialAmount, setInitialAmount] = useState(10_000_000);
   const [selectedStrategy, setSelectedStrategy] = useState<"DCA" | "LUMP_SUM">("LUMP_SUM");
   const [selectedPeriod, setSelectedPeriod] = useState("1y");
+  const [selectedRebalancing, setSelectedRebalancing] = useState("NONE");
   const [selectedBenchmark, setSelectedBenchmark] = useState("KOSPI");
   const [weights, setWeights] = useState<Record<string, number>>({});
 
@@ -73,6 +81,7 @@ export function BacktestSetup() {
         benchmarkTicker: selectedBenchmark,
         period: selectedPeriod,
         weights: activeWeights,
+        rebalancingPeriod: selectedRebalancing,
       },
     });
   };
@@ -201,6 +210,26 @@ export function BacktestSetup() {
             })}
           </div>
         )}
+      </div>
+
+      {/* 리밸런싱 주기 */}
+      <div className="px-6 py-6 border-b border-border">
+        <div className="text-foreground mb-4 font-bold text-[18px]">리밸런싱 주기</div>
+        <div className="grid grid-cols-2 gap-3">
+          {rebalancing.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setSelectedRebalancing(option.id)}
+              className={`py-3 rounded-2xl transition-all font-semibold ${
+                selectedRebalancing === option.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-foreground border border-border"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 벤치마크 */}
