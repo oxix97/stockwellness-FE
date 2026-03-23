@@ -154,12 +154,14 @@ export interface PortfolioRebalancingResponse {
   items: RebalancingItem[];
 }
 
+export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
+
 export interface PortfolioItemResponse {
   symbol: string;
   quantity: number;
   purchasePrice: number;
   currency: string;
-  assetType: string;
+  assetType: AssetType;
   purchaseAmount: number;
   targetWeight: number;
 }
@@ -483,7 +485,7 @@ export interface CreatePortfolioItemRequest {
   quantity: number;
   purchasePrice: number;
   currency: string;
-  assetType: "STOCK" | "CASH";
+  assetType: AssetType;
   targetWeight: number;
 }
 
