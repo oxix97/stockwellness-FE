@@ -51,6 +51,25 @@ export function BacktestResult() {
 
   const backtestData = data.dailyResults;
 
+  // Best Year / Worst Year 계산
+  const yearlyStats = useMemo(() => {
+    if (backtestData.length === 0) return { best: null, worst: null };
+    const byYear: Record<string, { first: number; last: number }> = {};
+    for (const r of backtestData) {
+      const year = String(r.date).slice(0, 4);
+      if (!byYear[year]) byYear[year] = { first: r.totalValue, last: r.totalValue };
+      byYear[year].last = r.totalValue;
+    }
+    const yearReturns = Object.entries(byYear).map(([year, { first, last }]) => ({
+      year,
+      returnPct: +((last / first - 1) * 100).toFixed(1),
+    }));
+    if (yearReturns.length === 0) return { best: null, worst: null };
+    const best = yearReturns.reduce((a, b) => (a.returnPct > b.returnPct ? a : b));
+    const worst = yearReturns.reduce((a, b) => (a.returnPct < b.returnPct ? a : b));
+    return { best, worst };
+  }, [backtestData]);
+
   return (
     <div className="min-h-screen bg-background pb-8">
       <PageHeader title="시뮬레이션 결과" showBack />
@@ -101,6 +120,22 @@ export function BacktestResult() {
           <MetricCard label="최대 낙폭" value={`${metrics?.mdd}%`} sub="MDD" color="text-[#FF4756]" />
           <MetricCard label="위험 대비 수익" value={metrics?.sharpeRatio} sub="샤프 지수" />
           <MetricCard label="시장 민감도" value={metrics?.beta ?? "-"} sub="Beta" />
+          {yearlyStats.best && (
+            <MetricCard
+              label={`최고 연도 (${yearlyStats.best.year})`}
+              value={`+${yearlyStats.best.returnPct}%`}
+              sub="Best Year"
+              color="text-primary"
+            />
+          )}
+          {yearlyStats.worst && (
+            <MetricCard
+              label={`최저 연도 (${yearlyStats.worst.year})`}
+              value={`${yearlyStats.worst.returnPct}%`}
+              sub="Worst Year"
+              color="text-[#FF4756]"
+            />
+          )}
         </div>
       </div>
     </div>
