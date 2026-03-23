@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import { Flame, TrendingUp, BarChart2, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -25,6 +25,7 @@ const getSectorIcon = (name: string) => {
 };
 
 export function Home() {
+  const navigate = useNavigate();
   const { valuation, isLoading: isValuationLoading } = usePortfolio();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
@@ -36,8 +37,8 @@ export function Home() {
 
   return (
     <div className="min-h-full pb-6">
-      {/* 인사 */}
-      <div className="px-4 py-4">
+      {/* 헤더 — 알림 벨 + LIVE 배지 */}
+      <header className="px-4 py-3 flex items-center justify-between">
         <motion.p
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
@@ -45,7 +46,21 @@ export function Home() {
         >
           {nickname ?? "투자자"}님,<br />오늘의 증시는 맑음이에요 ☀️
         </motion.p>
-      </div>
+        <div className="flex items-center gap-3 shrink-0 self-start mt-1">
+          {/* LIVE 배지 */}
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FF4756]/10 border border-[#FF4756]/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4756] animate-pulse" />
+            <span className="text-[#FF4756] text-[11px] font-bold">LIVE</span>
+          </span>
+          {/* 알림 벨 */}
+          <button
+            onClick={() => navigate("/more/notifications")}
+            className="p-2 rounded-full bg-secondary text-muted-foreground"
+          >
+            <Bell className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
 
       {/* 시장 인덱스 미니카드 */}
       <Section title="시장 현황" icon={BarChart2}>
