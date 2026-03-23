@@ -154,6 +154,26 @@ function CorrelationSection({ matrix }: { matrix: CorrelationMatrix }) {
   );
 }
 
+function ActionBadge({ action }: { action?: string }) {
+  if (!action) return null;
+  const upper = action.toUpperCase();
+  const isBuy = upper === "BUY";
+  const isSell = upper === "SELL";
+
+  const label = isBuy ? "📥 매수" : isSell ? "📤 매도" : action;
+  const cls = isBuy
+    ? "bg-primary/10 text-primary border-primary/20"
+    : isSell
+    ? "bg-[#FF4756]/10 text-[#FF4756] border-[#FF4756]/20"
+    : "bg-secondary text-foreground border-border";
+
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold border ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
 function PrescriptionSection({ advice, onBacktest }: any) {
   return (
     <div className="px-6 py-10">
@@ -161,19 +181,22 @@ function PrescriptionSection({ advice, onBacktest }: any) {
         <div className="text-4xl">💊</div>
         <div className="text-foreground font-bold text-2xl">AI의 처방전</div>
       </div>
-      
+
       <div className="bg-card rounded-3xl p-6 shadow-sm border border-border mb-8 relative overflow-hidden">
-         <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
-         <div className="flex items-center gap-3 mb-4">
-            <Activity className="w-6 h-6 text-primary" />
-            <div className="text-foreground font-bold text-lg">권장 조치: {advice?.action}</div>
-         </div>
-         <div className="text-foreground leading-relaxed mb-6 font-medium">
-           {advice?.content}
-         </div>
-         <div className="text-xs text-muted-foreground bg-secondary/50 inline-block px-3 py-1 rounded-full">
-           생성일: {new Date(advice?.createdAt).toLocaleString()}
-         </div>
+        <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            <div className="text-foreground font-bold text-base">권장 조치</div>
+          </div>
+          <ActionBadge action={advice?.action} />
+        </div>
+        <div className="text-foreground leading-relaxed mb-6 font-medium">
+          {advice?.content}
+        </div>
+        <div className="text-xs text-muted-foreground bg-secondary/50 inline-block px-3 py-1 rounded-full">
+          생성일: {new Date(advice?.createdAt).toLocaleString()}
+        </div>
       </div>
 
       <button

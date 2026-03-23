@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus, Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useWatchlist } from "@/hooks/use-watchlist";
@@ -27,6 +27,12 @@ export function Watchlist() {
 
   const itemsQuery = useGroupItems(activeGroup);
   const stocks = itemsQuery.data?.items ?? [];
+
+  // 마지막 업데이트 시각
+  const lastUpdatedAt = useMemo(() => {
+    if (!itemsQuery.dataUpdatedAt) return null;
+    return new Date(itemsQuery.dataUpdatedAt);
+  }, [itemsQuery.dataUpdatedAt]);
 
   const handleCreateGroup = () => {
     const name = newGroupName.trim();
@@ -134,6 +140,17 @@ export function Watchlist() {
           <EmptyState />
         )}
       </div>
+
+      {/* 마지막 업데이트 타임스탬프 */}
+      {lastUpdatedAt && stocks.length > 0 && (
+        <p className="text-muted-foreground text-xs text-center mt-4 mb-2">
+          마지막 업데이트:{" "}
+          {lastUpdatedAt.toLocaleTimeString("ko-KR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </p>
+      )}
     </div>
   );
 }

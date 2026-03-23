@@ -39,6 +39,10 @@ export function useSector() {
         details[index]?.isError
           ? []
           : details[index]?.data?.leadingStocks ?? [],
+      technicalIndicators:
+        details[index]?.isError
+          ? null
+          : details[index]?.data?.technicalIndicators ?? null,
       detailLoading: details[index]?.isLoading ?? false,
       detailError: details[index]?.isError ?? false,
     })) ?? [];

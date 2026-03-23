@@ -11,8 +11,8 @@ export const authApi = {
    * @returns 로그인 성공 시 사용자 정보 및 토큰 세트
    */
   login: async (params: LoginRequest): Promise<LoginResponse> => {
-    const { data } = await apiClient.post("/v1/auth/login", params);
-    return data;
+    const data = await apiClient.post("/v1/auth/login", params);
+    return data as unknown as LoginResponse;
   },
 
   /**
@@ -29,7 +29,7 @@ export const authApi = {
    * @returns 새 토큰 세트
    */
   reissue: async (params: ReissueRequest): Promise<ReissueResponse> => {
-    const { data } = await apiClient.post("/v1/auth/reissue", params);
-    return data;
+    const data = await apiClient.post("/v1/auth/reissue", params);
+    return data as unknown as ReissueResponse;
   },
 };

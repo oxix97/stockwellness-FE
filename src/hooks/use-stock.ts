@@ -8,11 +8,12 @@ import { StockSearchResponse, StockPriceHistoryResponse, NewListingStock } from 
 export function useStock() {
   const queryClient = useQueryClient();
 
-  /** 인기 검색 종목 쿼리 */
+  /** 인기 검색 종목 쿼리 — 비로그인 401 시 빈 배열로 graceful fallback */
   const popular = useQuery<string[]>({
     queryKey: ["stocks", "popular"],
-    queryFn: () => stockApi.getPopularSearch(),
-    staleTime: 1000 * 60 * 60, // 인기 검색어는 1시간 동안 유지
+    queryFn: () => stockApi.getPopularSearch().catch(() => []),
+    staleTime: 1000 * 60 * 60,
+    retry: false,
   });
 
   /**

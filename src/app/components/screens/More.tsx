@@ -28,7 +28,14 @@ export function More() {
   const navigate = useNavigate();
   const { nickname, logout, joinedDate, setAuth } = useAuthStore();
   const { theme, setTheme } = useTheme();
-  const { holdings, valuation } = usePortfolio();
+  const { holdings, valuation, health } = usePortfolio();
+
+  const investorType =
+    health.overallScore >= 70
+      ? "안정형 투자자"
+      : health.overallScore >= 40
+      ? "균형형 투자자"
+      : "공격형 투자자";
   const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const handleLogout = () => {
@@ -60,11 +67,11 @@ export function More() {
             <div>
               <p className="text-foreground font-bold text-lg">{nickname ?? "투자자"}님</p>
               <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-semibold">
-                안정형 투자자
+                {investorType}
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 pt-4 border-t border-primary/10">
+          <div className="grid grid-cols-3 pt-4 border-t border-primary/10 divide-x divide-primary/10">
             <MetricItem
               label="가입일"
               value={
@@ -83,7 +90,16 @@ export function More() {
                   ? `${valuation.totalReturnRate >= 0 ? "+" : ""}${valuation.totalReturnRate.toFixed(1)}%`
                   : "—"
               }
-              highlight={!!valuation?.totalReturnRate}
+              highlight={
+                valuation?.totalReturnRate != null
+                  ? valuation.totalReturnRate >= 0
+                  : false
+              }
+              negative={
+                valuation?.totalReturnRate != null
+                  ? valuation.totalReturnRate < 0
+                  : false
+              }
             />
           </div>
         </div>
@@ -303,18 +319,20 @@ function MenuItem({
 }
 
 function MetricItem({
-  label, value, highlight,
+  label, value, highlight, negative,
 }: {
   label: string;
   value: string;
   highlight?: boolean;
+  negative?: boolean;
 }) {
+  const color = negative ? "text-[#FF4756]" : highlight ? "text-primary" : "text-foreground";
   return (
-    <div>
-      <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide mb-1">
+    <div className="flex flex-col items-center text-center px-2">
+      <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide mb-1.5">
         {label}
       </p>
-      <p className={`font-bold text-sm ${highlight ? "text-primary" : "text-foreground"}`}>
+      <p className={`font-bold text-sm tabular-nums ${color}`}>
         {value}
       </p>
     </div>

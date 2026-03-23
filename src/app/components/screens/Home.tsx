@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import { Flame, TrendingUp, BarChart2, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
+import { useMarketIndex } from "@/hooks/use-market-index";
 import { Skeleton } from "@/app/components/ui";
 import { Section } from "@/app/components/shared";
 import { formatCurrency, formatPercent } from "@/utils/format";
@@ -13,6 +14,13 @@ import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
 import { SectorBottomSheet } from "@/app/components/home/SectorBottomSheet";
 import { SupplyDemandSection } from "@/app/components/home/SupplyDemandSection";
 import { NewListingsSection } from "@/app/components/home/NewListingsSection";
+
+function getMarketGreeting(kospiRate: number | null): { text: string; emoji: string } {
+  if (kospiRate == null) return { text: "오늘의 증시를 불러오는 중이에요", emoji: "📊" };
+  if (kospiRate >= 0.5) return { text: "오늘의 증시는 맑음이에요", emoji: "☀️" };
+  if (kospiRate <= -0.5) return { text: "오늘의 증시는 비가 내려요", emoji: "🌧️" };
+  return { text: "오늘의 증시는 흐림이에요", emoji: "⛅" };
+}
 
 const getSectorIcon = (name: string) => {
   if (name.includes("바이오") || name.includes("제약")) return "💊";
@@ -25,27 +33,47 @@ const getSectorIcon = (name: string) => {
 };
 
 export function Home() {
+  const navigate = useNavigate();
   const { valuation, isLoading: isValuationLoading } = usePortfolio();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
   const { popular } = useStock();
   const { data: sectors, isLoading: isSectorsLoading } = useSector();
+  const { data: marketIndexes } = useMarketIndex();
+
+  // KOSPI 등락률 기반 인사말
+  const kospiRate = marketIndexes?.find((m) => m.name === "KOSPI")?.fluctuationRate ?? null;
+  const greeting = getMarketGreeting(kospiRate);
 
   // 섹터 바텀시트 상태
   const [selectedSector, setSelectedSector] = useState<(typeof sectors)[number] | null>(null);
 
   return (
     <div className="min-h-full pb-6">
-      {/* 인사 */}
-      <div className="px-4 py-4">
+      {/* 헤더 — 알림 벨 + LIVE 배지 */}
+      <header className="px-4 py-3 flex items-center justify-between">
         <motion.p
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
           className="text-foreground font-bold text-2xl leading-snug"
         >
-          {nickname ?? "투자자"}님,<br />오늘의 증시는 맑음이에요 ☀️
+          {nickname ?? "투자자"}님,<br />{greeting.text} {greeting.emoji}
         </motion.p>
-      </div>
+        <div className="flex items-center gap-3 shrink-0 self-start mt-1">
+          {/* LIVE 배지 */}
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FF4756]/10 border border-[#FF4756]/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4756] animate-pulse" />
+            <span className="text-[#FF4756] text-[11px] font-bold">LIVE</span>
+          </span>
+          {/* 알림 벨 */}
+          <button
+            onClick={() => navigate("/more/notifications")}
+            className="p-2 rounded-full bg-secondary text-muted-foreground"
+          >
+            <Bell className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
 
       {/* 시장 인덱스 미니카드 */}
       <Section title="시장 현황" icon={BarChart2}>

@@ -154,12 +154,14 @@ export interface PortfolioRebalancingResponse {
   items: RebalancingItem[];
 }
 
+export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
+
 export interface PortfolioItemResponse {
   symbol: string;
   quantity: number;
   purchasePrice: number;
   currency: string;
-  assetType: string;
+  assetType: AssetType;
   purchaseAmount: number;
   targetWeight: number;
 }
@@ -309,6 +311,8 @@ export interface BacktestDailyResult {
 export interface BacktestResponse {
   /** 일별 백테스트 결과 리스트 */
   dailyResults: BacktestDailyResult[];
+  /** AI 생성 코멘트 (BE Spring AI 연동 완료 후 제공) */
+  aiComment?: string | null;
 }
 
 /**
@@ -483,11 +487,17 @@ export interface CreatePortfolioItemRequest {
   quantity: number;
   purchasePrice: number;
   currency: string;
-  assetType: "STOCK" | "CASH";
+  assetType: AssetType;
   targetWeight: number;
 }
 
 export interface CreatePortfolioRequest {
+  name: string;
+  description: string;
+  items: CreatePortfolioItemRequest[];
+}
+
+export interface UpdatePortfolioRequest {
   name: string;
   description: string;
   items: CreatePortfolioItemRequest[];
