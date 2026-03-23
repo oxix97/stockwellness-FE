@@ -1,12 +1,15 @@
 import { useState, useMemo } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { Heart } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Customized } from "recharts";
 import { useStock } from "@/hooks/use-stock";
-import { Skeleton } from "@/app/components/ui";
+import { usePortfolio, useUpdatePortfolio } from "@/hooks/use-portfolio";
+import { useAuthStore } from "@/store/auth";
+import { Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
 import { formatCurrency } from "@/utils/format";
 import { StockReturnsResponse } from "@/api/stock";
+import { toast } from "sonner";
 
 // ── 차트 색상 상수 (한국 관례: 상승=빨강, 하락=파랑) ────────────────────
 const CHART_COLORS = {
@@ -106,9 +109,16 @@ const PERIOD_CONFIG: Record<string, { period: string; frequency: string }> = {
 
 export function StockDetail() {
   const { symbol } = useParams();
+  const navigate = useNavigate();
+  const portfolioId = useAuthStore((s) => s.portfolioId);
   const [periodLabel, setPeriodLabel] = useState("일봉");
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [quantity, setQuantity] = useState("1");
+  const [purchasePrice, setPurchasePrice] = useState("");
   const { useHistory, useReturns } = useStock();
+  const { holdings } = usePortfolio();
+  const updatePortfolio = useUpdatePortfolio();
 
   const ticker = symbol || "";
   const { period: apiPeriod, frequency: apiFrequency } = PERIOD_CONFIG[periodLabel] || PERIOD_CONFIG["일봉"];
@@ -179,6 +189,53 @@ export function StockDetail() {
     };
   }, [history.data]);
 
+  const handleAddClick = () => {
+    if (!portfolioId) {
+      toast.info("포트폴리오를 먼저 만들어보세요.");
+      navigate("/portfolio");
+      return;
+    }
+    const alreadyIn = holdings?.items.some((item) => item.symbol === ticker);
+    if (alreadyIn) {
+      toast.info("이미 포트폴리오에 있는 종목입니다.");
+      return;
+    }
+    setPurchasePrice(String(latestPrice || ""));
+    setShowAddDialog(true);
+  };
+
+  const handleConfirmAdd = () => {
+    if (!holdings || !portfolioId) return;
+    const qty = Number(quantity);
+    const price = Number(purchasePrice);
+    if (!qty || !price) {
+      toast.error("수량과 매입단가를 올바르게 입력해주세요.");
+      return;
+    }
+    const existingItems = holdings.items.map((item) => ({
+      symbol: item.symbol,
+      quantity: item.quantity,
+      purchasePrice: item.purchasePrice,
+      currency: item.currency,
+      assetType: item.assetType as "STOCK" | "CASH",
+      targetWeight: item.targetWeight,
+    }));
+    updatePortfolio.mutate(
+      {
+        name: holdings.name,
+        description: holdings.description ?? "",
+        items: [...existingItems, { symbol: ticker, quantity: qty, purchasePrice: price, currency: "KRW", assetType: "STOCK", targetWeight: 0 }],
+      },
+      {
+        onSuccess: () => {
+          toast.success(`${ticker}을(를) 포트폴리오에 추가했습니다.`);
+          setShowAddDialog(false);
+        },
+        onError: () => toast.error("포트폴리오 추가에 실패했습니다."),
+      }
+    );
+  };
+
   if (history.isLoading) {
     return (
       <div className="p-6 space-y-8">
@@ -237,10 +294,51 @@ export function StockDetail() {
       />
 
       <div className="px-6 pb-12 pt-2">
-        <button className="w-full bg-primary text-primary-foreground rounded-2xl py-5 text-xl font-bold shadow-lg active:scale-95 transition-transform">
-          내 포트폴리오에 담기
+        <button
+          onClick={handleAddClick}
+          disabled={updatePortfolio.isPending}
+          className="w-full bg-primary text-primary-foreground rounded-2xl py-5 text-xl font-bold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
+        >
+          {updatePortfolio.isPending ? "추가 중..." : "내 포트폴리오에 담기"}
         </button>
       </div>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{ticker} 포트폴리오에 담기</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">수량 (주)</label>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                min="1"
+                className="w-full h-11 bg-secondary rounded-xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-foreground">매입단가 (₩)</label>
+              <input
+                type="number"
+                value={purchasePrice}
+                onChange={(e) => setPurchasePrice(e.target.value)}
+                min="0"
+                className="w-full h-11 bg-secondary rounded-xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <button
+              onClick={handleConfirmAdd}
+              disabled={updatePortfolio.isPending}
+              className="w-full bg-primary text-primary-foreground rounded-xl py-3 font-bold disabled:opacity-50"
+            >
+              추가하기
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
