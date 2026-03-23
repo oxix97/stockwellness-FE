@@ -311,6 +311,8 @@ export interface BacktestDailyResult {
 export interface BacktestResponse {
   /** 일별 백테스트 결과 리스트 */
   dailyResults: BacktestDailyResult[];
+  /** AI 생성 코멘트 (BE Spring AI 연동 완료 후 제공) */
+  aiComment?: string | null;
 }
 
 /**
