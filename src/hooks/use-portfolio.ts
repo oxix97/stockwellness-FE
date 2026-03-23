@@ -1,6 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { portfolioApi } from "@/api/portfolio";
 import { useAuthStore } from "@/store/auth";
+import { UpdatePortfolioRequest } from "@/types/api";
+
+export function useUpdatePortfolio() {
+  const portfolioId = useAuthStore((state) => state.portfolioId);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: UpdatePortfolioRequest) =>
+      portfolioApi.update(portfolioId!, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["portfolio", portfolioId] });
+    },
+  });
+}
 
 export function usePortfolio() {
   const portfolioId = useAuthStore((state) => state.portfolioId);

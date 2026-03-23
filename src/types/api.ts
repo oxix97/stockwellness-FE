@@ -497,6 +497,12 @@ export interface CreatePortfolioRequest {
   items: CreatePortfolioItemRequest[];
 }
 
+export interface UpdatePortfolioRequest {
+  name: string;
+  description: string;
+  items: CreatePortfolioItemRequest[];
+}
+
 export interface CreateWatchlistGroupRequest {
   name: string;
 }

@@ -8,6 +8,7 @@ import {
   PortfolioResponse,
   CorrelationMatrix,
   CreatePortfolioRequest,
+  UpdatePortfolioRequest,
 } from "@/types/api";
 
 /**
@@ -100,5 +101,14 @@ export const portfolioApi = {
   getCorrelation: async (portfolioId: string): Promise<CorrelationMatrix> => {
     const data = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/correlation`);
     return data as unknown as CorrelationMatrix;
+  },
+
+  /**
+   * 포트폴리오를 수정합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @param body 수정할 포트폴리오 정보
+   */
+  update: async (portfolioId: string, body: UpdatePortfolioRequest): Promise<void> => {
+    await apiClient.put(`/v1/portfolios/${portfolioId}`, body);
   },
 };
