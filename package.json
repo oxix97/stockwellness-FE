@@ -9,7 +9,7 @@
     "predev": "npm run sync-api || true",
     "dev": "vite",
     "sync-api": "openapi-typescript http://localhost:8080/docs/openapi3.yaml -o src/types/schema.d.ts",
-    "build": "npm run sync-api && vite build"
+    "build": "(npm run sync-api || echo 'API sync failed, using cached schema') && vite build"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
