@@ -65,7 +65,7 @@ jobs:
               "repository": "${{ github.repository }}",
               "branch": "${{ github.ref_name }}",
               "sha": "${{ github.sha }}",
-              "tag": "${{ github.ref_type == 'tag' && github.ref_name || '' }}",
-              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
               "app_name": "front"
+            }'
+
             }'
