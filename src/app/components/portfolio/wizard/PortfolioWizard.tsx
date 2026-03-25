@@ -32,7 +32,7 @@ export interface WizardState {
   createdPortfolioId: string | null;
 }
 
-type WizardAction =
+export type WizardAction =
   | { type: "NEXT" }
   | { type: "PREV" }
   | { type: "SET_NAME"; payload: string }

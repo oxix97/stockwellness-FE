@@ -16,18 +16,25 @@ export interface NotificationSettings {
 }
 
 export const memberApi = {
-  getMe: () =>
-    apiClient.get<MemberProfile>("/v1/members/me"),
+  getMe: async (): Promise<MemberProfile> => {
+    const data = await apiClient.get("/v1/members/me");
+    return data as unknown as MemberProfile;
+  },
 
-  updateProfile: (nickname: string) =>
-    apiClient.put<void>("/v1/members/me", { nickname }),
+  updateProfile: async (nickname: string): Promise<void> => {
+    await apiClient.put("/v1/members/me", { nickname });
+  },
 
-  withdraw: () =>
-    apiClient.delete<void>("/v1/members/me"),
+  withdraw: async (): Promise<void> => {
+    await apiClient.delete("/v1/members/me");
+  },
 
-  getNotifications: () =>
-    apiClient.get<NotificationSettings>("/v1/members/me/notifications"),
+  getNotifications: async (): Promise<NotificationSettings> => {
+    const data = await apiClient.get("/v1/members/me/notifications");
+    return data as unknown as NotificationSettings;
+  },
 
-  updateNotifications: (settings: Partial<NotificationSettings>) =>
-    apiClient.put<void>("/v1/members/me/notifications", settings),
+  updateNotifications: async (settings: Partial<NotificationSettings>): Promise<void> => {
+    await apiClient.put("/v1/members/me/notifications", settings);
+  },
 };

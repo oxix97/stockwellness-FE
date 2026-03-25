@@ -26,7 +26,7 @@ import { memberApi } from "@/api/member";
  */
 export function More() {
   const navigate = useNavigate();
-  const { nickname, logout, joinedDate, setAuth } = useAuthStore();
+  const { nickname, logout, joinedDate } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { holdings, valuation, health } = usePortfolio();
 

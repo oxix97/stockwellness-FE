@@ -9,6 +9,7 @@ import {
   CorrelationMatrix,
   CreatePortfolioRequest,
   UpdatePortfolioRequest,
+  AdviceResponse,
 } from "@/types/api";
 
 /**
@@ -77,9 +78,9 @@ export const portfolioApi = {
    * @param portfolioId 포트폴리오 ID
    * @returns 포트폴리오 최적화 및 전략 제언 메시지
    */
-  getAdvice: async (portfolioId: string) => {
+  getAdvice: async (portfolioId: string): Promise<AdviceResponse> => {
     const data = await apiClient.get(`/v1/portfolios/${portfolioId}/advice/latest`);
-    return data;
+    return data as unknown as AdviceResponse;
   },
 
   /**
@@ -108,7 +109,15 @@ export const portfolioApi = {
    * @param portfolioId 포트폴리오 ID
    * @param body 수정할 포트폴리오 정보
    */
-  update: async (portfolioId: string, body: UpdatePortfolioRequest): Promise<void> => {
+  updatePortfolio: async (portfolioId: string, body: UpdatePortfolioRequest): Promise<void> => {
     await apiClient.put(`/v1/portfolios/${portfolioId}`, body);
+  },
+
+  /**
+   * 포트폴리오를 삭제합니다.
+   * @param portfolioId 포트폴리오 ID
+   */
+  deletePortfolio: async (portfolioId: string): Promise<void> => {
+    await apiClient.delete(`/v1/portfolios/${portfolioId}`);
   },
 };

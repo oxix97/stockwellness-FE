@@ -1,8 +1,7 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "motion/react";
-import { Badge } from "@/app/components/ui";
 import { WatchlistStock } from "@/types/api";
 import { formatPercent } from "@/utils/format";
 import { useWatchlist } from "@/hooks/use-watchlist";
@@ -146,13 +145,13 @@ export function WatchlistItemCard({
           {/* 가격 + 등락률 */}
           <div className="text-right shrink-0 ml-2">
             <p className="text-foreground font-semibold text-sm tabular-nums">
-              ₩{stock.currentPrice.toLocaleString()}
+              ₩{(stock.currentPrice ?? 0).toLocaleString()}
             </p>
             <p
               className="text-xs font-medium tabular-nums"
               style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
             >
-              {formatPercent(stock.fluctuationRate)}
+              {formatPercent(stock.fluctuationRate ?? 0)}
             </p>
           </div>
         </button>

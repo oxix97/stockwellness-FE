@@ -8,7 +8,7 @@ interface SectorData {
   fluctuationRate: number;
   diagnosisMessage: string;
   leadingStocks: LeadingStock[];
-  technicalIndicators: TechnicalIndicators | null;
+  technicalIndicators: Partial<TechnicalIndicators> | null;
   detailLoading: boolean;
 }
 
@@ -72,7 +72,7 @@ function SheetBody({ sector }: { sector: SectorData }) {
   );
 }
 
-function TechnicalIndicatorCard({ ti, loading }: { ti: TechnicalIndicators | null; loading: boolean }) {
+function TechnicalIndicatorCard({ ti, loading }: { ti: Partial<TechnicalIndicators> | null; loading: boolean }) {
   if (loading) {
     return (
       <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
@@ -84,10 +84,7 @@ function TechnicalIndicatorCard({ ti, loading }: { ti: TechnicalIndicators | nul
   }
 
   const rsi = ti?.rsi14;
-  const alignment = ti?.alignmentStatus;
-  const isGolden = ti?.isGoldenCross;
-  const isDead = ti?.isDeadCross;
-  const hasAnyData = rsi != null || alignment != null || isGolden != null || isDead != null;
+  const hasAnyData = rsi != null || ti?.ma5 != null || ti?.ma20 != null;
 
   if (!hasAnyData) {
     return (
@@ -154,25 +151,16 @@ function TechnicalIndicatorCard({ ti, loading }: { ti: TechnicalIndicators | nul
         <div className="text-xs text-muted-foreground">RSI 분석 중...</div>
       )}
 
-      {/* 이동평균 정배열 + 크로스 뱃지 */}
+      {/* 이동평균 뱃지 */}
       <div className="flex flex-wrap gap-2">
-        {alignment != null ? (
+        {ti?.ma5 != null && (
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground">
-            MA {alignment}
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-secondary">
-            MA 분석 중
+            MA 5: {(ti.ma5 ?? 0).toLocaleString()}
           </span>
         )}
-        {isGolden === true && (
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-            골든크로스 ✦
-          </span>
-        )}
-        {isDead === true && (
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EF4444]/10 text-[#EF4444]">
-            데드크로스 ✦
+        {ti?.ma20 != null && (
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground">
+            MA 20: {(ti.ma20 ?? 0).toLocaleString()}
           </span>
         )}
       </div>

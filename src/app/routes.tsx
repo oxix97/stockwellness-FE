@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { Layout } from "@/app/components/Layout";
+import { ProtectedRoute } from "@/app/components/shared/ProtectedRoute";
 import {
   Home,
-  Search,
   Portfolio,
   Watchlist,
   More,
@@ -18,7 +18,11 @@ import {
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: Layout,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, Component: Home },
       { path: "search", element: <Navigate to="/" replace /> },
@@ -38,18 +42,34 @@ export const router = createBrowserRouter([
   },
   {
     path: "/stock/:symbol",
-    Component: StockDetail,
+    element: (
+      <ProtectedRoute>
+        <StockDetail />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/health-diagnosis",
-    Component: HealthDiagnosis,
+    element: (
+      <ProtectedRoute>
+        <HealthDiagnosis />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/backtest/setup",
-    Component: BacktestSetup,
+    element: (
+      <ProtectedRoute>
+        <BacktestSetup />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/backtest/result",
-    Component: BacktestResult,
+    element: (
+      <ProtectedRoute>
+        <BacktestResult />
+      </ProtectedRoute>
+    ),
   },
 ]);

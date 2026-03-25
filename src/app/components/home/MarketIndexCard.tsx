@@ -36,9 +36,10 @@ function MarketIndexCard({ index }: { index: MarketIndex }) {
   return (
     <div className="flex-1 bg-card rounded-xl p-3 shadow-sm border border-border">
       <div className="text-muted-foreground text-[10px] font-medium mb-0.5">{index.name}</div>
-      <div className="text-foreground font-semibold text-[13px] tabular-nums">
-        {index.currentPrice.toLocaleString()}
+      <div className="text-foreground font-bold text-base tabular-nums">
+        {(index.currentPrice ?? 0).toLocaleString()}
       </div>
+
       <div
         className="text-[11px] font-semibold tabular-nums mb-1"
         style={{ color }}

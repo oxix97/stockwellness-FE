@@ -34,6 +34,11 @@ interface UserState {
      * @param id 포트폴리오 ID (문자열 혹은 숫자)
      */
     setPortfolioId: (id: string | null) => void;
+    /**
+     * 액세스 토큰만 업데이트합니다.
+     * @param accessToken 새 액세스 토큰
+     */
+    updateAccessToken: (accessToken: string) => void;
     /** 닉네임을 변경합니다. */
     setNickname: (nickname: string) => void;
     /**
@@ -66,12 +71,17 @@ export const useAuthStore = create<UserState>()(
                 localStorage.setItem("refreshToken", data.refreshToken);
             },
             setPortfolioId: (id) => set({ portfolioId: id }),
+            updateAccessToken: (accessToken) => {
+                set({ accessToken });
+                localStorage.setItem("accessToken", accessToken);
+            },
             setNickname: (nickname) => set({ nickname }),
             logout: () => {
                 set({
                     memberId: null,
                     email: null,
                     nickname: null,
+                    portfolioId: null,
                     accessToken: null,
                     joinedDate: null,
                 });

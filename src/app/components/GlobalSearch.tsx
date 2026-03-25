@@ -26,9 +26,32 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
     clearHistory,
   } = useSearch();
 
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // 무한 스크롤 관찰자 설정
+  useEffect(() => {
+    const { hasNextPage, isFetchingNextPage, fetchNextPage } = autocomplete;
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [autocomplete.hasNextPage, autocomplete.isFetchingNextPage, autocomplete.fetchNextPage]);
 
   const handleSelect = (ticker: string) => {
     onClose();
@@ -41,6 +64,7 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
   };
 
   const showAutocomplete = keyword.trim().length > 0;
+  const autocompleteResults = autocomplete.data?.pages.flatMap((page) => page.content) ?? [];
 
   return (
     <motion.div
@@ -145,25 +169,34 @@ export function GlobalSearch({ onClose }: GlobalSearchProps) {
                   <Skeleton key={i} className="h-12 rounded-xl" />
                 ))}
               </div>
-            ) : autocomplete.data?.content.length === 0 ? (
+            ) : autocompleteResults.length === 0 ? (
               <div className="text-center text-muted-foreground py-16 text-sm">
                 검색 결과가 없습니다
               </div>
             ) : (
-              autocomplete.data?.content.map((stock) => (
-                <button
-                  key={stock.ticker}
-                  onClick={() => handleSelect(stock.ticker)}
-                  className="w-full flex items-center justify-between py-3.5 border-b border-border last:border-0 text-left"
-                >
-                  <div>
-                    <div className="text-foreground font-semibold text-[15px]">{stock.name}</div>
-                    <div className="text-muted-foreground text-xs mt-0.5">
-                      {stock.ticker} · {stock.marketType}
+              <>
+                {autocompleteResults.map((stock) => (
+                  <button
+                    key={stock.ticker}
+                    onClick={() => handleSelect(stock.ticker)}
+                    className="w-full flex items-center justify-between py-3.5 border-b border-border last:border-0 text-left"
+                  >
+                    <div>
+                      <div className="text-foreground font-semibold text-[15px]">{stock.name}</div>
+                      <div className="text-muted-foreground text-xs mt-0.5">
+                        {stock.ticker} · {stock.marketType}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))
+                  </button>
+                ))}
+                
+                {/* 무한 스크롤 트리거 */}
+                <div ref={loadMoreRef} className="py-4 flex justify-center">
+                  {autocomplete.isFetchingNextPage && (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                  )}
+                </div>
+              </>
             )}
           </section>
         )}

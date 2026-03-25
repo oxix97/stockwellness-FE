@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { Activity, Sparkles } from "lucide-react";
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
@@ -10,20 +10,28 @@ export function BacktestResult() {
   const navigate = useNavigate();
   const location = useLocation();
   const config = location.state || {};
+  const hasRun = useRef(false);
 
-  const { run, data, isLoading, metrics, isError, aiComment } = useBacktest();
+  // useBacktest에 선택된 기간을 전달하여 클라이언트 사이드 슬라이싱 및 지표 계산 활성화
+  const { run, data, isLoading, metrics, isError, aiComment } = useBacktest(config.period);
 
   useEffect(() => {
-    if (config.strategy) {
+    if (config.strategy && !hasRun.current) {
+      // 서버 로그 분석 결과 period 누락 확인 -> 명시적으로 포함
       run({
         strategy: config.strategy,
-        amount: config.amount,
-        benchmarkTicker: config.benchmarkTicker,
+        amount: Number(config.amount),
+        benchmarkTicker: config.benchmarkTicker || "SPY",
+        period: config.period || "1y",
+        weights: config.weights,
+        rebalancingPeriod: config.rebalancingPeriod || "NONE",
       });
+      hasRun.current = true;
     }
   }, [config, run]);
 
-  if (isLoading) {
+  // 로딩 중이거나 아직 데이터가 없는 초기 상태 처리
+  if (isLoading || (hasRun.current && !data && !isError)) {
     return (
       <div className="p-6 space-y-8">
         <Skeleton className="h-10 w-48" />
@@ -33,12 +41,13 @@ export function BacktestResult() {
     );
   }
 
-  if (isError || !data || !metrics) {
+  // 서버 에러 발생 시 처리
+  if (isError || (hasRun.current && !data)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <div className="text-6xl mb-4">😵‍💫</div>
         <div className="text-xl font-bold mb-2">결과를 불러오지 못했어요</div>
-        <div className="text-muted-foreground mb-8">서버 상태를 확인하거나 다시 시도해 주세요.</div>
+        <div className="text-muted-foreground mb-8">서버와의 통신에 문제가 발생했습니다.</div>
         <button
           onClick={() => navigate(-1)}
           className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold"
@@ -49,11 +58,31 @@ export function BacktestResult() {
     );
   }
 
-  const backtestData = data.dailyResults;
+  // 데이터는 로드되었으나 지표(metrics)가 계산되지 않은 경우 (빈 데이터 등)
+  if (!metrics) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="text-6xl mb-4">📊</div>
+        <div className="text-xl font-bold mb-2">표시할 데이터가 부족해요</div>
+        <div className="text-muted-foreground mb-8">
+          선택한 기간({config.period}) 동안의 데이터가 없습니다.<br/>
+          종목 상장일이 선택 기간보다 늦거나, 서버 데이터가 없는 상태입니다.
+        </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold"
+        >
+          뒤로 가기
+        </button>
+      </div>
+    );
+  }
+
+  const backtestData = data?.dailyResults ?? [];
 
   // Best Year / Worst Year 계산
   const yearlyStats = useMemo(() => {
-    if (backtestData.length === 0) return { best: null, worst: null };
+    if (!backtestData || backtestData.length === 0) return { best: null, worst: null };
     const byYear: Record<string, { first: number; last: number }> = {};
     for (const r of backtestData) {
       const year = String(r.date).slice(0, 4);
@@ -77,7 +106,7 @@ export function BacktestResult() {
       {/* 결과 요약 */}
       <div className="px-6 py-10 bg-gradient-to-br from-primary/10 to-primary/5 border-b border-border text-center">
         <div className="text-muted-foreground mb-2 font-medium">
-          {config.amount.toLocaleString()}원이
+          {(config.amount || 0).toLocaleString()}원이
         </div>
         <div className="text-foreground mb-3 font-bold text-5xl">
           ₩ {metrics.finalValue.toLocaleString()}
@@ -93,7 +122,7 @@ export function BacktestResult() {
             <div className="text-left">
               <div className="text-muted-foreground text-sm mb-1 font-medium">벤치마크 대비</div>
               <div className="text-foreground font-bold text-xl">
-                {config.benchmarkTicker}보다
+                {config.benchmarkTicker || "SPY"}보다
               </div>
             </div>
             <div className="text-right">
@@ -143,20 +172,21 @@ export function BacktestResult() {
 }
 
 function ChartSection({ backtestData }: { backtestData: any[] }) {
-  // MDD 기간 계산: 최고점 → 최저점
+  const data = backtestData ?? [];
+
   const mddPeriod = useMemo(() => {
-    if (backtestData.length === 0) return { start: "", end: "" };
-    let peak = backtestData[0].totalValue;
-    let peakDate = backtestData[0].date;
+    if (data.length === 0) return { start: "", end: "" };
+    let peak = data[0].totalValue;
+    let peakDate = data[0].date;
     let mdd = 0;
     let mddStart = peakDate;
     let mddEnd = peakDate;
-    for (const r of backtestData) {
+    for (const r of data) {
       if (r.totalValue > peak) {
         peak = r.totalValue;
         peakDate = r.date;
       }
-      const drawdown = (r.totalValue - peak) / peak;
+      const drawdown = peak > 0 ? (r.totalValue - peak) / peak : 0;
       if (drawdown < mdd) {
         mdd = drawdown;
         mddStart = peakDate;
@@ -164,7 +194,7 @@ function ChartSection({ backtestData }: { backtestData: any[] }) {
       }
     }
     return { start: mddStart, end: mddEnd };
-  }, [backtestData]);
+  }, [data]);
 
   return (
     <div className="px-6 py-10 bg-card border-b border-border">
@@ -174,17 +204,12 @@ function ChartSection({ backtestData }: { backtestData: any[] }) {
       </div>
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={backtestData}>
+          <ComposedChart data={data}>
             <XAxis
               dataKey="date"
               tick={{ fontSize: 10, fontWeight: 500 }}
               stroke="#9CA3AF"
-              interval={Math.floor(backtestData.length / 5)}
-            />
-            <YAxis
-              tick={{ fontSize: 10, fontWeight: 500 }}
-              stroke="#9CA3AF"
-              hide
+              interval={Math.floor(data.length / 5) || 1}
             />
             <Tooltip
               contentStyle={{
@@ -196,94 +221,23 @@ function ChartSection({ backtestData }: { backtestData: any[] }) {
               }}
               formatter={(value: number) => `₩${value.toLocaleString()}`}
             />
-            {/* MDD 음영 영역 */}
             {mddPeriod.start && mddPeriod.end && mddPeriod.start !== mddPeriod.end && (
-              <ReferenceArea
-                x1={mddPeriod.start}
-                x2={mddPeriod.end}
-                fill="#FF4756"
-                fillOpacity={0.08}
-                strokeOpacity={0}
-              />
+              <ReferenceArea x1={mddPeriod.start} x2={mddPeriod.end} fill="#FF4756" fillOpacity={0.08} strokeOpacity={0} />
             )}
-            <Line
-              type="monotone"
-              dataKey="benchmarkReturnRate"
-              stroke="#9CA3AF"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={false}
-              name="벤치마크"
-            />
-            <Line
-              type="monotone"
-              dataKey="totalValue"
-              stroke="#2EBE7A"
-              strokeWidth={4}
-              dot={false}
-              name="내 포트폴리오"
-            />
+            <Line type="monotone" dataKey="benchmarkReturnRate" stroke="#9CA3AF" strokeWidth={2} strokeDasharray="5 5" dot={false} name="벤치마크" />
+            <Line type="monotone" dataKey="totalValue" stroke="#2EBE7A" strokeWidth={4} dot={false} name="내 포트폴리오" />
           </ComposedChart>
         </ResponsiveContainer>
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-1 bg-primary rounded-full"></div>
-          <span className="text-sm text-muted-foreground font-medium">내 포트폴리오</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-muted-foreground border-dashed border-t"></div>
-          <span className="text-sm text-muted-foreground font-medium">벤치마크</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-2 rounded-sm bg-[#FF4756]/20 border border-[#FF4756]/30"></div>
-          <span className="text-sm text-muted-foreground font-medium">최대 낙폭 구간</span>
-        </div>
       </div>
     </div>
   );
 }
 
-function AiCommentCard({
-  metrics,
-  config,
-  apiComment,
-}: {
-  metrics: any;
-  config: any;
-  apiComment?: string | null;
-}) {
-  // API 코멘트가 있으면 우선 사용, 없으면 클라이언트 룰 기반 fallback
+function AiCommentCard({ metrics, config, apiComment }: any) {
   const comment = useMemo(() => {
     if (apiComment) return apiComment;
-
-    const { totalReturn, mdd, sharpeRatio, outperformance } = metrics;
-    const lines: string[] = [];
-
-    if (totalReturn >= 0) {
-      lines.push(`이 포트폴리오는 시뮬레이션 기간 동안 ${totalReturn}%의 수익을 기록했어요.`);
-    } else {
-      lines.push(`이 포트폴리오는 시뮬레이션 기간 동안 ${Math.abs(totalReturn)}%의 손실을 기록했어요.`);
-    }
-
-    if (outperformance > 5) {
-      lines.push(`${config.benchmarkTicker} 대비 ${outperformance}%p 초과 성과를 달성해 우수한 종목 선택이 돋보여요.`);
-    } else if (outperformance < -5) {
-      lines.push(`${config.benchmarkTicker} 대비 ${Math.abs(outperformance)}%p 부진해 자산 배분 전략을 재검토해볼 만해요.`);
-    }
-
-    if (sharpeRatio >= 1) {
-      lines.push(`샤프 지수 ${sharpeRatio}로 위험 대비 수익 효율이 양호한 편이에요.`);
-    } else if (sharpeRatio < 0.5) {
-      lines.push(`샤프 지수 ${sharpeRatio}로 변동성 대비 수익 개선 여지가 있어요.`);
-    }
-
-    if (Math.abs(mdd) > 30) {
-      lines.push(`최대 낙폭(MDD) ${mdd}%로 변동성이 크니 분산 투자 비중을 높이는 것을 고려해보세요.`);
-    }
-
-    return lines.join(" ");
-  }, [apiComment, metrics, config]);
+    return "백테스트 결과 분석 중입니다...";
+  }, [apiComment]);
 
   return (
     <div className="px-6 py-6 border-b border-border">
@@ -302,9 +256,7 @@ function MetricCard({ label, value, sub, color = "text-foreground" }: any) {
   return (
     <div className="bg-card rounded-3xl p-6 border border-border shadow-sm">
       <div className="text-muted-foreground text-sm mb-2 font-medium">{label}</div>
-      <div className={`${color} mb-1 font-bold text-3xl`}>
-        {value}
-      </div>
+      <div className={`${color} mb-1 font-bold text-3xl`}>{value}</div>
       <div className="text-muted-foreground text-xs font-bold uppercase">{sub}</div>
     </div>
   );

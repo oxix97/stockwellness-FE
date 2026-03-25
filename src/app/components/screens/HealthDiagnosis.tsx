@@ -36,11 +36,17 @@ export function HealthDiagnosis() {
 }
 
 function ScoreCard({ score, adviceContent }: { score: number; adviceContent?: string }) {
+  const getScoreColor = (s: number) => {
+    if (s >= 80) return "text-[#2EBE7A]"; // 건강 (초록)
+    if (s >= 50) return "text-[#F5A623]"; // 주의 (주황)
+    return "text-[#FF4756]"; // 위험 (빨강)
+  };
+
   return (
     <div className="px-6 py-10 bg-card border-b border-border text-center">
       <div className="text-6xl mb-4">🩺</div>
       <div className="text-muted-foreground mb-2 font-medium">종합 건강 점수</div>
-      <div className="text-primary mb-6 font-bold text-6xl">
+      <div className={`mb-6 font-bold text-6xl ${getScoreColor(score)}`}>
         {score}점
       </div>
       <div className="bg-accent rounded-3xl p-5 max-w-md mx-auto border border-primary/10">
@@ -195,7 +201,7 @@ function PrescriptionSection({ advice, onBacktest }: any) {
           {advice?.content}
         </div>
         <div className="text-xs text-muted-foreground bg-secondary/50 inline-block px-3 py-1 rounded-full">
-          생성일: {new Date(advice?.createdAt).toLocaleString()}
+          생성일: {advice?.createdAt ? new Date(advice.createdAt).toLocaleString() : "-"}
         </div>
       </div>
 

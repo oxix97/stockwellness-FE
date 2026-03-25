@@ -11,7 +11,8 @@ interface Props {
  * Task #79 — 위저드 4단계: 생성 완료 + AI 1차 진단
  * canvas-confetti 미설치 시 CSS 애니메이션으로 대체
  */
-export function Phase4Result({ portfolioId, onComplete }: Props) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function Phase4Result({ portfolioId: _portfolioId, onComplete }: Props) {
   const [showAdvice, setShowAdvice] = useState(false);
   const { advice } = usePortfolio();
 
@@ -76,7 +77,7 @@ export function Phase4Result({ portfolioId, onComplete }: Props) {
               <p className="text-foreground font-semibold text-sm">AI 1차 진단</p>
             </div>
             {advice ? (
-              <p className="text-foreground text-sm leading-relaxed">{advice}</p>
+              <p className="text-foreground text-sm leading-relaxed">{advice.content}</p>
             ) : (
               <p className="text-muted-foreground text-sm">분석 데이터를 불러오는 중...</p>
             )}

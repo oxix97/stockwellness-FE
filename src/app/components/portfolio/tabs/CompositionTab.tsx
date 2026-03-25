@@ -1,7 +1,7 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/app/components/ui";
-import { usePortfolio } from "@/hooks/use-portfolio";
-import { formatCurrency, formatPercent } from "@/utils/format";
+import { usePortfolioSummary, usePortfolioDetails } from "@/hooks/use-portfolio";
+import { formatCurrency } from "@/utils/format";
 
 const CHART_COLORS = ["#2EBE7A", "#1A56DB", "#F59E0B", "#EF4444", "#8B5CF6", "#6B7280"];
 
@@ -9,9 +9,10 @@ const CHART_COLORS = ["#2EBE7A", "#1A56DB", "#F59E0B", "#EF4444", "#8B5CF6", "#6
  * Task #81 — 구성/비중 탭: 도넛 차트 + 보유 종목 테이블
  */
 export function CompositionTab() {
-  const { diversification, holdings, isLoading } = usePortfolio();
+  const { diversification, isLoading: isSummaryLoading } = usePortfolioSummary();
+  const { data: holdings, isLoading: isDetailsLoading } = usePortfolioDetails();
 
-  if (isLoading) {
+  if (isSummaryLoading || isDetailsLoading) {
     return (
       <div className="px-4 py-4 space-y-4">
         <Skeleton className="h-[200px] rounded-2xl" />

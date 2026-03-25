@@ -8,7 +8,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { usePortfolio } from "@/hooks/use-portfolio";
+import { usePortfolioAnalysis } from "@/hooks/use-portfolio";
 import { portfolioApi } from "@/api/portfolio";
 import { useAuthStore } from "@/store/auth";
 import { useQuery } from "@tanstack/react-query";
@@ -24,7 +24,7 @@ type Period = (typeof PERIOD_OPTIONS)[number];
 export function SimulationTab() {
   const [period, setPeriod] = useState<Period>("1Y");
   const portfolioId = useAuthStore((s) => s.portfolioId);
-  const { correlation } = usePortfolio();
+  const { correlation } = usePortfolioAnalysis();
 
   const backtest = useQuery({
     queryKey: ["portfolio", portfolioId, "backtest", period],
@@ -39,7 +39,7 @@ export function SimulationTab() {
   });
 
   const chartData =
-    backtest.data?.dailyResults.map((d) => ({
+    backtest.data?.dailyResults?.map((d) => ({
       date: d.date.slice(5), // "MM-DD"
       portfolio: Number(d.returnRate.toFixed(2)),
       benchmark: Number(d.benchmarkReturnRate.toFixed(2)),

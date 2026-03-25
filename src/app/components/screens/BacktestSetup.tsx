@@ -4,12 +4,14 @@ import { ChevronLeft, FlaskConical } from "lucide-react";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useAuthStore } from "@/store/auth";
 import { Skeleton, Slider } from "@/app/components/ui";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 
 const periods = [
+  { id: "1m", label: "최근 1개월" },
+  { id: "3m", label: "최근 3개월" },
+  { id: "6m", label: "최근 6개월" },
   { id: "1y", label: "최근 1년" },
   { id: "3y", label: "최근 3년" },
-  { id: "5y", label: "최근 5년" },
-  { id: "max", label: "최대 기간" },
 ];
 
 const strategies = [
@@ -24,12 +26,25 @@ const rebalancing = [
   { id: "YEARLY", label: "매년" },
 ];
 
-const benchmarks = [
-  { id: "KOSPI", label: "코스피" },
-  { id: "KOSPI200", label: "코스피 200" },
-  { id: "KOSDAQ", label: "코스닥" },
-  { id: "SPY", label: "S&P 500" },
-];
+const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe", "#00C49F", "#FFBB28", "#FF8042"];
+
+// 임시 종목명 매핑 테이블 (백엔드 미지원 시 보완용)
+const STOCK_NAMES: Record<string, string> = {
+  "005930": "삼성전자",
+  "000660": "SK하이닉스",
+  "005380": "현대차",
+  "035420": "NAVER",
+  "035720": "카카오",
+  "AAPL": "애플",
+  "TSLA": "테슬라",
+  "NVDA": "엔비디아",
+  "MSFT": "마이크로소프트",
+  "AMZN": "아마존",
+  "GOOGL": "알파벳",
+  "META": "메타",
+  "SPY": "S&P 500 ETF",
+  "QQQ": "나스닥 100 ETF",
+};
 
 export function BacktestSetup() {
   const navigate = useNavigate();
@@ -41,7 +56,6 @@ export function BacktestSetup() {
   const [selectedStrategy, setSelectedStrategy] = useState<"DCA" | "LUMP_SUM">("LUMP_SUM");
   const [selectedPeriod, setSelectedPeriod] = useState("1y");
   const [selectedRebalancing, setSelectedRebalancing] = useState("NONE");
-  const [selectedBenchmark, setSelectedBenchmark] = useState("KOSPI");
   const [weights, setWeights] = useState<Record<string, number>>({});
 
   // 포트폴리오 로드 완료 후 초기 비중 설정
@@ -56,8 +70,22 @@ export function BacktestSetup() {
   const canStart = portfolioItems.length > 0 && Math.abs(totalWeight - 100) < 0.5;
 
   const handleWeightChange = (symbol: string, value: number) => {
-    setWeights((prev) => ({ ...(Object.keys(prev).length > 0 ? prev : initializedWeights), [symbol]: value }));
+    // 5% 단위로 올림/내림 처리 (value가 이미 step=5로 오지만 보장 차원)
+    const roundedValue = Math.round(value / 5) * 5;
+    setWeights((prev) => ({ ...(Object.keys(prev).length > 0 ? prev : initializedWeights), [symbol]: roundedValue }));
   };
+
+  // 차트 데이터 구성
+  const chartData = useMemo(() => {
+    return portfolioItems.map((item, idx) => {
+      const displayName = item.name || STOCK_NAMES[item.symbol] || item.symbol;
+      return {
+        name: displayName,
+        value: activeWeights[item.symbol] ?? 0,
+        color: COLORS[idx % COLORS.length]
+      };
+    }).filter(d => d.value > 0);
+  }, [portfolioItems, activeWeights]);
 
   if (!portfolioId) return <Navigate to="/portfolio" replace />;
 
@@ -78,7 +106,7 @@ export function BacktestSetup() {
       state: {
         strategy: selectedStrategy,
         amount: initialAmount,
-        benchmarkTicker: selectedBenchmark,
+        benchmarkTicker: "SPY", // 데이터 가용성이 높은 SPY를 기본값으로 사용
         period: selectedPeriod,
         weights: activeWeights,
         rebalancingPeriod: selectedRebalancing,
@@ -175,26 +203,66 @@ export function BacktestSetup() {
         </div>
       </div>
 
-      {/* 자산 구성 및 비중 — 슬라이더 편집 */}
-      <div className="px-6 py-6 border-b border-border">
+      {/* 자산 구성 및 비중 — 원형 차트 및 슬라이더 */}
+      <div className="px-6 py-8 border-b border-border">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-foreground font-bold text-[18px]">자산 구성 및 비중</div>
+          <div className="text-foreground font-bold text-xl">자산 구성 및 비중</div>
           <span className={`text-sm font-bold tabular-nums ${Math.abs(totalWeight - 100) < 0.5 ? "text-primary" : "text-destructive"}`}>
             합계 {totalWeight}%
           </span>
         </div>
+
+        {/* 원형(Donut) 차트 시각화 */}
+        <div className="h-64 w-full mb-8">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                animationDuration={500}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                ))}
+              </Pie>
+              <RechartsTooltip 
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute left-1/2 -translate-x-1/2 -translate-y-[140px] text-center pointer-events-none">
+            <div className="text-muted-foreground text-xs font-medium">총 비중</div>
+            <div className={`text-xl font-bold ${Math.abs(totalWeight - 100) < 0.5 ? "text-foreground" : "text-destructive"}`}>
+              {totalWeight}%
+            </div>
+          </div>
+        </div>
+
         {portfolioItems.length === 0 ? (
           <div className="text-muted-foreground text-sm text-center py-6">
             포트폴리오에 종목이 없습니다.
           </div>
         ) : (
           <div className="space-y-4">
-            {portfolioItems.map((item) => {
+            {portfolioItems.map((item, idx) => {
               const w = activeWeights[item.symbol] ?? 0;
+              const color = COLORS[idx % COLORS.length];
+              const displayName = item.name || STOCK_NAMES[item.symbol] || item.symbol;
+              const hasName = !!(item.name || STOCK_NAMES[item.symbol]);
+              
               return (
                 <div key={item.symbol} className="bg-card rounded-2xl px-4 py-4 border border-border">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-foreground font-bold text-sm">{item.symbol}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
+                      <div>
+                        <p className="text-foreground font-bold text-sm">{displayName}</p>
+                        {hasName && <p className="text-muted-foreground text-[10px] uppercase font-medium">{item.symbol}</p>}
+                      </div>
+                    </div>
                     <span className="text-primary font-bold text-sm tabular-nums w-12 text-right">{w}%</span>
                   </div>
                   <Slider
@@ -202,7 +270,7 @@ export function BacktestSetup() {
                     onValueChange={([v]) => handleWeightChange(item.symbol, v)}
                     min={0}
                     max={100}
-                    step={1}
+                    step={5}
                     className="w-full"
                   />
                 </div>
@@ -222,26 +290,6 @@ export function BacktestSetup() {
               onClick={() => setSelectedRebalancing(option.id)}
               className={`py-3 rounded-2xl transition-all font-semibold ${
                 selectedRebalancing === option.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-foreground border border-border"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 벤치마크 */}
-      <div className="px-6 py-6">
-        <div className="text-foreground mb-4 font-bold text-[18px]">벤치마크 (비교 대상)</div>
-        <div className="grid grid-cols-2 gap-3">
-          {benchmarks.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => setSelectedBenchmark(option.id)}
-              className={`py-3 rounded-2xl transition-all ${
-                selectedBenchmark === option.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-card text-foreground border border-border"
               }`}
