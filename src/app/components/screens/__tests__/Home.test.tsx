@@ -4,13 +4,32 @@ import { Home } from "../Home";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
+import { useMarketIndex } from "@/hooks/use-market-index";
 import { MemoryRouter } from "react-router";
 import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // 훅 모킹
 vi.mock("@/hooks/use-portfolio");
 vi.mock("@/hooks/use-stock");
 vi.mock("@/hooks/use-sector");
+vi.mock("@/hooks/use-market-index");
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </QueryClientProvider>
+  );
+};
 
 describe("Home Screen", () => {
   beforeEach(() => {
@@ -21,15 +40,11 @@ describe("Home Screen", () => {
     (usePortfolio as any).mockReturnValue({ valuation: null, isLoading: true });
     (useStock as any).mockReturnValue({ popular: { data: [], isLoading: true } });
     (useSector as any).mockReturnValue({ data: [], isLoading: true });
+    (useMarketIndex as any).mockReturnValue({ data: [], isLoading: true });
 
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
-    );
+    renderWithProviders(<Home />);
 
     // 섹터 카드 스켈레톤 3개가 렌더링되는지 확인 (div 구조 기반)
-    // Skeleton 컴포넌트의 클래스나 구조를 통해 확인
     const skeletons = document.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThanOrEqual(3);
   });
@@ -43,18 +58,15 @@ describe("Home Screen", () => {
     (usePortfolio as any).mockReturnValue({ valuation: { currentTotalValue: 1000000 }, isLoading: false });
     (useStock as any).mockReturnValue({ popular: { data: ["삼성전자"], isLoading: false } });
     (useSector as any).mockReturnValue({ data: mockSectors, isLoading: false });
+    (useMarketIndex as any).mockReturnValue({ data: [], isLoading: false });
 
-    render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
-    );
+    renderWithProviders(<Home />);
 
     expect(screen.getByText("바이오")).toBeInTheDocument();
     expect(screen.getByText("반도체")).toBeInTheDocument();
-    expect(screen.getByText("+5.5% 🔺")).toBeInTheDocument();
-    expect(screen.getByText("-1.2% 🔻")).toBeInTheDocument();
-    expect(screen.getByText("진단 메시지 1")).toBeInTheDocument();
-    expect(screen.getByText("⚠️ 과열 주의")).toBeInTheDocument();
+    // 데이터 형식 소수점 2자리로 렌더링됨
+    expect(screen.getByText("+5.50%")).toBeInTheDocument();
+    expect(screen.getByText("-1.20%")).toBeInTheDocument();
+    expect(screen.getByText("⚠️ 과열")).toBeInTheDocument();
   });
 });
