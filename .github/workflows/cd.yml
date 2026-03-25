@@ -3,6 +3,7 @@ name: CD (Main Deployment)
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
 
 env:
   REGISTRY: ghcr.io
@@ -12,6 +13,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -35,6 +37,7 @@ jobs:
           tags: |
             type=sha,prefix=,format=short
             latest
+            type=ref,event=tag
 
       - name: Build and push Docker image
         id: push
@@ -58,8 +61,10 @@ jobs:
             -H "Content-Type: application/json" \
             -H "X-Deploy-Token: ${{ secrets.N8N_DEPLOY_TOKEN }}" \
             -d '{
-              "image_tag": "latest",
-              "commit_message": "${{ github.event.head_commit.message }}",
               "repository": "${{ github.repository }}",
+              "branch": "${{ github.ref_name }}",
+              "sha": "${{ github.sha }}",
+              "tag": "${{ github.ref_type == 'tag' && github.ref_name || '' }}",
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
               "app_name": "front"
             }'
