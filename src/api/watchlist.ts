@@ -40,4 +40,12 @@ export const watchlistApi = {
   updateItemNote: async (groupId: number, ticker: string, note: string): Promise<void> => {
     await apiClient.patch(`/v1/watchlist/groups/${groupId}/items/${ticker}/note`, { note } satisfies UpdateWatchlistItemNoteRequest);
   },
+
+  updateGroupName: async (groupId: number, name: string): Promise<void> => {
+    await apiClient.patch(`/v1/watchlist/groups/${groupId}`, { name });
+  },
+
+  deleteGroup: async (groupId: number): Promise<void> => {
+    await apiClient.delete(`/v1/watchlist/groups/${groupId}`);
+  },
 };

@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { X, Search } from "lucide-react";
 import { useSearch } from "@/hooks/use-search";
 import { WizardState, WizardAction, AssetItem } from "./PortfolioWizard";
@@ -18,11 +17,8 @@ interface Props {
 /** Task #77 — 위저드 2단계: 자산 담기 */
 export function Phase2Assets({ state, dispatch }: Props) {
   const { keyword, setKeyword, autocomplete } = useSearch();
-  const [showResults, setShowResults] = useState(false);
-
-  useEffect(() => {
-    setShowResults(keyword.trim().length > 0);
-  }, [keyword]);
+  const showResults = keyword.trim().length > 0;
+  const autocompleteResults = autocomplete.data?.pages.flatMap((page) => page.content ?? []) ?? [];
 
   const isAdded = (ticker: string) => state.assets.some((a) => a.ticker === ticker);
 
@@ -84,10 +80,10 @@ export function Phase2Assets({ state, dispatch }: Props) {
             <div className="mt-1 bg-card rounded-xl border border-border overflow-hidden shadow-lg max-h-[200px] overflow-y-auto">
               {autocomplete.isLoading ? (
                 <div className="p-3 text-sm text-muted-foreground">검색 중...</div>
-              ) : autocomplete.data?.content.length === 0 ? (
+              ) : autocompleteResults.length === 0 ? (
                 <div className="p-3 text-sm text-muted-foreground">결과 없음</div>
               ) : (
-                autocomplete.data?.content.slice(0, 8).map((stock) => (
+                autocompleteResults.slice(0, 8).map((stock) => (
                   <button
                     key={stock.ticker}
                     onClick={() => {

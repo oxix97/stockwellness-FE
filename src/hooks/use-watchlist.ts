@@ -42,6 +42,21 @@ export function useWatchlist() {
       queryClient.invalidateQueries({ queryKey: ["watchlist", "groups", groupId, "items"] }),
   });
 
+  const updateGroupName = useMutation({
+    mutationFn: ({ groupId, name }: { groupId: number; name: string }) =>
+      watchlistApi.updateGroupName(groupId, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watchlist", "groups"] });
+    },
+  });
+
+  const deleteGroup = useMutation({
+    mutationFn: (groupId: number) => watchlistApi.deleteGroup(groupId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watchlist", "groups"] });
+    },
+  });
+
   return {
     groups,
     useGroupItems,
@@ -49,5 +64,7 @@ export function useWatchlist() {
     addItem,
     removeItem,
     updateItemNote,
+    updateGroupName,
+    deleteGroup,
   };
 }

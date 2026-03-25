@@ -70,7 +70,12 @@ export function AuthCallback() {
         }
 
         toast.success(`${decoded.nickname || "사용자"}님, 환영합니다!`);
-        navigate("/");
+
+        // 4. 로그인 전 가려던 페이지로 복귀 (Login.tsx에서 저장함)
+        const redirectPath = sessionStorage.getItem("redirect_after_login") || "/";
+        sessionStorage.removeItem("redirect_after_login");
+        
+        navigate(redirectPath, { replace: true });
       } catch (e) {
         console.error("Token parsing error:", e);
         toast.error("인증 처리 중 오류가 발생했습니다.");

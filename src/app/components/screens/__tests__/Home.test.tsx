@@ -1,11 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Home } from "../Home";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
 import { MemoryRouter } from "react-router";
-import React from "react";
+import { renderWithQuery } from "@/test/test-utils";
 
 // 훅 모킹
 vi.mock("@/hooks/use-portfolio");
@@ -22,7 +22,7 @@ describe("Home Screen", () => {
     (useStock as any).mockReturnValue({ popular: { data: [], isLoading: true } });
     (useSector as any).mockReturnValue({ data: [], isLoading: true });
 
-    render(
+    renderWithQuery(
       <MemoryRouter>
         <Home />
       </MemoryRouter>
@@ -44,7 +44,7 @@ describe("Home Screen", () => {
     (useStock as any).mockReturnValue({ popular: { data: ["삼성전자"], isLoading: false } });
     (useSector as any).mockReturnValue({ data: mockSectors, isLoading: false });
 
-    render(
+    renderWithQuery(
       <MemoryRouter>
         <Home />
       </MemoryRouter>

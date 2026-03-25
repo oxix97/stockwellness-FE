@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Search } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { Skeleton } from "@/app/components/ui";
 import { WatchlistItemCard } from "@/app/components/watchlist/WatchlistItemCard";
+import { AddItemSheet } from "@/app/components/watchlist/AddItemSheet";
 import { toast } from "sonner";
 
 /**
@@ -18,6 +19,7 @@ export function Watchlist() {
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
 
   useEffect(() => {
     if (groups.data && groups.data.length > 0 && activeGroup === null) {
@@ -52,7 +54,7 @@ export function Watchlist() {
   };
 
   return (
-    <div className="min-h-full pb-6">
+    <div className="min-h-full pb-6 relative">
       {/* 그룹 칩 탭 */}
       <div className="px-4 pt-4 pb-3">
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -137,7 +139,7 @@ export function Watchlist() {
             ))}
           </div>
         ) : (
-          <EmptyState />
+          <EmptyState onAdd={() => setIsAddSheetOpen(true)} hasGroup={!!activeGroup} />
         )}
       </div>
 
@@ -151,12 +153,37 @@ export function Watchlist() {
           })}
         </p>
       )}
+
+      {/* Floating Action Button (#71) */}
+      <AnimatePresence>
+        {activeGroup !== null && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0, opacity: 0, y: 20 }}
+            onClick={() => setIsAddSheetOpen(true)}
+            aria-label="종목 추가"
+            className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/20 flex items-center justify-center z-40"
+          >
+            <Plus className="w-7 h-7" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* 종목 추가 바텀시트 */}
+      {isAddSheetOpen && activeGroup !== null && (
+        <AddItemSheet
+          groupId={activeGroup}
+          existingTickers={stocks.map((s) => s.ticker)}
+          onClose={() => setIsAddSheetOpen(false)}
+        />
+      )}
     </div>
   );
 }
 
 /** Task #74 — 빈 상태 개선 */
-function EmptyState() {
+function EmptyState({ onAdd, hasGroup }: { onAdd: () => void; hasGroup: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -172,9 +199,11 @@ function EmptyState() {
       </p>
       <button
         onClick={() => {
-          // GlobalSearch 오버레이 열기 — AppBar의 검색 버튼과 동일한 동작
-          // Layout에서 관리하는 상태이므로 AppBar의 검색 버튼을 programmatic하게 트리거
-          document.querySelector<HTMLButtonElement>('[aria-label="검색"]')?.click();
+          if (hasGroup) {
+            onAdd();
+          } else {
+            document.querySelector<HTMLButtonElement>('[aria-label="검색"]')?.click();
+          }
         }}
         className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold text-sm"
       >

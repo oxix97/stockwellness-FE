@@ -1,13 +1,16 @@
-import { useNavigate } from "react-router";
-import { toast } from "sonner";
-import { useAuthStore } from "@/store/auth";
-import { authApi } from "@/api/auth";
+import { useLocation } from "react-router";
 
 export function Login() {
-  const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const location = useLocation();
 
   const handleSocialLogin = (type: "GOOGLE" | "KAKAO") => {
+    // 1. ProtectedRoute에서 넘겨준 redirect 경로가 있다면 sessionStorage에 임시 저장
+    // (소셜 로그인 페이지로 이동하면 리액트 state가 유실되므로 sessionStorage를 활용)
+    const from = location.state?.from?.pathname || "/";
+    if (from !== "/login") {
+      sessionStorage.setItem("redirect_after_login", from);
+    }
+
     const apiBase = import.meta.env.VITE_API_BASE_URL || "";
     // Spring Security OAuth2 기본 엔드포인트 호출
     const authorizeUrl = `${apiBase}/oauth2/authorization/${type.toLowerCase()}`;

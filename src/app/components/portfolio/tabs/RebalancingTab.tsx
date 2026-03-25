@@ -1,31 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-import { portfolioApi } from "@/api/portfolio";
-import { useAuthStore } from "@/store/auth";
 import { Progress, Skeleton } from "@/app/components/ui";
 import { RebalancingItem } from "@/types/api";
 import { formatCurrency } from "@/utils/format";
+import { usePortfolioAnalysis } from "@/hooks/use-portfolio";
 
 /**
  * Task #83 — AI 리밸런싱 탭
  */
 export function RebalancingTab() {
-  const portfolioId = useAuthStore((s) => s.portfolioId);
+  const { rebalancing, advice, isLoading } = usePortfolioAnalysis();
 
-  const rebalancing = useQuery({
-    queryKey: ["portfolio", portfolioId, "rebalancing"],
-    queryFn: () => portfolioApi.getRebalancing(portfolioId!),
-    enabled: !!portfolioId,
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const advice = useQuery({
-    queryKey: ["portfolio", portfolioId, "advice"],
-    queryFn: () => portfolioApi.getAdvice(portfolioId!),
-    enabled: !!portfolioId,
-    staleTime: 1000 * 60 * 5,
-  });
-
-  if (rebalancing.isLoading) {
+  if (isLoading) {
     return (
       <div className="px-4 py-4 space-y-4">
         <Skeleton className="h-28 rounded-2xl" />
@@ -35,7 +19,7 @@ export function RebalancingTab() {
     );
   }
 
-  const items = rebalancing.data?.items ?? [];
+  const items = rebalancing?.items ?? [];
 
   return (
     <div className="px-4 py-4 space-y-4">
@@ -46,7 +30,7 @@ export function RebalancingTab() {
           <p className="text-foreground font-semibold text-sm">AI 리밸런싱 조언</p>
         </div>
         <p className="text-foreground text-sm leading-relaxed">
-          {advice.data ?? "AI 분석 데이터를 불러오는 중입니다..."}
+          {advice?.content ?? "AI 분석 데이터를 불러오는 중입니다..."}
         </p>
       </div>
 
