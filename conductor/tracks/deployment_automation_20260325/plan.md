@@ -1,9 +1,9 @@
 # Implementation Plan: GitHub Actions 배포 자동화 및 n8n 연동 설정
 
 ## Phase 1: 기반 설정 및 시크릿 구성
-- [ ] Task: GitHub Actions Secrets 설정 안내 및 확인
-    - [ ] `N8N_WEBHOOK_URL` 시크릿 등록 필요성 확인
-- [ ] Task: 워크플로우 파일 생성 (.github/workflows/cd.yml)
+- [x] Task: GitHub Actions Secrets 설정 안내 및 확인
+    - [x] `N8N_WEBHOOK_URL` 시크릿 등록 필요성 확인
+- [x] Task: 워크플로우 파일 생성 (.github/workflows/cd.yml) [6a57b76]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: 기반 설정 및 시크릿 구성' (Protocol in workflow.md)
 
 ## Phase 2: 배포 워크플로우 구현 (n8n 연동)
