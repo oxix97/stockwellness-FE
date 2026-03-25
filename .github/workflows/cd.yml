@@ -4,13 +4,16 @@ on:
   push:
     branches: [ main ]
     tags: [ 'v*' ]
+  workflow_dispatch: # GitHub 웹 UI에서 수동으로 파이프라인을 실행할 수 있는 버튼을 추가합니다.
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/stockwellness-front
 
 jobs:
-  build-and-deploy:
+  # 1단계: 도커 이미지 빌드 및 GHCR 푸시
+  build-and-push:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,7 +30,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 이미지 이름을 강제로 소문자로 변환 (대문자가 포함된 계정명 에러 방지용)
       - name: Lowercase image name
         id: string
         run: |
@@ -55,6 +57,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+  # 2단계: Tailscale 접속 및 n8n 웹훅 트리거
+  trigger-deploy:
+    name: Trigger n8n Deployment
+    needs: build-and-push # 빌드 작업이 성공해야만 이 Job이 실행됩니다.
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
