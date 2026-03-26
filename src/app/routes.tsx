@@ -12,7 +12,7 @@ import {
   BacktestSetup,
   BacktestResult,
   Login,
-  AuthCallback,
+  AuthCallbackHandler,
 } from "@/app/components/screens";
 
 export const router = createBrowserRouter([
@@ -38,7 +38,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/auth/callback",
-    Component: AuthCallback,
+    Component: AuthCallbackHandler,
   },
   {
     path: "/stock/:symbol",
