@@ -19,6 +19,11 @@ export default defineConfig(({ mode }) => {
       // PWA(Progressive Web App) 설정
       VitePWA({
         registerType: 'autoUpdate',
+        workbox: {
+          // 백엔드 경로는 서비스 워커가 가로채지 않도록 제외
+          // (OAuth2, Spring Security 콜백, API 요청)
+          navigateFallbackDenylist: [/^\/oauth2/, /^\/login\/oauth2/, /^\/api/],
+        },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
         manifest: {
           name: env.VITE_APP_NAME || 'Stockwellness',
