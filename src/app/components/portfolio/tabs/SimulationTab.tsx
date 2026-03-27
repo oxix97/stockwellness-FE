@@ -9,9 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { usePortfolioAnalysis } from "@/hooks/use-portfolio";
-import { portfolioApi } from "@/api/portfolio";
-import { useAuthStore } from "@/store/auth";
-import { useQuery } from "@tanstack/react-query";
+import { usePortfolioSimulation } from "@/hooks/use-backtest";
 import { Skeleton } from "@/app/components/ui";
 import { CorrelationMatrix } from "@/types/api";
 
@@ -23,27 +21,18 @@ type Period = (typeof PERIOD_OPTIONS)[number];
  */
 export function SimulationTab() {
   const [period, setPeriod] = useState<Period>("1Y");
-  const portfolioId = useAuthStore((s) => s.portfolioId);
   const { correlation } = usePortfolioAnalysis();
 
-  const backtest = useQuery({
-    queryKey: ["portfolio", portfolioId, "backtest", period],
-    queryFn: () =>
-      portfolioApi.runBacktest(portfolioId!, {
-        strategy: "LUMP_SUM",
-        amount: 10_000_000,
-        benchmarkTicker: "SPY",
-      }),
-    enabled: !!portfolioId,
-    staleTime: 1000 * 60 * 5,
-  });
+  const backtest = usePortfolioSimulation(period);
 
   const chartData =
     backtest.data?.dailyResults?.map((d) => ({
       date: d.date.slice(5), // "MM-DD"
-      portfolio: Number(d.returnRate.toFixed(2)),
-      benchmark: Number(d.benchmarkReturnRate.toFixed(2)),
+      portfolio: Number((d.returnRate ?? 0).toFixed(2)),
+      benchmark: d.benchmarkReturnRate ? Number(d.benchmarkReturnRate.toFixed(2)) : null,
     })) ?? [];
+
+  const hasBenchmarkData = chartData.some((d) => d.benchmark !== null);
 
   return (
     <div className="px-4 py-4 space-y-4">
@@ -105,14 +94,16 @@ export function SimulationTab() {
                 strokeWidth={2}
                 dot={false}
               />
-              <Line
-                type="monotone"
-                dataKey="benchmark"
-                stroke="#94A3B8"
-                strokeWidth={1.5}
-                strokeDasharray="4 4"
-                dot={false}
-              />
+              {hasBenchmarkData && (
+                <Line
+                  type="monotone"
+                  dataKey="benchmark"
+                  stroke="#94A3B8"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                  dot={false}
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         ) : (

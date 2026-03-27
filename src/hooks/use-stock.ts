@@ -1,6 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { stockApi, StockReturnsResponse } from "@/api/stock";
-import { StockSearchResponse, StockPriceHistoryResponse, NewListingStock } from "@/types/api";
+import { StockSearchResponse, StockPriceHistoryResponse, NewListingStock, ChartPeriod, ChartFrequency } from "@/types/api";
 
 /**
  * 주식 종목 데이터 조회를 위한 커스텀 훅
@@ -24,7 +24,8 @@ export function useStock() {
     queryKey: ["stocks", "search", query],
     queryFn: ({ pageParam = 0 }) => stockApi.search(query, pageParam as number),
     initialPageParam: 0,
-    getNextPageParam: (lastPage: StockSearchResponse) => (lastPage.hasNext ? lastPage.number + 1 : undefined),
+    // TODO(#123): BE SliceResponse 배포 후 lastPage.hasNext 로 원복 (hasNext === !last)
+    getNextPageParam: (lastPage: StockSearchResponse) => (!lastPage.last ? lastPage.number + 1 : undefined),
     enabled: query.trim().length >= 2,
     staleTime: 1000 * 60 * 5, // 검색 결과는 5분 동안 유지
   });
@@ -64,7 +65,7 @@ export function useStock() {
    * @param ticker 종목 티커
    * @param period 조회 기간
    */
-  const useHistory = (ticker: string, period: string, frequency = "DAILY") => useQuery<StockPriceHistoryResponse>({
+  const useHistory = (ticker: string, period: ChartPeriod, frequency: ChartFrequency = "DAILY") => useQuery<StockPriceHistoryResponse>({
     queryKey: ["stocks", ticker, "history", period, frequency],
     queryFn: () => stockApi.getPriceHistory(ticker, period, frequency),
     enabled: !!ticker,

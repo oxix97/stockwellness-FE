@@ -109,6 +109,12 @@ export type SectorDetailResponse = NonNullable<components["schemas"]["SectorDeta
 export type TechnicalIndicators = NonNullable<SectorDetailResponse["technicalIndicators"]>;
 export type LeadingStock = NonNullable<SectorDetailResponse["leadingStocks"]>[number];
 
+/** 주가 차트 조회 기간 */
+export type ChartPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL";
+
+/** 주가 차트 집계 단위 */
+export type ChartFrequency = "DAILY" | "WEEKLY" | "MONTHLY";
+
 /**
  * 백테스트 관련 타입
  */
@@ -119,7 +125,11 @@ export interface BacktestRequest {
   amount: number;
   /** 비교 벤치마크 티커 */
   benchmarkTicker: string;
-  /** 시뮬레이션 기간 (1y, 3y, 5y, max) */
+  /**
+   * 클라이언트 사이드 필터링 전용.
+   * BE는 이 값을 무시하고 전체 이력 데이터를 반환한다.
+   * 실제 기간 슬라이싱은 use-backtest.ts sliceByPeriod()에서 처리.
+   */
   period: string;
   /** 리밸런싱 주기 (NONE, MONTHLY, QUARTERLY, YEARLY) */
   rebalancingPeriod: string;
@@ -175,7 +185,9 @@ export interface StockSearchResult {
  */
 export type StockSearchResponse = Omit<NonNullable<components["schemas"]["api-v1-stocks-search-1069080236"]["data"]>, "content"> & {
   content: StockSearchResult[];
+  /** BE SliceResponse 배포 후 추가될 명시적 필드 (현재 응답에 없음 — !last로 임시 대응 중) */
   hasNext: boolean;
+  // number, last 필드는 기반 스키마에 이미 포함됨
 };
 
 /**
