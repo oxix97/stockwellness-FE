@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
-import { usePortfolio } from "@/hooks/use-portfolio";
+import { usePortfolioSummary } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
@@ -34,7 +34,7 @@ const getSectorIcon = (name: string) => {
 
 export function Home() {
   const navigate = useNavigate();
-  const { valuation, isLoading: isValuationLoading } = usePortfolio();
+  const { valuation, isLoading: isValuationLoading } = usePortfolioSummary();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
   const { popular } = useStock();
