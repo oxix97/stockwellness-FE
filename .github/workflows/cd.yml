@@ -60,25 +60,50 @@ jobs:
   # 2단계: Tailscale 접속 및 n8n 웹훅 트리거
   trigger-deploy:
     name: Trigger n8n Deployment
-    needs: build-and-push # 빌드 작업이 성공해야만 이 Job이 실행됩니다.
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
       - name: Connect to Tailscale
-        uses: tailscale/github-action@v2
+        uses: tailscale/github-action@v3          # v2 → v3
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:github-actions
 
-      - name: Trigger n8n Deployment Webhook
+      - name: Trigger n8n Deployment Webhook (배포 완료 대기)
+        env:
+          MSG: ${{ github.event.head_commit.message }}
         run: |
-          curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
+          SHA_SHORT="${GITHUB_SHA:0:7}"
+          
+          JSON_DATA=$(jq -n \
+            --arg img "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}" \
+            --arg tag "$SHA_SHORT" \
+            --arg commit "${{ github.sha }}" \
+            --arg msg "$MSG" \
+            --arg author "${{ github.actor }}" \
+            '{image: $img, tag: $tag, commit: $commit, message: $msg, author: $author}')
+          
+          RESPONSE=$(curl -f \
+            --max-time 300 \
+            --connect-timeout 30 \
+            -X POST \
             -H "Content-Type: application/json" \
             -H "X-Deploy-Token: ${{ secrets.N8N_DEPLOY_TOKEN }}" \
-            -d '{
-              "repository": "${{ github.repository }}",
-              "branch": "${{ github.ref_name }}",
-              "sha": "${{ github.sha }}",
-              "app_name": "front"
-            }'
+            -d "$JSON_DATA" \
+            -w "\nHTTP_STATUS:%{http_code}" \
+            "${{ secrets.N8N_WEBHOOK_URL }}")
+          
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
+          echo "n8n 응답 코드: ${HTTP_STATUS}"
+          echo "n8n 응답 내용: ${BODY}"
+          
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "❌ 배포 실패 (HTTP ${HTTP_STATUS})"
+            exit 1
+          fi
+
+      - name: Done
+        run: echo "✅ Front-End 배포 완료 → ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${GITHUB_SHA:0:7}"
