@@ -8,6 +8,7 @@ import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { Skeleton } from "@/app/components/ui";
+import { PortfolioValuationResponse, SectorRankingItem } from "@/types/api";
 import { Section } from "@/app/components/shared";
 import { formatCurrency, formatPercent } from "@/utils/format";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
@@ -137,7 +138,7 @@ export function Home() {
   );
 }
 
-function AssetSummaryCard({ valuation, isLoading }: any) {
+function AssetSummaryCard({ valuation, isLoading }: { valuation: PortfolioValuationResponse | undefined; isLoading: boolean }) {
   const totalReturn = valuation?.totalReturnRate ?? 0;
   const totalProfitLoss = valuation?.totalProfitLoss ?? 0;
   const isUp = totalReturn >= 0;
@@ -176,7 +177,7 @@ function AssetSummaryCard({ valuation, isLoading }: any) {
   );
 }
 
-function SectorCard({ sector, onTap }: { sector: any; onTap: () => void }) {
+function SectorCard({ sector, onTap }: { sector: SectorRankingItem; onTap: () => void }) {
   const isUp = sector.fluctuationRate >= 0;
 
   return (
@@ -209,7 +210,7 @@ function SectorCard({ sector, onTap }: { sector: any; onTap: () => void }) {
   );
 }
 
-function TrendingList({ stocks, isLoading }: any) {
+function TrendingList({ stocks, isLoading }: { stocks: string[] | undefined; isLoading: boolean }) {
   if (isLoading) {
     return (
       <div className="bg-card rounded-2xl p-4 border border-border space-y-3">

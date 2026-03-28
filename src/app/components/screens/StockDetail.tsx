@@ -161,8 +161,8 @@ export function StockDetail() {
       
       // 그룹이 하나도 없다면 생성 후 추가
       if (!targetGroupId) {
-        const newGroup: any = await createGroup.mutateAsync("기본");
-        targetGroupId = newGroup.id;
+        const newGroupId = await createGroup.mutateAsync("기본");
+        targetGroupId = newGroupId;
       }
 
       addItem.mutate({ groupId: targetGroupId!, body: { ticker } }, {
@@ -662,7 +662,7 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
                       {stockRate != null ? `${stockRate > 0 ? "+" : ""}${stockRate}%` : "-"}
                     </span>
                     <span className="text-right font-bold text-sm text-foreground">
-                      {benchRate != null && benchRate !== 0
+                      {benchRate != null
                         ? `${benchRate > 0 ? "+" : ""}${benchRate}%`
                         : <span className="text-muted-foreground font-medium">데이터 없음</span>}
                     </span>

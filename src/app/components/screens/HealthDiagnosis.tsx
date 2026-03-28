@@ -4,7 +4,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
-import { CorrelationMatrix } from "@/types/api";
+import { CorrelationMatrix, AdviceResponse } from "@/types/api";
 
 export function HealthDiagnosis() {
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ function ScoreCard({ score, adviceContent }: { score: number; adviceContent?: st
   );
 }
 
-function RadarSection({ data }: { data: any[] }) {
+function RadarSection({ data }: { data: { metric: string; value: number }[] }) {
   return (
     <div className="px-6 py-10 bg-card border-b border-border">
       <div className="text-foreground mb-8 text-center font-bold text-xl">
@@ -178,7 +178,7 @@ function ActionBadge({ action }: { action?: string }) {
   );
 }
 
-function PrescriptionSection({ advice, onBacktest }: any) {
+function PrescriptionSection({ advice, onBacktest }: { advice: AdviceResponse | undefined; onBacktest: () => void }) {
   return (
     <div className="px-6 py-10">
       <div className="flex items-center gap-3 mb-8">

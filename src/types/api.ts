@@ -185,7 +185,7 @@ export interface StockSearchResult {
  */
 export type StockSearchResponse = Omit<NonNullable<components["schemas"]["api-v1-stocks-search-1069080236"]["data"]>, "content"> & {
   content: StockSearchResult[];
-  /** BE SliceResponse 배포 후 추가될 명시적 필드 (현재 응답에 없음 — !last로 임시 대응 중) */
+  /** BE SliceResponse hasNext 필드 */
   hasNext: boolean;
   // number, last 필드는 기반 스키마에 이미 포함됨
 };

@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { useStock } from "@/hooks/use-stock";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader, Section, StockLogo } from "@/app/components/shared";
+import { StockSearchResult } from "@/types/api";
 
 const RECENT_SEARCHES_KEY = "recent-searches";
 const MAX_RECENT = 10;
@@ -170,7 +171,7 @@ function RecentSearchesList({
   );
 }
 
-function SearchResultsList({ results, isLoading }: any) {
+function SearchResultsList({ results, isLoading }: { results: StockSearchResult[]; isLoading: boolean }) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -194,7 +195,7 @@ function SearchResultsList({ results, isLoading }: any) {
 
   return (
     <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
-      {results.map((stock: any, index: number) => (
+      {results.map((stock, index) => (
         <Link key={stock.ticker} to={`/stock/${stock.ticker}`}>
           <motion.div
             whileTap={{ backgroundColor: "var(--color-secondary)" }}
@@ -214,7 +215,7 @@ function SearchResultsList({ results, isLoading }: any) {
   );
 }
 
-function PopularKeywordList({ keywords, isLoading, onSelect }: any) {
+function PopularKeywordList({ keywords, isLoading, onSelect }: { keywords: string[] | undefined; isLoading: boolean; onSelect: (keyword: string) => void }) {
   if (isLoading) {
     return (
        <div className="p-4 space-y-4">
