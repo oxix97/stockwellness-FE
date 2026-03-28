@@ -24,8 +24,7 @@ export function useStock() {
     queryKey: ["stocks", "search", query],
     queryFn: ({ pageParam = 0 }) => stockApi.search(query, pageParam as number),
     initialPageParam: 0,
-    // TODO(#123): BE SliceResponse 배포 후 lastPage.hasNext 로 원복 (hasNext === !last)
-    getNextPageParam: (lastPage: StockSearchResponse) => (!lastPage.last ? lastPage.number + 1 : undefined),
+    getNextPageParam: (lastPage: StockSearchResponse) => (lastPage.hasNext ? lastPage.number + 1 : undefined),
     enabled: query.trim().length >= 2,
     staleTime: 1000 * 60 * 5, // 검색 결과는 5분 동안 유지
   });
