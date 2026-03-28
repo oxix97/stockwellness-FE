@@ -1,18 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { Skeleton } from "@/app/components/ui";
-import { stockApi } from "@/api/stock";
+import { useStock } from "@/hooks/use-stock";
 import { NewListingStock } from "@/types/api";
 
 /**
  * Task #70 — 신규 상장 종목 카드 리스트
  */
 export function NewListingsSection() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["stocks", "new-listings"],
-    queryFn: stockApi.getNewListings,
-    staleTime: 1000 * 60 * 10,
-  });
+  const { data, isLoading } = useStock().newListings;
 
   if (isLoading) {
     return (

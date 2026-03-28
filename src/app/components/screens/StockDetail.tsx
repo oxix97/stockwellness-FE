@@ -10,6 +10,7 @@ import { Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ap
 import { PageHeader } from "@/app/components/shared";
 import { formatCurrency } from "@/utils/format";
 import { StockReturnsResponse } from "@/api/stock";
+import { ChartPeriod, ChartFrequency } from "@/types/api";
 import { toast } from "sonner";
 
 // ── 차트 색상 상수 (한국 관례: 상승=빨강, 하락=파랑) ────────────────────
@@ -102,7 +103,7 @@ function computeRsi(closes: number[], period = 14): number | null {
 
 // ── 기간 설정 ─────────────────────────────────────────────────────────────
 const PERIODS = ["일봉", "주봉", "월봉"];
-const PERIOD_CONFIG: Record<string, { period: string; frequency: string }> = {
+const PERIOD_CONFIG: Record<string, { period: ChartPeriod; frequency: ChartFrequency }> = {
   "일봉": { period: "3M",  frequency: "DAILY"   },
   "주봉": { period: "6M",  frequency: "WEEKLY"  },
   "월봉": { period: "ALL", frequency: "MONTHLY" },
@@ -451,6 +452,7 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
   const labelMap: Record<string, string> = { "일봉": "일봉", "주봉": "주봉", "월봉": "월봉" };
   const maxVolume = Math.max(...data.map((d) => d.volume || 0), 1);
   const interval = Math.floor(data.length / 4);
+  const hasBenchmarkData = data.some((d) => d.benchmark !== null);
 
   return (
     <div className="bg-card px-6 py-10">
@@ -471,12 +473,14 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
           <span className="w-4 h-0.5 inline-block rounded" style={{ backgroundColor: CHART_COLORS.ma60 }} />
           <span className="text-muted-foreground">MA60</span>
         </span>
-        <span className="flex items-center gap-1">
-          <svg width="16" height="4" viewBox="0 0 16 4">
-            <line x1="0" y1="2" x2="16" y2="2" stroke={CHART_COLORS.benchmark} strokeWidth="1.5" strokeDasharray="4 2" />
-          </svg>
-          <span className="text-muted-foreground">{benchmarkName || "벤치마크"}</span>
-        </span>
+        {hasBenchmarkData && (
+          <span className="flex items-center gap-1">
+            <svg width="16" height="4" viewBox="0 0 16 4">
+              <line x1="0" y1="2" x2="16" y2="2" stroke={CHART_COLORS.benchmark} strokeWidth="1.5" strokeDasharray="4 2" />
+            </svg>
+            <span className="text-muted-foreground">{benchmarkName || "벤치마크"}</span>
+          </span>
+        )}
       </div>
 
       {/* 캔들 + 라인 차트 */}
@@ -521,17 +525,19 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
             <Line type="monotone" dataKey="ma20" stroke={CHART_COLORS.ma20} strokeWidth={1} dot={false} animationDuration={0} connectNulls />
             <Line type="monotone" dataKey="ma60" stroke={CHART_COLORS.ma60} strokeWidth={1} dot={false} animationDuration={0} connectNulls />
 
-            {/* 벤치마크 라인 — 회색 점선 */}
-            <Line
-              type="monotone"
-              dataKey="benchmark"
-              stroke={CHART_COLORS.benchmark}
-              strokeWidth={1.5}
-              strokeDasharray="4 4"
-              dot={false}
-              animationDuration={600}
-              connectNulls
-            />
+            {/* 벤치마크 라인 — 회색 점선 (데이터 있을 때만) */}
+            {hasBenchmarkData && (
+              <Line
+                type="monotone"
+                dataKey="benchmark"
+                stroke={CHART_COLORS.benchmark}
+                strokeWidth={1.5}
+                strokeDasharray="4 4"
+                dot={false}
+                animationDuration={600}
+                connectNulls
+              />
+            )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -656,7 +662,9 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
                       {stockRate != null ? `${stockRate > 0 ? "+" : ""}${stockRate}%` : "-"}
                     </span>
                     <span className="text-right font-bold text-sm text-foreground">
-                      {benchRate != null ? `${benchRate > 0 ? "+" : ""}${benchRate}%` : "-"}
+                      {benchRate != null && benchRate !== 0
+                        ? `${benchRate > 0 ? "+" : ""}${benchRate}%`
+                        : <span className="text-muted-foreground font-medium">데이터 없음</span>}
                     </span>
                   </>
                 )}

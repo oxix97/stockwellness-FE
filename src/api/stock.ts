@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { StockPriceHistoryResponse, StockSearchResponse, NewListingStock } from "@/types/api";
+import { StockPriceHistoryResponse, StockSearchResponse, NewListingStock, ChartPeriod, ChartFrequency } from "@/types/api";
 
 /** 종목 수익률 응답 타입 */
 export interface StockReturnsResponse {
@@ -80,7 +80,7 @@ export const stockApi = {
    * @param period 조회 기간 (기본값: 1Y)
    * @returns 일별 주가 이력 및 벤치마크 데이터
    */
-  getPriceHistory: async (ticker: string, period = "1Y", frequency = "DAILY"): Promise<StockPriceHistoryResponse> => {
+  getPriceHistory: async (ticker: string, period: ChartPeriod = "1Y", frequency: ChartFrequency = "DAILY"): Promise<StockPriceHistoryResponse> => {
     const data = await apiClient.get(`/v1/stocks/${ticker}/prices/history`, {
       params: { period, frequency, includeBenchmark: true },
     });

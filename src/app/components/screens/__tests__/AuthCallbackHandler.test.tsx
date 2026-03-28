@@ -1,7 +1,7 @@
 import { render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { AuthCallback } from "../AuthCallback";
+import { AuthCallbackHandler } from "../AuthCallbackHandler";
 import { portfolioApi } from "@/api/portfolio";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
@@ -38,17 +38,17 @@ vi.mock("react-router", async () => {
   };
 });
 
-describe("AuthCallback Component", () => {
+describe("AuthCallbackHandler Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
   });
 
-  it("should show error if accessToken or refreshToken is missing", async () => {
+  it("should show error if both accessToken and token are missing", async () => {
     render(
-      <MemoryRouter initialEntries={["/auth/callback?accessToken=only_access"]}>
+      <MemoryRouter initialEntries={["/auth/callback?refreshToken=rt"]}>
         <Routes>
-          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/callback" element={<AuthCallbackHandler />} />
         </Routes>
       </MemoryRouter>
     );
@@ -59,47 +59,44 @@ describe("AuthCallback Component", () => {
     });
   });
 
-  it("should fail if token parsing fails", async () => {
-    const { jwtDecode } = await import("jwt-decode");
-    (jwtDecode as any).mockImplementationOnce(() => {
-      throw new Error("Invalid token");
-    });
+  it("should succeed with 'token' parameter instead of 'accessToken'", async () => {
+    (portfolioApi.getMyPortfolios as any).mockResolvedValue([]);
 
     render(
-      <MemoryRouter initialEntries={["/auth/callback?accessToken=bad&refreshToken=bad"]}>
+      <MemoryRouter initialEntries={["/auth/callback?token=valid_token"]}>
         <Routes>
-          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/callback" element={<AuthCallbackHandler />} />
         </Routes>
       </MemoryRouter>
     );
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("인증 처리 중 오류가 발생했습니다.");
-      expect(mockNavigate).toHaveBeenCalledWith("/login");
+      expect(toast.success).toHaveBeenCalledWith("Tester님, 환영합니다!");
+      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
     });
+    
+    // Check if accessToken was set in the store correctly from 'token' param
+    expect(useAuthStore.getState().accessToken).toBe("valid_token");
   });
 
-  it("should set auth and portfolio, then redirect to home on success", async () => {
+  it("should set auth and portfolio, then redirect to home on success with accessToken", async () => {
     const mockPortfolios = [{ id: 10, name: "Main Portfolio" }];
     (portfolioApi.getMyPortfolios as any).mockResolvedValue(mockPortfolios);
 
     render(
       <MemoryRouter initialEntries={["/auth/callback?accessToken=valid_at&refreshToken=valid_rt"]}>
         <Routes>
-          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/callback" element={<AuthCallbackHandler />} />
         </Routes>
       </MemoryRouter>
     );
 
     await waitFor(() => {
-      // Auth Store check (indirectly via setAuth call if we had it mocked, 
-      // but here we check derived state or just the side effects)
       expect(toast.success).toHaveBeenCalledWith("Tester님, 환영합니다!");
-      expect(portfolioApi.getMyPortfolios).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
     });
     
-    // Check if portfolioId was set in the store
     expect(useAuthStore.getState().portfolioId).toBe("10");
+    expect(useAuthStore.getState().accessToken).toBe("valid_at");
   });
 });

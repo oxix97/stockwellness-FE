@@ -1,4 +1,4 @@
-export * from "./AuthCallback";
+export * from "./AuthCallbackHandler";
 export * from "./BacktestResult";
 export * from "./BacktestSetup";
 export * from "./HealthDiagnosis";

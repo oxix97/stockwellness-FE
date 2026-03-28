@@ -160,21 +160,19 @@ function CorrelationSection({ matrix }: { matrix: CorrelationMatrix }) {
   );
 }
 
+const ACTION_LABEL: Record<string, string> = {
+  REBALANCE: "리밸런싱",
+  RISK_MANAGEMENT: "리스크 관리",
+  TECHNICAL_OPTIMIZATION: "기술적 최적화",
+  DIVERSIFICATION: "포트폴리오 다각화",
+};
+
 function ActionBadge({ action }: { action?: string }) {
   if (!action) return null;
-  const upper = action.toUpperCase();
-  const isBuy = upper === "BUY";
-  const isSell = upper === "SELL";
-
-  const label = isBuy ? "📥 매수" : isSell ? "📤 매도" : action;
-  const cls = isBuy
-    ? "bg-primary/10 text-primary border-primary/20"
-    : isSell
-    ? "bg-[#FF4756]/10 text-[#FF4756] border-[#FF4756]/20"
-    : "bg-secondary text-foreground border-border";
+  const label = ACTION_LABEL[action] ?? action;
 
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold border ${cls}`}>
+    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold border bg-primary/10 text-primary border-primary/20">
       {label}
     </span>
   );

@@ -13,10 +13,10 @@ interface JwtPayload {
 }
 
 /**
- * 백엔드 소셜 로그인 성공 후 리다이렉트 되는 페이지.
- * URL 파라미터에서 토큰을 추출하여 스토어에 저장합니다.
+ * 백엔드 소셜 로그인 성공 후 리다이렉트 되는 핸들러 컴포넌트.
+ * URL 파라미터에서 토큰(accessToken 또는 token)을 추출하여 스토어에 저장합니다.
  */
-export function AuthCallback() {
+export function AuthCallbackHandler() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -24,7 +24,8 @@ export function AuthCallback() {
 
   useEffect(() => {
     const processAuth = async () => {
-      const accessToken = searchParams.get("accessToken");
+      // 1. URL 파라미터 추출 (accessToken 또는 token 둘 다 지원)
+      const accessToken = searchParams.get("accessToken") || searchParams.get("token");
       const refreshToken = searchParams.get("refreshToken");
       const error = searchParams.get("error");
 
@@ -34,44 +35,45 @@ export function AuthCallback() {
         return;
       }
 
-      if (!accessToken || !refreshToken) {
+      // 액세스 토큰이 없는 경우 처리
+      if (!accessToken) {
         toast.error("인증 정보가 누락되었습니다. 다시 시도해주세요.");
         navigate("/login");
         return;
       }
 
       try {
-        // 1. 토큰에서 유저 정보 파싱
+        // 2. 토큰에서 유저 정보 파싱
         const decoded: JwtPayload = jwtDecode(accessToken);
 
-        // 2. 인증 스토어 업데이트
+        // 3. 인증 스토어 업데이트
         setAuth({
           memberId: Number(decoded.sub),
           email: decoded.email || "",
           nickname: decoded.nickname || "사용자",
           accessToken,
-          refreshToken,
+          // 리프레시 토큰이 없더라도 로그인은 가능하게 처리 (선택적)
+          refreshToken: refreshToken || "",
           joinedDate: decoded.joinedDate || "",
         });
 
-        // 3. 포트폴리오 정보 동적 동기화
+        // 4. 포트폴리오 정보 동적 동기화
         try {
           const portfolios = await portfolioApi.getMyPortfolios();
           if (portfolios && portfolios.length > 0) {
             setPortfolioId(String(portfolios[0].id));
           } else {
             console.warn("No portfolios found for user. Please create one.");
-            // 포트폴리오가 없는 경우 빈 상태로 시작 (하드코딩된 '1' 등을 사용하지 않음)
             setPortfolioId(null);
           }
         } catch (portfolioError) {
-          console.warn("Failed to fetch portfolios on login (might be a new user):", portfolioError);
+          console.warn("Failed to fetch portfolios on login:", portfolioError);
           setPortfolioId(null);
         }
 
         toast.success(`${decoded.nickname || "사용자"}님, 환영합니다!`);
 
-        // 4. 로그인 전 가려던 페이지로 복귀 (Login.tsx에서 저장함)
+        // 5. 로그인 전 가려던 페이지로 복귀 (Login.tsx에서 저장함)
         const redirectPath = sessionStorage.getItem("redirect_after_login") || "/";
         sessionStorage.removeItem("redirect_after_login");
         

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { portfolioApi } from "@/api/portfolio";
 import { useAuthStore } from "@/store/auth";
 import { CreatePortfolioRequest, UpdatePortfolioRequest } from "@/types/api";
@@ -113,7 +114,12 @@ export function usePortfolioAnalysis() {
 
   const advice = useQuery({
     queryKey: ["portfolio", portfolioId, "advice"],
-    queryFn: () => portfolioApi.getAdvice(portfolioId!),
+    queryFn: () =>
+      portfolioApi.getAdvice(portfolioId!).catch((error) => {
+        // 아직 AI 조언이 생성되지 않은 경우 (매주 월요일 배치 전) → null로 처리
+        if (isAxiosError(error) && error.response?.status === 404) return null;
+        throw error;
+      }),
     ...queryConfig,
   });
 
