@@ -86,8 +86,7 @@ export function BacktestResult() {
   const displayMdd = serverMetrics?.mdd ?? metrics?.mdd;
   const displaySharpe = serverMetrics?.sharpeRatio ?? metrics?.sharpeRatio;
   const displayBeta = serverMetrics?.beta ?? metrics?.beta;
-  // TODO(BE): benchmarkReturnRate가 0일 때 데이터 없음인지 실제 0%인지 BE가 null로 명확히 구분해야 함
-  const hasBenchmarkReturn = (metrics?.benchmarkReturn ?? 0) !== 0;
+  const hasBenchmarkReturn = metrics?.benchmarkReturn != null;
 
   // Best Year / Worst Year 계산
   const yearlyStats = useMemo(() => {
@@ -189,7 +188,7 @@ export function BacktestResult() {
 function ChartSection({ backtestData }: { backtestData: BacktestDailyResult[] }) {
   const data = backtestData ?? [];
 
-  const hasBenchmarkData = data.some((r) => (r.benchmarkReturnRate ?? 0) !== 0);
+  const hasBenchmarkData = data.some((r) => r.benchmarkReturnRate != null);
 
   const mddPeriod = useMemo(() => {
     if (data.length === 0) return { start: "", end: "" };

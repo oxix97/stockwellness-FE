@@ -662,7 +662,7 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
                       {stockRate != null ? `${stockRate > 0 ? "+" : ""}${stockRate}%` : "-"}
                     </span>
                     <span className="text-right font-bold text-sm text-foreground">
-                      {benchRate != null && benchRate !== 0
+                      {benchRate != null
                         ? `${benchRate > 0 ? "+" : ""}${benchRate}%`
                         : <span className="text-muted-foreground font-medium">데이터 없음</span>}
                     </span>
