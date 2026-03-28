@@ -15,7 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/app/components/ui";
 import { usePortfolio } from "@/hooks/use-portfolio";
-import { memberApi } from "@/api/member";
+import { useWithdraw, useUpdateProfile } from "@/hooks/use-member";
 
 /**
  * Task #84 ~ #87 — 마이 탭 완성
@@ -29,6 +29,8 @@ export function More() {
   const { nickname, logout, joinedDate } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { holdings, valuation, health } = usePortfolio();
+
+  const withdraw = useWithdraw();
 
   const investorType =
     health.overallScore >= 70
@@ -46,7 +48,7 @@ export function More() {
 
   const handleWithdraw = async () => {
     try {
-      await memberApi.withdraw();
+      await withdraw.mutateAsync();
       logout();
       navigate("/login");
       toast.success("탈퇴되었습니다.");
@@ -230,22 +232,17 @@ function NicknameEditModal({
   onClose: () => void;
 }) {
   const [value, setValue] = useState(currentNickname);
-  const [saving, setSaving] = useState(false);
-  const { setNickname } = useAuthStore();
+  const updateProfile = useUpdateProfile();
 
   const handleSave = async () => {
     const trimmed = value.trim();
     if (!trimmed) return;
-    setSaving(true);
     try {
-      await memberApi.updateProfile(trimmed);
-      setNickname(trimmed);
+      await updateProfile.mutateAsync(trimmed);
       toast.success("닉네임이 변경되었습니다.");
       onClose();
     } catch {
       toast.error("닉네임 변경에 실패했습니다.");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -273,10 +270,10 @@ function NicknameEditModal({
             </button>
             <button
               onClick={handleSave}
-              disabled={saving || !value.trim()}
+              disabled={updateProfile.isPending || !value.trim()}
               className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm disabled:opacity-40"
             >
-              {saving ? "저장 중..." : "저장"}
+              {updateProfile.isPending ? "저장 중..." : "저장"}
             </button>
           </div>
         </div>

@@ -3,8 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Switch } from "@/app/components/ui";
 import { toast } from "sonner";
-import { memberApi } from "@/api/member";
-import { useNotificationSettings } from "@/hooks/use-member";
+import { useNotificationSettings, useUpdateNotifications } from "@/hooks/use-member";
 
 interface NotifSetting {
   id: "rebalancing" | "marketAlert" | "newListing";
@@ -22,6 +21,7 @@ const SETTING_META: Omit<NotifSetting, "enabled">[] = [
 export function NotificationSettings() {
   const navigate = useNavigate();
   const { data: serverSettings, isLoading } = useNotificationSettings();
+  const updateNotifications = useUpdateNotifications();
   const [settings, setSettings] = useState<NotifSetting[]>([]);
 
   // 서버 응답으로 초기값 세팅
@@ -40,7 +40,7 @@ export function NotificationSettings() {
     const prev = settings;
     setSettings((s) => s.map((item) => (item.id === id ? { ...item, enabled: value } : item)));
     try {
-      await memberApi.updateNotifications({ [id]: value });
+      await updateNotifications.mutateAsync({ [id]: value });
     } catch {
       setSettings(prev);
       toast.error("설정 저장에 실패했습니다.");

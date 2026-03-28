@@ -590,22 +590,12 @@ export interface components {
                     totalValue: number;
                     /** @description 날짜 */
                     date: string;
-                    /** @description 주요 벤치마크 수익률 (%) */
+                    /** @description 벤치마크 수익률 (%) */
                     benchmarkReturnRate: number;
-                    /** @description 다중 지수 수익률 (ticker → 수익률) */
-                    benchmarkReturnRates: Record<string, number>;
                     /** @description 누적 수익률 (%) */
                     returnRate: number;
                     /** @description 총 투자금 */
                     totalInvested: number;
-                }[];
-                /** @description 다중 지수 비교 결과 */
-                comparisons?: {
-                    indexName: string;
-                    ticker: string;
-                    totalReturn: number;
-                    alpha: number;
-                    beta: number;
                 }[];
                 /** @description 초과 수익률 (Alpha) */
                 alpha: number;

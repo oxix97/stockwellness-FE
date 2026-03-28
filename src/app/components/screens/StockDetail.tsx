@@ -161,8 +161,8 @@ export function StockDetail() {
       
       // 그룹이 하나도 없다면 생성 후 추가
       if (!targetGroupId) {
-        const newGroup: any = await createGroup.mutateAsync("기본");
-        targetGroupId = newGroup.id;
+        const newGroupId = await createGroup.mutateAsync("기본");
+        targetGroupId = newGroupId;
       }
 
       addItem.mutate({ groupId: targetGroupId!, body: { ticker } }, {

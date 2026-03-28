@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
-import { portfolioApi } from "@/api/portfolio";
+import { usePortfolioSync } from "@/hooks/use-portfolio";
 import { jwtDecode } from "jwt-decode";
 
 interface JwtPayload {
@@ -20,7 +20,7 @@ export function AuthCallbackHandler() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
-  const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
+  const { syncPortfolio } = usePortfolioSync();
 
   useEffect(() => {
     const processAuth = async () => {
@@ -58,18 +58,7 @@ export function AuthCallbackHandler() {
         });
 
         // 4. 포트폴리오 정보 동적 동기화
-        try {
-          const portfolios = await portfolioApi.getMyPortfolios();
-          if (portfolios && portfolios.length > 0) {
-            setPortfolioId(String(portfolios[0].id));
-          } else {
-            console.warn("No portfolios found for user. Please create one.");
-            setPortfolioId(null);
-          }
-        } catch (portfolioError) {
-          console.warn("Failed to fetch portfolios on login:", portfolioError);
-          setPortfolioId(null);
-        }
+        await syncPortfolio();
 
         toast.success(`${decoded.nickname || "사용자"}님, 환영합니다!`);
 
@@ -78,8 +67,7 @@ export function AuthCallbackHandler() {
         sessionStorage.removeItem("redirect_after_login");
         
         navigate(redirectPath, { replace: true });
-      } catch (e) {
-        console.error("Token parsing error:", e);
+      } catch {
         toast.error("인증 처리 중 오류가 발생했습니다.");
         navigate("/login");
       }

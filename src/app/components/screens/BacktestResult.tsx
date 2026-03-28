@@ -271,7 +271,12 @@ function AiCommentCard({ apiComment }: { apiComment: string | null }) {
   );
 }
 
-function MetricCard({ label, value, sub, color = "text-foreground" }: any) {
+function MetricCard({ label, value, sub, color = "text-foreground" }: {
+  label: string;
+  value: string | number;
+  sub: string;
+  color?: string;
+}) {
   return (
     <div className="bg-card rounded-3xl p-6 border border-border shadow-sm">
       <div className="text-muted-foreground text-sm mb-2 font-medium">{label}</div>
