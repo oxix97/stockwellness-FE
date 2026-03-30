@@ -1,4 +1,5 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { sectorApi } from "@/api/sector";
 
 /**
@@ -18,7 +19,12 @@ export function useSector() {
   const details = useQueries({
     queries: sectorCodes.map((code) => ({
       queryKey: ["sectors", "detail", code],
-      queryFn: () => sectorApi.getSectorDetail(code),
+      queryFn: () =>
+        sectorApi.getSectorDetail(code).catch((error) => {
+          // 당일 배치 미실행 시 detail 데이터 없음 → null로 처리 (ranking은 fallback 있으나 detail은 없음)
+          if (isAxiosError(error) && error.response?.status === 404) return null;
+          throw error;
+        }),
       staleTime: 5 * 60 * 1000,
       enabled: !!code,
     })),

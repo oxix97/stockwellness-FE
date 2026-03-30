@@ -4,7 +4,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
-import { CorrelationMatrix } from "@/types/api";
+import { CorrelationMatrix, AdviceResponse } from "@/types/api";
 
 export function HealthDiagnosis() {
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ function ScoreCard({ score, adviceContent }: { score: number; adviceContent?: st
   );
 }
 
-function RadarSection({ data }: { data: any[] }) {
+function RadarSection({ data }: { data: { metric: string; value: number }[] }) {
   return (
     <div className="px-6 py-10 bg-card border-b border-border">
       <div className="text-foreground mb-8 text-center font-bold text-xl">
@@ -160,27 +160,25 @@ function CorrelationSection({ matrix }: { matrix: CorrelationMatrix }) {
   );
 }
 
+const ACTION_LABEL: Record<string, string> = {
+  REBALANCE: "리밸런싱",
+  RISK_MANAGEMENT: "리스크 관리",
+  TECHNICAL_OPTIMIZATION: "기술적 최적화",
+  DIVERSIFICATION: "포트폴리오 다각화",
+};
+
 function ActionBadge({ action }: { action?: string }) {
   if (!action) return null;
-  const upper = action.toUpperCase();
-  const isBuy = upper === "BUY";
-  const isSell = upper === "SELL";
-
-  const label = isBuy ? "📥 매수" : isSell ? "📤 매도" : action;
-  const cls = isBuy
-    ? "bg-primary/10 text-primary border-primary/20"
-    : isSell
-    ? "bg-[#FF4756]/10 text-[#FF4756] border-[#FF4756]/20"
-    : "bg-secondary text-foreground border-border";
+  const label = ACTION_LABEL[action] ?? action;
 
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold border ${cls}`}>
+    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold border bg-primary/10 text-primary border-primary/20">
       {label}
     </span>
   );
 }
 
-function PrescriptionSection({ advice, onBacktest }: any) {
+function PrescriptionSection({ advice, onBacktest }: { advice: AdviceResponse | undefined; onBacktest: () => void }) {
   return (
     <div className="px-6 py-10">
       <div className="flex items-center gap-3 mb-8">

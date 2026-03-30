@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router";
 import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
-import { usePortfolio } from "@/hooks/use-portfolio";
+import { usePortfolioSummary } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { Skeleton } from "@/app/components/ui";
+import { PortfolioValuationResponse, SectorRankingItem } from "@/types/api";
 import { Section } from "@/app/components/shared";
 import { formatCurrency, formatPercent } from "@/utils/format";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
@@ -34,7 +35,7 @@ const getSectorIcon = (name: string) => {
 
 export function Home() {
   const navigate = useNavigate();
-  const { valuation, isLoading: isValuationLoading } = usePortfolio();
+  const { valuation, isLoading: isValuationLoading } = usePortfolioSummary();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
   const { popular } = useStock();
@@ -137,7 +138,7 @@ export function Home() {
   );
 }
 
-function AssetSummaryCard({ valuation, isLoading }: any) {
+function AssetSummaryCard({ valuation, isLoading }: { valuation: PortfolioValuationResponse | undefined; isLoading: boolean }) {
   const totalReturn = valuation?.totalReturnRate ?? 0;
   const totalProfitLoss = valuation?.totalProfitLoss ?? 0;
   const isUp = totalReturn >= 0;
@@ -176,7 +177,7 @@ function AssetSummaryCard({ valuation, isLoading }: any) {
   );
 }
 
-function SectorCard({ sector, onTap }: { sector: any; onTap: () => void }) {
+function SectorCard({ sector, onTap }: { sector: SectorRankingItem; onTap: () => void }) {
   const isUp = sector.fluctuationRate >= 0;
 
   return (
@@ -209,7 +210,7 @@ function SectorCard({ sector, onTap }: { sector: any; onTap: () => void }) {
   );
 }
 
-function TrendingList({ stocks, isLoading }: any) {
+function TrendingList({ stocks, isLoading }: { stocks: string[] | undefined; isLoading: boolean }) {
   if (isLoading) {
     return (
       <div className="bg-card rounded-2xl p-4 border border-border space-y-3">

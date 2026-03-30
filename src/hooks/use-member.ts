@@ -40,3 +40,20 @@ export function useUpdateNotifications() {
     },
   });
 }
+
+export function useUpdateProfile() {
+  const setNickname = useAuthStore((s) => s.setNickname);
+
+  return useMutation({
+    mutationFn: (nickname: string) => memberApi.updateProfile(nickname),
+    onSuccess: (_, nickname) => {
+      setNickname(nickname);
+    },
+  });
+}
+
+export function useWithdraw() {
+  return useMutation({
+    mutationFn: () => memberApi.withdraw(),
+  });
+}

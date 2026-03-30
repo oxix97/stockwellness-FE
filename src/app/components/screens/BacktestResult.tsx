@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { Activity, Sparkles } from "lucide-react";
-import { XAxis, YAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
+import { XAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
 import { useBacktest } from "@/hooks/use-backtest";
+import { BacktestDailyResult } from "@/types/api";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
 
@@ -13,7 +14,7 @@ export function BacktestResult() {
   const hasRun = useRef(false);
 
   // useBacktest에 선택된 기간을 전달하여 클라이언트 사이드 슬라이싱 및 지표 계산 활성화
-  const { run, data, isLoading, metrics, isError, aiComment } = useBacktest(config.period);
+  const { run, data, isLoading, metrics, serverMetrics, isError, aiComment } = useBacktest(config.period);
 
   useEffect(() => {
     if (config.strategy && !hasRun.current) {
@@ -80,6 +81,13 @@ export function BacktestResult() {
 
   const backtestData = data?.dailyResults ?? [];
 
+  // serverMetrics(BE 계산) 우선, 없으면 클라이언트 재계산값 사용
+  const displayCagr = serverMetrics?.cagr ?? metrics?.cagr;
+  const displayMdd = serverMetrics?.mdd ?? metrics?.mdd;
+  const displaySharpe = serverMetrics?.sharpeRatio ?? metrics?.sharpeRatio;
+  const displayBeta = serverMetrics?.beta ?? metrics?.beta;
+  const hasBenchmarkReturn = metrics?.benchmarkReturn != null;
+
   // Best Year / Worst Year 계산
   const yearlyStats = useMemo(() => {
     if (!backtestData || backtestData.length === 0) return { best: null, worst: null };
@@ -98,6 +106,9 @@ export function BacktestResult() {
     const worst = yearReturns.reduce((a, b) => (a.returnPct < b.returnPct ? a : b));
     return { best, worst };
   }, [backtestData]);
+
+  const displayBestYear = serverMetrics?.bestYearRate ?? yearlyStats.best?.returnPct;
+  const displayWorstYear = serverMetrics?.worstYearRate ?? yearlyStats.worst?.returnPct;
 
   return (
     <div className="min-h-screen bg-background pb-8">
@@ -126,10 +137,16 @@ export function BacktestResult() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-primary font-bold text-3xl">
-                {metrics.outperformance >= 0 ? "+" : ""}{metrics.outperformance.toFixed(1)}%
-              </div>
-              <div className="text-muted-foreground text-sm font-medium">더 높은 수익</div>
+              {hasBenchmarkReturn ? (
+                <>
+                  <div className="text-primary font-bold text-3xl">
+                    {metrics.outperformance >= 0 ? "+" : ""}{metrics.outperformance.toFixed(1)}%
+                  </div>
+                  <div className="text-muted-foreground text-sm font-medium">더 높은 수익</div>
+                </>
+              ) : (
+                <div className="text-muted-foreground text-sm font-medium">벤치마크 데이터 없음</div>
+              )}
             </div>
           </div>
         </div>
@@ -139,28 +156,28 @@ export function BacktestResult() {
       <ChartSection backtestData={backtestData} />
 
       {/* AI 코멘트 카드 */}
-      <AiCommentCard metrics={metrics} config={config} apiComment={aiComment} />
+      <AiCommentCard apiComment={aiComment} />
 
       {/* 성과 지표 */}
       <div className="px-6 py-10">
         <div className="text-foreground mb-6 font-bold text-2xl">상세 성과 지표</div>
         <div className="grid grid-cols-2 gap-4">
-          <MetricCard label="연평균 수익률" value={`${metrics?.cagr}%`} sub="CAGR" color="text-primary" />
-          <MetricCard label="최대 낙폭" value={`${metrics?.mdd}%`} sub="MDD" color="text-[#FF4756]" />
-          <MetricCard label="위험 대비 수익" value={metrics?.sharpeRatio} sub="샤프 지수" />
-          <MetricCard label="시장 민감도" value={metrics?.beta ?? "-"} sub="Beta" />
-          {yearlyStats.best && (
+          <MetricCard label="연평균 수익률" value={displayCagr != null ? `${displayCagr}%` : "-"} sub="CAGR" color="text-primary" />
+          <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-[#FF4756]" />
+          <MetricCard label="위험 대비 수익" value={displaySharpe ?? "-"} sub="샤프 지수" />
+          <MetricCard label="시장 민감도" value={displayBeta ?? "-"} sub="Beta" />
+          {displayBestYear != null && (
             <MetricCard
-              label={`최고 연도 (${yearlyStats.best.year})`}
-              value={`+${yearlyStats.best.returnPct}%`}
+              label={yearlyStats.best?.year ? `최고 연도 (${yearlyStats.best.year})` : "최고 연도"}
+              value={`${displayBestYear > 0 ? "+" : ""}${displayBestYear}%`}
               sub="Best Year"
               color="text-primary"
             />
           )}
-          {yearlyStats.worst && (
+          {displayWorstYear != null && (
             <MetricCard
-              label={`최저 연도 (${yearlyStats.worst.year})`}
-              value={`${yearlyStats.worst.returnPct}%`}
+              label={yearlyStats.worst?.year ? `최저 연도 (${yearlyStats.worst.year})` : "최저 연도"}
+              value={`${displayWorstYear}%`}
               sub="Worst Year"
               color="text-[#FF4756]"
             />
@@ -171,8 +188,10 @@ export function BacktestResult() {
   );
 }
 
-function ChartSection({ backtestData }: { backtestData: any[] }) {
+function ChartSection({ backtestData }: { backtestData: BacktestDailyResult[] }) {
   const data = backtestData ?? [];
+
+  const hasBenchmarkData = data.some((r) => r.benchmarkReturnRate != null);
 
   const mddPeriod = useMemo(() => {
     if (data.length === 0) return { start: "", end: "" };
@@ -224,7 +243,9 @@ function ChartSection({ backtestData }: { backtestData: any[] }) {
             {mddPeriod.start && mddPeriod.end && mddPeriod.start !== mddPeriod.end && (
               <ReferenceArea x1={mddPeriod.start} x2={mddPeriod.end} fill="#FF4756" fillOpacity={0.08} strokeOpacity={0} />
             )}
-            <Line type="monotone" dataKey="benchmarkReturnRate" stroke="#9CA3AF" strokeWidth={2} strokeDasharray="5 5" dot={false} name="벤치마크" />
+            {hasBenchmarkData && (
+              <Line type="monotone" dataKey="benchmarkReturnRate" stroke="#9CA3AF" strokeWidth={2} strokeDasharray="5 5" dot={false} name="벤치마크" />
+            )}
             <Line type="monotone" dataKey="totalValue" stroke="#2EBE7A" strokeWidth={4} dot={false} name="내 포트폴리오" />
           </ComposedChart>
         </ResponsiveContainer>
@@ -233,7 +254,7 @@ function ChartSection({ backtestData }: { backtestData: any[] }) {
   );
 }
 
-function AiCommentCard({ metrics, config, apiComment }: any) {
+function AiCommentCard({ apiComment }: { apiComment: string | null }) {
   const comment = useMemo(() => {
     if (apiComment) return apiComment;
     return "백테스트 결과 분석 중입니다...";
@@ -252,7 +273,12 @@ function AiCommentCard({ metrics, config, apiComment }: any) {
   );
 }
 
-function MetricCard({ label, value, sub, color = "text-foreground" }: any) {
+function MetricCard({ label, value, sub, color = "text-foreground" }: {
+  label: string;
+  value: string | number;
+  sub: string;
+  color?: string;
+}) {
   return (
     <div className="bg-card rounded-3xl p-6 border border-border shadow-sm">
       <div className="text-muted-foreground text-sm mb-2 font-medium">{label}</div>

@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { portfolioApi } from "@/api/portfolio";
 import { useAuthStore } from "@/store/auth";
-import { CreatePortfolioRequest, UpdatePortfolioRequest } from "@/types/api";
+import { CreatePortfolioRequest, UpdatePortfolioRequest, AssetRatio } from "@/types/api";
 
 export function useCreatePortfolio() {
   const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
@@ -64,7 +65,7 @@ export function usePortfolioSummary() {
     const defense = Math.min(100, Math.max(0, 100 - (v.mdd ?? 0)));
     const balance = Math.min(100, (d.sectorRatios?.length ?? 0) * 20);
     const agility = Math.min(100, (v.sharpeRatio ?? 0) * 40);
-    const cash = d.assetRatios?.find((a: any) => a.name === "CASH")?.value ?? 0;
+    const cash = d.assetRatios?.find((a: AssetRatio) => a.name === "CASH")?.value ?? 0;
 
     const radarData = [
       { metric: "수익성\n(Attack)", value: attack },
@@ -113,7 +114,12 @@ export function usePortfolioAnalysis() {
 
   const advice = useQuery({
     queryKey: ["portfolio", portfolioId, "advice"],
-    queryFn: () => portfolioApi.getAdvice(portfolioId!),
+    queryFn: () =>
+      portfolioApi.getAdvice(portfolioId!).catch((error) => {
+        // 아직 AI 조언이 생성되지 않은 경우 (매주 월요일 배치 전) → null로 처리
+        if (isAxiosError(error) && error.response?.status === 404) return null;
+        throw error;
+      }),
     ...queryConfig,
   });
 
@@ -154,4 +160,24 @@ export function usePortfolio() {
     isLoading: summary.isLoading || details.isLoading || analysis.isLoading,
     health: summary.health,
   };
+}
+
+/** 로그인 직후 포트폴리오 ID를 동기화하는 imperative 헬퍼 훅 */
+export function usePortfolioSync() {
+  const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
+
+  const syncPortfolio = async () => {
+    try {
+      const portfolios = await portfolioApi.getMyPortfolios();
+      if (portfolios && portfolios.length > 0) {
+        setPortfolioId(String(portfolios[0].id));
+      } else {
+        setPortfolioId(null);
+      }
+    } catch {
+      setPortfolioId(null);
+    }
+  };
+
+  return { syncPortfolio };
 }

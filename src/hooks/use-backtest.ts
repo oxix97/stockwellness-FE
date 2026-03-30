@@ -1,16 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { portfolioApi } from "@/api/portfolio";
-import { BacktestRequest, BacktestResponse } from "@/types/api";
+import { BacktestRequest, BacktestResponse, ChartPeriod } from "@/types/api";
 import { useAuthStore } from "@/store/auth";
 
-export type Period = "1M" | "3M" | "6M" | "1Y" | "3Y";
-
 const PERIOD_DAYS: Record<string, number> = {
+  "1W": 7,
   "1M": 30,
   "3M": 90,
   "6M": 180,
   "1Y": 365,
   "3Y": 365 * 3,
+  "ALL": Infinity,
 };
 
 /**
@@ -114,17 +114,17 @@ export function computeMetrics(results: BacktestResponse["dailyResults"] | undef
 /**
  * 활성 포트폴리오에 대한 백테스트 시뮬레이션을 실행하고 기간별 결과를 제공합니다.
  */
-export function usePortfolioSimulation(period: string) {
+export function usePortfolioSimulation(period: ChartPeriod) {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   const query = useQuery({
-    queryKey: ["backtest", "simulation", portfolioId],
+    queryKey: ["backtest", "simulation", portfolioId, period],
     queryFn: () =>
       portfolioApi.runBacktest(portfolioId!, {
         strategy: "LUMP_SUM",
         amount: 10_000_000,
         benchmarkTicker: "SPY",
-        period: period.toLowerCase(),
+        period: period as any, // ChartPeriod Union 대응
         rebalancingPeriod: "NONE",
       }),
     enabled: !!portfolioId,
@@ -160,7 +160,21 @@ export function useBacktest(period?: string) {
     data,
     isLoading: mutation.isPending,
     isError: mutation.isError,
+    /** 기간 슬라이싱된 결과 기반 클라이언트 계산 지표 */
     metrics: processedResults ? computeMetrics(processedResults) : null,
+    /** BE 서버 계산 지표 — 전체 기간 기준 (슬라이싱 미적용) */
+    serverMetrics: data
+      ? {
+          cagr: data.cagr,
+          mdd: data.mdd,
+          sharpeRatio: data.sharpeRatio,
+          beta: data.beta,
+          bestYearRate: data.bestYearRate,
+          worstYearRate: data.worstYearRate,
+          alpha: data.alpha,
+          totalReturnRate: data.totalReturnRate,
+        }
+      : null,
     /** BE Spring AI 연동 완료 시 제공되는 AI 코멘트. null이면 클라이언트 룰 기반 사용 */
     aiComment: data?.aiComment ?? null,
   };
