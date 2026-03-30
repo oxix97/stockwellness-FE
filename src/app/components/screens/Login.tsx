@@ -11,9 +11,8 @@ export function Login() {
       sessionStorage.setItem("redirect_after_login", from);
     }
 
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-    // Spring Security OAuth2 기본 엔드포인트 호출
-    const authorizeUrl = `${apiBase}/oauth2/authorization/${type.toLowerCase()}`;
+    // Spring Security OAuth2 기본 엔드포인트 호출 (프리픽스 없이 직접 호출)
+    const authorizeUrl = `/oauth2/authorization/${type.toLowerCase()}`;
     
     window.location.href = authorizeUrl;
   };
