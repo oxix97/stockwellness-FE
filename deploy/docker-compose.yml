@@ -11,5 +11,5 @@ services:
       - stockwellness-net
 
 networks:
-  wellness-net:
-    driver: bridge
+  stockwellness-net:
+    external: true

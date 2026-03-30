@@ -56,6 +56,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_BASE_URL=/api
+            VITE_APP_NAME=Stockwellness
 
   # 2단계: Tailscale 접속 및 n8n 웹훅 트리거
   trigger-deploy:
@@ -83,7 +86,7 @@ jobs:
             --arg commit "${{ github.sha }}" \
             --arg msg "$MSG" \
             --arg author "${{ github.actor }}" \
-            '{image: $img, tag: $tag, commit: $commit, message: $msg, author: $author}')
+            '{image: $img, tag: $tag, IMAGE_TAG: $tag, commit: $commit, message: $msg, author: $author}')
           
           RESPONSE=$(curl -f \
             --max-time 300 \
