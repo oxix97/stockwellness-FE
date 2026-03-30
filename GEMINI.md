@@ -1,69 +1,146 @@
----
-tags:
-  - configuration
-  - gemini-cli
-  - superpowers
-  - react
-  - frontend
+# GEMINI.md
+
+GEMINI Code가 이 저장소에서 작업할 때 참조하는 가이드입니다.
+코드 생성·수정 시 이 파일의 규칙을 반드시 따르세요.
+
 ---
 
-# GEMINI.md - Stockwellness FE 전역 설정 파일
+## 명령어
 
-> [!info] 개요
-> 이 파일은 `stockwellness-FE` 프로젝트에서 활동하는 AI 에이전트(Gemini)가 `obra/superpowers` 프레임워크의 핵심 철학과 본 프로젝트의 프론트엔드 컨벤션을 엄격하게 준수하도록 제어하는 전역 설정 파일입니다.
+```bash
+npm run dev          # Vite 개발 서버 (localhost:5173)
+npm run build        # 프로덕션 빌드
+npm test             # Vitest 단위/컴포넌트 테스트
+npm run test:e2e     # Playwright E2E 테스트 (dev 서버 필요)
 
-## 1. 🤖 시스템 페르소나 및 핵심 철학
-당신은 `Stockwellness` 프론트엔드 프로젝트를 리드하는 **최고 수준의 프론트엔드 엔지니어**입니다.
-단순히 UI 코드를 뱉어내는 것을 넘어, 항상 코드 작성 전에 컴포넌트 구조를 설계(`brainstorming`)하고, 구현은 작게 쪼개어(`writing-plans`), 테스트 및 검증(`test-driven-development`)을 기반으로 하는 에이전틱 워크플로우를 따릅니다.
+# 단일 파일 실행
+npx vitest run src/api/__tests__/sector.test.ts
+npx playwright test tests/auth.e2e.spec.ts
+```
 
-* **증명 우선 (Evidence over claims)**: 코드가 동작한다고 추측하지 마십시오. 의도한 레이아웃과 비즈니스 로직이 제대로 동작하는지 증명해야 합니다.
-* **추측 배제 (No Guessing)**: React 렌더링 에러나 API 통신 실패 시, 코드를 무작정 고치지 말고 `systematic-debugging` 스킬을 사용해 원인을 추적합니다.
+> 패키지 매니저: `npm` 또는 `yarn` 모두 허용 — 한 세션 내에서 하나만 사용
 
-## 2. 🛠️ 기술 스택 및 환경
-항상 아래 명시된 기술 스택과 버전을 기준으로 코드를 작성하고 아키텍처를 설계해야 합니다.
-* **Core:** `React 19`, `Vite 6`, `TypeScript 5.9`
-* **UI/UX:** `Tailwind CSS 4.0`, `Framer Motion`, `Radix UI`
-* **State Management:** * 서버 상태: `TanStack Query v5`
-    * 전역/인증 상태: `Zustand`
-* **Form & Chart:** `React Hook Form`, `Recharts`
-* **통신:** `Axios` (`src/api/` 폴더 내 캡슐화)
+---
 
-## 3. 📐 Stockwellness 개발 가이드라인 (에이전트 강제 준수 사항)
+## 환경 변수
 
-### 3.1. 아키텍처 및 폴더 구조 규칙
-작업을 계획(`writing-plans`)하거나 서브 에이전트를 파견(`subagent-driven-development`)하여 파일/폴더를 생성할 때 다음 구조를 지킵니다.
-* **관심사 분리 (SoC)**: UI 렌더링 로직은 `src/app/components/`에, 비즈니스 로직 및 데이터 패칭은 `src/hooks/`에 철저히 분리하여 작성합니다.
-* **컴포넌트 작성**:
-    * 새로운 UI를 만들 때 아토믹 디자인 기반으로 `src/app/components/ui/`에 있는 공통 컴포넌트를 최우선으로 재사용 및 조합합니다.
-    * 경로(Route)별 페이지 화면은 `src/app/components/screens/`에 구성합니다.
-* **네이밍 컨벤션**:
-    * React 컴포넌트 파일: `PascalCase.tsx`
-    * 커스텀 훅 파일: `use-camelCase.ts`
+```env
+VITE_API_BASE_URL=<백엔드 URL>
+VITE_APP_NAME=Stockwellness
+```
 
-### 3.2. UI/UX 구현 규칙
-화면을 구성할 때 프로젝트의 'Healing UX' 철학과 다음 디자인 제약을 준수합니다.
-* **레이아웃**: 절대 좌표(`absolute`) 사용을 지양하고, `Flex`와 `Grid` 기반의 반응형 레이아웃을 기본으로 적용합니다.
-* **스타일링**: 기본 폰트 크기는 `14px`로 맞추고, 중요한 지표는 포인트 컬러를 사용합니다. 데이터의 날짜 형식은 항상 `Jun 10` (월/일 영문 약어) 형식을 따릅니다.
-* **컴포넌트 제약 조건**:
-    * **하단 툴바(Bottom Toolbar)**: 최대 4개의 아이템만 허용.
-    * **칩(Chips)**: 의미 있는 비교를 위해 3개 이상의 세트로 구성.
-    * **드롭다운(Dropdown)**: 선택지가 3개 이상일 때만 사용.
+- 개발 서버는 `/api`를 `VITE_API_BASE_URL`로 프록시
+- `.env` 파일 커밋 **절대 금지**
 
-### 3.3. 상태 관리 및 에러 핸들링
-* **데이터 패칭**: 모든 서버 API 통신 데이터는 `TanStack Query`를 통해 관리하며, 캐싱 및 로딩/에러 처리를 일관되게 적용합니다.
-* **전역 상태 최소화**: `Zustand`는 인증(`Auth`) 및 테마와 같이 앱 전역에서 공유되어야 하는 상태에만 제한적으로 사용합니다.
-* **안정성**: 사용자 경험을 해치지 않도록 `ErrorBoundary`와 토스트 알림(`sonner`)을 적극 활용하여 에러를 우아하게 핸들링합니다.
+---
 
-## 4. ⚡ 워크플로우 적용 (Superpowers Skills Trigger)
+## 아키텍처
 
-### Phase 1: 기능 설계 (`brainstorming`, `writing-plans`)
-새로운 화면이나 복잡한 훅(Hook)을 개발하기 전, 현재의 컴포넌트 구조(`src/app/components/ui`)를 분석하여 재사용할 요소를 먼저 식별하십시오. 이후 2~5분 내에 처리할 수 있는 단위로 마이크로 태스크 플랜을 세웁니다.
+**앱 성격:** React 19 + TypeScript SPA/PWA — 포트폴리오 분석 및 주식 백테스팅 서비스
 
-### Phase 2: 안전한 구현 (`using-git-worktrees`, `test-driven-development`)
-새 브랜치/워크트리를 생성하여 메인 코드베이스를 보호합니다. `src/hooks`에 비즈니스 로직을 추가할 경우, 로직이 실패함을 먼저 증명하는 테스트를 작성(RED)하고, 기능을 최소한으로 구현(GREEN)한 뒤 리팩토링(REFACTOR)합니다.
+**스택:** React 19 · Vite 6 · TS 5.9 · Tailwind 4 · TanStack Query v5 · Zustand · Axios · React Router 7 · Recharts · Framer Motion · Radix UI · RHF · Zod · Vitest · Playwright
 
-### Phase 3: 디버깅 (`systematic-debugging`)
-React 렌더링 최적화 문제, 불필요한 리렌더링, 혹은 React Query의 Stale/Cache 라이프사이클 이슈가 발생할 경우 임의로 코드를 덧붙이지 마십시오. 즉시 4단계 근본 원인 분석(`root-cause-tracing`)을 가동하여 디버깅을 진행합니다.
+### 레이어 구조
 
-### Phase 4: 코드 리뷰 및 마무리 (`requesting-code-review`, `finishing-a-development-branch`)
-기능 구현을 마쳤다고 선언하기 전에 `requesting-code-review` 스킬을 발동시켜 본 문서의 **[3.2. UI/UX 구현 규칙]** (예: 툴바 아이템 갯수 등)과 **[3.1. 관심사 분리]**가 제대로 지켜졌는지 체크리스트 기반으로 자체 검증하십시오.
+| 레이어 | 위치 | 역할 |
+|---|---|---|
+| API 클라이언트 | `src/api/` | Axios 인스턴스 + 도메인 모듈 (`authApi`, `portfolioApi`, `stockApi` 등) |
+| 비즈니스 로직 | `src/hooks/` | TanStack Query 커스텀 훅 (`use-portfolio.ts`, `use-stock.ts` 등) |
+| 화면 | `src/app/components/screens/` | 라우트 레벨 페이지 컴포넌트 |
+| 공통 UI | `src/app/components/ui/`, `shared/` | Radix UI + Tailwind 원자 컴포넌트 |
+| 전역 상태 | `src/store/auth.ts` | Zustand — 인증 전용 (memberId, email, nickname, portfolioId, accessToken) |
+| 타입 | `src/types/` | 공유 TS 인터페이스 및 API 스키마 |
+
+### 데이터 흐름 (엄수)
+
+```
+컴포넌트 → src/hooks/use-*.ts → src/api/[domain]Api.ts → src/api/client.ts → 백엔드
+```
+
+**컴포넌트에서 `src/api/`를 직접 import하는 것은 금지. 반드시 `src/hooks/`를 경유할 것.**
+
+### 핵심 동작
+
+- **API 클라이언트** (`src/api/client.ts`): Request 인터셉터에서 localStorage의 토큰을 `Authorization: Bearer`로 주입. Response 인터셉터에서 `response.data.data` 언래핑. 401 발생 시 `/api/v1/auth/reissue`로 토큰 재발급 후 재시도, 실패 시 `/login` 리다이렉트.
+- **라우팅** (`src/app/routes.tsx`): 메인 라우트 (`/`, `/search`, `/portfolio`, `/watchlist`, `/more`)는 하단 네비 `<Layout>` 공유. 인증·상세 라우트는 Layout 없음.
+- **서버 상태**: TanStack Query — `refetchOnWindowFocus: false`, `retry: 1`.
+- **전역 상태**: Zustand + localStorage 영속화 (`"auth-storage"`). 서버 데이터는 저장 금지.
+
+---
+
+## 개발 가이드라인
+
+### 네이밍 규칙
+
+| 종류 | 패턴 | 예시 |
+|---|---|---|
+| 컴포넌트 파일 | `PascalCase.tsx` | `PortfolioCard.tsx` |
+| 커스텀 훅 파일 | `use-camelCase.ts` | `use-portfolio.ts` |
+| API 모듈 파일 | `camelCaseApi.ts` | `portfolioApi.ts` |
+| Query Key 팩토리 | `[domain]Keys` | `portfolioKeys` |
+
+### UI 규칙
+
+- 레이아웃: Flex/Grid 사용 — `absolute` 포지셔닝 지양
+- 기본 폰트: `14px` · 주요 액센트 컬러: `#2EBE7A`
+- 날짜 형식: `Jun 10`
+- 하단 툴바: 최대 4개 · Chips: 3개 이상 · Dropdown: 3개 이상 옵션일 때만
+
+### 에러 처리
+
+- 컴포넌트 에러 → `ErrorBoundary`
+- 사용자 알림 → `sonner` 토스트
+- API 에러 → `ApiError` 클래스로 통일 (`docs/error-handling.md` 참고)
+
+### 폼
+
+- 상태 관리: `React Hook Form` + `zodResolver`
+- 유효성 검사 스키마: `Zod`
+
+### 테스트
+
+- 단위: `vi.mock`으로 API 모듈 및 auth 스토어 모킹
+- E2E: Playwright 네트워크 인터셉션으로 OAuth + API 응답 모킹
+- 위치: 대상 코드 옆 `__tests__/` · E2E는 `tests/`
+
+---
+
+## API 코드 작성 순서 (신규 엔드포인트 추가 시)
+
+```
+1. 타입 정의  →  2. API 함수 + Query Key  →  3. 커스텀 훅
+```
+
+→ 상세 패턴 및 예시: **`docs/api-layer.md`**
+→ 실제 엔드포인트 목록 및 타입: **`docs/api-spec.md`**
+
+---
+
+## 절대 금지 사항
+
+| ❌ 금지 | 이유 |
+|---|---|
+| `any` 타입 사용 | 타입 안전성 파괴 |
+| 컴포넌트에서 `src/api/` 직접 import | 레이어 분리 위반 |
+| Query Key 하드코딩 문자열 | 캐시 무효화 버그 유발 |
+| `.env` 파일 커밋 | 보안 사고 |
+| 프로덕션 코드에 `console.log` 잔류 | 로그 노출 |
+| Zustand에 서버 데이터 저장 | TanStack Query 캐시와 이중화 |
+
+---
+
+## 문서 참조
+
+| 주제 | 파일 |
+|---|---|
+| API 3계층 패턴 및 코드 예시 | `docs/api-layer.md` |
+| 전체 API 엔드포인트 명세 및 타입 | `docs/api-spec.md` |
+| 인증 흐름, 인터셉터, 토큰 전략 | `docs/auth.md` |
+| TanStack Query 패턴 및 Query Key | `docs/tanstack-query.md` |
+| 전체 도메인 Query Key 팩토리 목록 | `docs/query-keys.md` |
+| 에러 처리 및 ApiError 클래스 | `docs/error-handling.md` |
+| 단위/E2E 테스트 작성 패턴 | `docs/testing.md` |
+| 디자인 가이드 인덱스 | `@docs/design/README.md` (**루트** `docs/design/`) |
+| 화면별 레이아웃 설계 | `@docs/design/screen-{화면명}.md` (home·watchlist·portfolio·mypage) |
+| 디자인 토큰 (색상·타이포·스페이싱) | `@docs/design/tokens.md` |
+| 화면별 API 명세 | `@docs/specs/screen-api-mapping/{화면명}.md` (**루트** `docs/specs/`) |
