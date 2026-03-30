@@ -107,6 +107,9 @@ export function BacktestResult() {
     return { best, worst };
   }, [backtestData]);
 
+  const displayBestYear = serverMetrics?.bestYearRate ?? yearlyStats.best?.returnPct;
+  const displayWorstYear = serverMetrics?.worstYearRate ?? yearlyStats.worst?.returnPct;
+
   return (
     <div className="min-h-screen bg-background pb-8">
       <PageHeader title="시뮬레이션 결과" showBack />
@@ -163,18 +166,18 @@ export function BacktestResult() {
           <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-[#FF4756]" />
           <MetricCard label="위험 대비 수익" value={displaySharpe ?? "-"} sub="샤프 지수" />
           <MetricCard label="시장 민감도" value={displayBeta ?? "-"} sub="Beta" />
-          {yearlyStats.best && (
+          {displayBestYear != null && (
             <MetricCard
-              label={`최고 연도 (${yearlyStats.best.year})`}
-              value={`+${yearlyStats.best.returnPct}%`}
+              label={yearlyStats.best?.year ? `최고 연도 (${yearlyStats.best.year})` : "최고 연도"}
+              value={`${displayBestYear > 0 ? "+" : ""}${displayBestYear}%`}
               sub="Best Year"
               color="text-primary"
             />
           )}
-          {yearlyStats.worst && (
+          {displayWorstYear != null && (
             <MetricCard
-              label={`최저 연도 (${yearlyStats.worst.year})`}
-              value={`${yearlyStats.worst.returnPct}%`}
+              label={yearlyStats.worst?.year ? `최저 연도 (${yearlyStats.worst.year})` : "최저 연도"}
+              value={`${displayWorstYear}%`}
               sub="Worst Year"
               color="text-[#FF4756]"
             />

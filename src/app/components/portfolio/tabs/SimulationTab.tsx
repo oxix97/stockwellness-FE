@@ -29,7 +29,7 @@ export function SimulationTab() {
     backtest.data?.dailyResults?.map((d) => ({
       date: d.date.slice(5), // "MM-DD"
       portfolio: Number((d.returnRate ?? 0).toFixed(2)),
-      benchmark: d.benchmarkReturnRate ? Number(d.benchmarkReturnRate.toFixed(2)) : null,
+      benchmark: d.benchmarkReturnRate != null ? Number(d.benchmarkReturnRate.toFixed(2)) : null,
     })) ?? [];
 
   const hasBenchmarkData = chartData.some((d) => d.benchmark !== null);

@@ -110,10 +110,13 @@ export type TechnicalIndicators = NonNullable<SectorDetailResponse["technicalInd
 export type LeadingStock = NonNullable<SectorDetailResponse["leadingStocks"]>[number];
 
 /** 주가 차트 조회 기간 */
-export type ChartPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL";
+export type ChartPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "ALL";
 
 /** 주가 차트 집계 단위 */
 export type ChartFrequency = "DAILY" | "WEEKLY" | "MONTHLY";
+
+/** 리밸런싱 주기 */
+export type RebalancingPeriod = "NONE" | "MONTHLY" | "QUARTERLY" | "YEARLY";
 
 /**
  * 백테스트 관련 타입
@@ -130,9 +133,9 @@ export interface BacktestRequest {
    * BE는 이 값을 무시하고 전체 이력 데이터를 반환한다.
    * 실제 기간 슬라이싱은 use-backtest.ts sliceByPeriod()에서 처리.
    */
-  period: string;
+  period: ChartPeriod;
   /** 리밸런싱 주기 (NONE, MONTHLY, QUARTERLY, YEARLY) */
-  rebalancingPeriod: string;
+  rebalancingPeriod: RebalancingPeriod;
   /** 각 종목별 가상 비중 설정 (ticker -> percentage) */
   weights?: Record<string, number>;
 }
