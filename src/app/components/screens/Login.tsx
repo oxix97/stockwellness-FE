@@ -11,7 +11,7 @@ export function Login() {
       sessionStorage.setItem("redirect_after_login", from);
     }
 
-    // Spring Security OAuth2 기본 엔드포인트 호출 (프리픽스 없이 직접 호출)
+    // Spring Security OAuth2 기본 엔드포인트 호출 (프록시를 통해 백엔드 /oauth2/... 로 연결)
     const authorizeUrl = `/oauth2/authorization/${type.toLowerCase()}`;
     
     window.location.href = authorizeUrl;

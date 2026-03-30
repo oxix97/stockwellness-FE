@@ -63,6 +63,10 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_API_BASE_URL || 'http://localhost:8080',
           changeOrigin: true,
         },
+        '/oauth2': {
+          target: env.VITE_API_BASE_URL || 'http://localhost:8080',
+          changeOrigin: true,
+        },
       },
     },
     resolve: {
