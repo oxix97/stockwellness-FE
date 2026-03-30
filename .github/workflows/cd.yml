@@ -57,7 +57,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VITE_API_BASE_URL=/api
             VITE_APP_NAME=Stockwellness
 
   # 2단계: Tailscale 접속 및 n8n 웹훅 트리거
