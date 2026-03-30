@@ -74,7 +74,7 @@ export function AuthCallbackHandler() {
     };
 
     processAuth();
-  }, [searchParams, navigate, setAuth, setPortfolioId]);
+  }, [searchParams, navigate, setAuth, syncPortfolio]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
