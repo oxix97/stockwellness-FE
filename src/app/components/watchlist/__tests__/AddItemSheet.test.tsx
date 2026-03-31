@@ -80,7 +80,7 @@ describe("AddItemSheet", () => {
     mockUseSearch.mockReturnValue({
       keyword: "없는종목",
       setKeyword: mockSetKeyword,
-      autocomplete: { data: { content: [] }, isLoading: false },
+      autocomplete: { data: { pages: [{ content: [] }] }, isLoading: false },
     });
 
     renderWithQuery(
@@ -95,7 +95,7 @@ describe("AddItemSheet", () => {
       keyword: "삼성",
       setKeyword: mockSetKeyword,
       autocomplete: {
-        data: { content: [makeSearchResult(), makeSearchResult({ ticker: "000660", name: "SK하이닉스" })] },
+        data: { pages: [{ content: [makeSearchResult(), makeSearchResult({ ticker: "000660", name: "SK하이닉스" })] }] },
         isLoading: false,
       },
     });
@@ -114,7 +114,7 @@ describe("AddItemSheet", () => {
       keyword: "삼성",
       setKeyword: mockSetKeyword,
       autocomplete: {
-        data: { content: [makeSearchResult({ ticker: "005930" })] },
+        data: { pages: [{ content: [makeSearchResult({ ticker: "005930" })] }] },
         isLoading: false,
       },
     });
@@ -133,7 +133,7 @@ describe("AddItemSheet", () => {
       keyword: "삼성",
       setKeyword: mockSetKeyword,
       autocomplete: {
-        data: { content: [makeSearchResult()] },
+        data: { pages: [{ content: [makeSearchResult()] }] },
         isLoading: false,
       },
     });
@@ -158,7 +158,7 @@ describe("AddItemSheet", () => {
       keyword: "삼성",
       setKeyword: mockSetKeyword,
       autocomplete: {
-        data: { content: [makeSearchResult()] },
+        data: { pages: [{ content: [makeSearchResult()] }] },
         isLoading: false,
       },
     });

@@ -22,7 +22,7 @@ export function AddItemSheet({ groupId, existingTickers, onClose }: AddItemSheet
   const { addItem } = useWatchlist();
   const [addedInSession, setAddedInSession] = useState<string[]>([]);
 
-  const autocompleteResults = autocomplete.data?.pages.flatMap((page) => page.content) ?? [];
+  const autocompleteResults = autocomplete.data?.pages?.flatMap((page) => page.content) ?? [];
 
   // 시트 닫힐 때 검색어 초기화
   useEffect(() => {
