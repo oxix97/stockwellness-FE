@@ -26,6 +26,65 @@ export interface ErrorEnvelope {
 }
 
 /**
+ * 시장 지수 관련 타입
+ */
+export interface MarketIndexResult {
+  ticker: string;
+  name: string;
+  currentPrice: number;
+  fluctuationRate: number;
+  fluctuationAmount: number;
+}
+
+/**
+ * 주식 상세 정보 타입 (수동 보강)
+ */
+export type StockDetailResult = NonNullable<components["schemas"]["api-v1-stocks-ticker1095671400"]["data"]>;
+
+/**
+ * 포트폴리오 건강 진단 타입 (수동 보강)
+ */
+export interface StockContribution {
+  ticker: string;
+  name: string;
+  contributionScore: number;
+  reason: string;
+}
+
+export type DiagnosisResponse = Omit<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-health-38320959"]["data"]>, "stockContributions" | "nextSteps"> & {
+  stockContributions: StockContribution[];
+  nextSteps: string[];
+};
+
+/**
+ * 포트폴리오 분석 요약 타입 (수동 보강)
+ */
+export interface AnalysisSummaryResponse {
+  valuation: PortfolioValuationResponse;
+  diversification: PortfolioDiversificationResponse;
+  advice?: AdviceResponse | null;
+}
+
+/**
+ * 섹터 비교 데이터 포인트
+ */
+export interface SectorComparisonPoint {
+  date: string;
+  sectorReturn: number;
+  benchmarkReturn: number;
+}
+
+/**
+ * 섹터 시장 비교 응답 타입
+ */
+export interface SectorComparisonResponse {
+  sectorCode: string;
+  sectorName: string;
+  benchmarkName: string;
+  comparisonData: SectorComparisonPoint[];
+}
+
+/**
  * 인증 관련 타입
  */
 export type LoginRequest = components["schemas"]["LoginRequest"];

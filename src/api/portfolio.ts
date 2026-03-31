@@ -10,12 +10,34 @@ import {
   CreatePortfolioRequest,
   UpdatePortfolioRequest,
   AdviceResponse,
+  DiagnosisResponse,
+  AnalysisSummaryResponse,
 } from "@/types/api";
 
 /**
  * 포트폴리오 관련 API 호출 객체
  */
 export const portfolioApi = {
+  /**
+   * 포트폴리오의 건강 진단 점수를 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 진단 결과 및 건강 점수
+   */
+  getHealth: async (portfolioId: string): Promise<DiagnosisResponse> => {
+    const data = await apiClient.get<DiagnosisResponse>(`/v1/portfolios/${portfolioId}/health`);
+    return data as unknown as DiagnosisResponse;
+  },
+
+  /**
+   * 포트폴리오 분석 요약 정보를 조회합니다.
+   * @param portfolioId 포트폴리오 ID
+   * @returns 평가, 분산도 등을 종합한 분석 요약 정보
+   */
+  getAnalysisSummary: async (portfolioId: string): Promise<AnalysisSummaryResponse> => {
+    const data = await apiClient.get<AnalysisSummaryResponse>(`/v1/portfolios/${portfolioId}/analysis/summary`);
+    return data as unknown as AnalysisSummaryResponse;
+  },
+
   /**
    * 사용자의 모든 포트폴리오 목록을 조회합니다.
    * @returns 포트폴리오 리스트

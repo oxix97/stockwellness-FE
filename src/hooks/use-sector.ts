@@ -1,6 +1,7 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { sectorApi } from "@/api/sector";
+import { SectorComparisonResponse } from "@/types/api";
 
 /**
  * 섹터 데이터를 관리하는 커스텀 훅
@@ -53,10 +54,23 @@ export function useSector() {
       detailError: details[index]?.isError ?? false,
     })) ?? [];
 
+  /**
+   * 섹터 시장 비교 데이터 쿼리
+   * @param sectorCode 섹터 코드
+   * @param date 조회 기준 날짜
+   */
+  const useComparison = (sectorCode: string, date?: string) => useQuery<SectorComparisonResponse>({
+    queryKey: ["sectors", sectorCode, "comparison", date],
+    queryFn: () => sectorApi.compareWithMarket(sectorCode, date),
+    enabled: !!sectorCode,
+    staleTime: 1000 * 60 * 60, // 1시간
+  });
+
   return {
     data: combinedData,
     isLoading,
     isError: ranking.isError,
     isPartialError: details.some((d) => d.isError),
+    useComparison,
   };
 }

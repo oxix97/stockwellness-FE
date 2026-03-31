@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { SectorRankingResponse, SectorDetailResponse, SectorSupplyResponse } from "@/types/api";
+import { SectorRankingResponse, SectorDetailResponse, SectorSupplyResponse, SectorComparisonResponse } from "@/types/api";
 
 /**
  * 섹터 관련 API 호출 객체
@@ -45,5 +45,18 @@ export const sectorApi = {
       params: { date } 
     });
     return data as unknown as SectorDetailResponse;
-  }
+  },
+
+  /**
+   * 특정 섹터와 전체 시장(KOSPI 등)의 수익률을 비교 조회합니다.
+   * @param sectorCode 섹터 코드
+   * @param date 조회 기준 날짜
+   * @returns 섹터 vs 시장 비교 데이터
+   */
+  compareWithMarket: async (sectorCode: string, date?: string): Promise<SectorComparisonResponse> => {
+    const data = await apiClient.get(`/v1/sectors/${sectorCode}/comparison`, {
+      params: { date }
+    });
+    return data as unknown as SectorComparisonResponse;
+  },
 };

@@ -130,4 +130,24 @@ describe("portfolioApi", () => {
 
     expect(mockClient.delete).toHaveBeenCalledWith("/v1/portfolios/1");
   });
+
+  it("getHealth — GET /v1/portfolios/:id/health 호출", async () => {
+    const health = { overallScore: 85, summary: "Good" };
+    mockClient.get.mockResolvedValue(health);
+
+    const result = await portfolioApi.getHealth("1");
+
+    expect(mockClient.get).toHaveBeenCalledWith("/v1/portfolios/1/health");
+    expect(result).toEqual(health);
+  });
+
+  it("getAnalysisSummary — GET /v1/portfolios/:id/analysis/summary 호출", async () => {
+    const summary = { valuation: {}, diversification: {} };
+    mockClient.get.mockResolvedValue(summary);
+
+    const result = await portfolioApi.getAnalysisSummary("1");
+
+    expect(mockClient.get).toHaveBeenCalledWith("/v1/portfolios/1/analysis/summary");
+    expect(result).toEqual(summary);
+  });
 });
