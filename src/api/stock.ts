@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { StockPriceHistoryResponse, StockSearchResponse, NewListingStock, ChartPeriod, ChartFrequency } from "@/types/api";
+import { StockPriceHistoryResponse, StockSearchResponse, NewListingStock, ChartPeriod, ChartFrequency, StockDetailResult } from "@/types/api";
 
 /** 종목 수익률 응답 타입 */
 export interface StockReturnsResponse {
@@ -17,6 +17,16 @@ export interface StockReturnsResponse {
  * 주식 종목 관련 API 호출 객체
  */
 export const stockApi = {
+  /**
+   * 종목 상세 정보를 조회합니다.
+   * @param ticker 종목 티커
+   * @returns 종목 상세 정보
+   */
+  getStockDetail: async (ticker: string): Promise<StockDetailResult> => {
+    const data = await apiClient.get<StockDetailResult>(`/v1/stocks/${ticker}`);
+    return data as unknown as StockDetailResult;
+  },
+
   /**
    * 인기 검색 종목 리스트를 조회합니다.
    * @returns 인기 검색어(티커/종목명) 리스트

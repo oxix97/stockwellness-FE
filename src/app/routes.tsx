@@ -5,6 +5,7 @@ import {
   Home,
   Portfolio,
   Watchlist,
+  Search,
   More,
   NotificationSettings,
   StockDetail,

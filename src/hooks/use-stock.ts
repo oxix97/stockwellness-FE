@@ -1,6 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { stockApi, StockReturnsResponse } from "@/api/stock";
-import { StockSearchResponse, StockPriceHistoryResponse, NewListingStock, ChartPeriod, ChartFrequency } from "@/types/api";
+import { StockSearchResponse, StockPriceHistoryResponse, NewListingStock, ChartPeriod, ChartFrequency, StockDetailResult } from "@/types/api";
 
 /**
  * 주식 종목 데이터 조회를 위한 커스텀 훅
@@ -81,6 +81,17 @@ export function useStock() {
     enabled: !!ticker,
   });
 
+  /**
+   * 종목 상세 정보 쿼리
+   * @param ticker 종목 티커
+   */
+  const useDetail = (ticker: string) => useQuery<StockDetailResult>({
+    queryKey: ["stocks", ticker, "detail"],
+    queryFn: () => stockApi.getStockDetail(ticker),
+    enabled: !!ticker,
+    staleTime: 1000 * 60 * 60, // 상세 정보는 1시간 동안 유지
+  });
+
   return {
     popular,
     useSearch,
@@ -90,5 +101,6 @@ export function useStock() {
     clearHistory,
     useHistory,
     useReturns,
+    useDetail,
   };
 }
