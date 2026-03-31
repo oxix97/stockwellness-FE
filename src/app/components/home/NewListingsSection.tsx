@@ -29,11 +29,8 @@ export function NewListingsSection() {
 }
 
 function NewListingCard({ stock }: { stock: NewListingStock }) {
-  const navigate = useNavigate();
-
   return (
-    <button
-      onClick={() => navigate(`/stock/${stock.ticker}`)}
+    <div
       className="w-full bg-card rounded-xl p-4 border border-border flex items-center justify-between text-left"
     >
       <div>
@@ -46,6 +43,6 @@ function NewListingCard({ stock }: { stock: NewListingStock }) {
       <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
         신규상장
       </span>
-    </button>
+    </div>
   );
 }
