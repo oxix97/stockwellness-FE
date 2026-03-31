@@ -4,7 +4,7 @@ import { Search as SearchIcon, TrendingUp, Clock, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useStock } from "@/hooks/use-stock";
 import { Skeleton } from "@/app/components/ui";
-import { PageHeader, Section, StockLogo } from "@/app/components/shared";
+import { Section, StockLogo } from "@/app/components/shared";
 import { StockSearchResult } from "@/types/api";
 
 const RECENT_SEARCHES_KEY = "recent-searches";
@@ -68,9 +68,7 @@ export function Search() {
 
   return (
     <div className="min-h-full pb-20">
-      <PageHeader title="검색" />
-
-      <div className="px-6 py-6 sticky top-0 bg-background/80 backdrop-blur-md z-10 border-b border-border">
+      <div className="px-6 py-4 sticky top-0 bg-background/80 backdrop-blur-md z-10 border-b border-border">
         <div className="relative group">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input

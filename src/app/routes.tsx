@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, Component: Home },
-      { path: "search", element: <Navigate to="/" replace /> },
+      { path: "search", Component: Search },
       { path: "portfolio", Component: Portfolio },
       { path: "watchlist", Component: Watchlist },
       { path: "more", Component: More },

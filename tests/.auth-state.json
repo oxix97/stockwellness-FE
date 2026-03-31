@@ -1,0 +1,31 @@
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwibmlja25hbWUiOiLthYzsiqTthLAiLCJsb2dpblR5cGUiOiJLQUtBTyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc0ODUwNzQxLCJleHAiOjE3Nzc0NDI3NDF9.heiviOYNO4v-3pgeuSmz4lKVS3Z6oRQqO11MSiO51gw",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzc0ODUwNzQxLCJleHAiOjE3ODI2MjY3NDF9.8ihX-Bwn2euOW95nHghaEcI4zhYTZr6sdNGeoEjC9OU",
+  "memberId": 1,
+  "email": "test@example.com",
+  "nickname": "테스터",
+  "portfolioId": "1",
+  "backendUrl": "http://localhost:8080",
+  "originalPortfolioItems": [
+    {
+      "symbol": "005930",
+      "quantity": 10,
+      "purchasePrice": 70000,
+      "currency": "KRW",
+      "assetType": "STOCK",
+      "purchaseAmount": 700000,
+      "targetWeight": 60
+    },
+    {
+      "symbol": "000660",
+      "quantity": 5,
+      "purchasePrice": 130000,
+      "currency": "KRW",
+      "assetType": "STOCK",
+      "purchaseAmount": 650000,
+      "targetWeight": 40
+    }
+  ],
+  "portfolioName": "포트폴리오 테스트",
+  "portfolioDescription": ""
+}

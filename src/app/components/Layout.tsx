@@ -1,13 +1,12 @@
-import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router";
-import { Home, Star, Wallet, User } from "lucide-react";
+import { Home, Star, Wallet, User, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { AppBar } from "./AppBar";
-import { GlobalSearch } from "./GlobalSearch";
 import { useMe } from "@/hooks/use-member";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "홈", size: 24 },
+  { path: "/search", icon: Search, label: "검색", size: 24 },
   { path: "/watchlist", icon: Star, label: "관심", size: 24 },
   { path: "/portfolio", icon: Wallet, label: "포트폴리오", size: 28 },
   { path: "/more", icon: User, label: "마이", size: 24 },
@@ -15,13 +14,12 @@ const NAV_ITEMS = [
 
 export function Layout() {
   const location = useLocation();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   useMe(); // 재진입 시 서버에서 최신 프로필 조회 → Zustand 갱신
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* 전체 탭 공통 앱바 */}
-      <AppBar onSearchOpen={() => setIsSearchOpen(true)} />
+      <AppBar />
 
       {/* 메인 콘텐츠 — 앱바(pt-14) + 하단 네비(pb-20) 여백 확보 */}
       <main className="flex-1 overflow-y-auto pt-14 pb-20">
@@ -38,7 +36,7 @@ export function Layout() {
         </AnimatePresence>
       </main>
 
-      {/* 하단 네비게이션 — 4탭 */}
+      {/* 하단 네비게이션 — 5탭 */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-lg border-t border-border z-50 pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center h-16">
           {NAV_ITEMS.map((item) => {
@@ -74,13 +72,6 @@ export function Layout() {
           })}
         </div>
       </nav>
-
-      {/* 전체화면 검색 오버레이 */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <GlobalSearch onClose={() => setIsSearchOpen(false)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

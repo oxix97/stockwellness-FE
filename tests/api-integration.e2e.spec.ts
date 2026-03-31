@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const REAL_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJpZWVqbzcxNkBuYXZlci5jb20iLCJsb2dpblR5cGUiOiJLQUtBTyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzczODI2NzEyLCJleHAiOjE3NzM4MzAzMTJ9.CNzyCDwQ0UJFF1PFsJSHT1IxqYRTyWqld13lqcsqomQ';
+const REAL_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwibmlja25hbWUiOiLthYzsiqTthLAiLCJsb2dpblR5cGUiOiJLQUtBTyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc0ODUwNzQxLCJleHAiOjE3Nzc0NDI3NDF9.heiviOYNO4v-3pgeuSmz4lKVS3Z6oRQqO11MSiO51gw';
 
 test.describe('Real API Integration Tests', () => {
   
@@ -30,19 +30,19 @@ test.describe('Real API Integration Tests', () => {
     await page.goto('http://localhost:5173/');
     
     // 로딩 스켈레톤이 사라질 때까지 대기
-    await page.waitForSelector('.bg-card:has-text("AI 의견")', { state: 'visible', timeout: 15000 }).catch(() => {
+    await page.waitForSelector('.bg-card:has-text("AI 추천"), .bg-card:has-text("과열")', { state: 'visible', timeout: 15000 }).catch(() => {
         console.log('추천 섹터 데이터를 찾을 수 없거나 로딩이 지연되고 있습니다.');
     });
 
     // 화면에 최소 하나 이상의 섹터명이 나타나는지 확인 (바이오, 반도체 등 실제 DB 데이터)
-    const sectors = page.locator('.bg-card:has-text("AI 의견")');
+    const sectors = page.locator('.bg-card:has-text("AI 추천"), .bg-card:has-text("과열")');
     const count = await sectors.count();
     console.log(`실제 서버에서 가져온 추천 섹터 수: ${count}`);
     
     if (count > 0) {
       await expect(sectors.first()).toBeVisible();
     } else {
-      await expect(page.getByText('현재 추천 섹터가 없습니다.')).toBeVisible();
+      await expect(page.getByText('AI가 주목하는 섹터')).toBeVisible();
     }
   });
 
@@ -59,7 +59,7 @@ test.describe('Real API Integration Tests', () => {
 
     if (status === 200) {
       // 총 평가 금액이 화면에 보이는지 확인
-      await expect(page.getByText('내 포트폴리오 총 평가금액')).toBeVisible();
+      await expect(page.getByText('총 자산')).toBeVisible();
     } else if (status === 401) {
       console.error('토큰이 만료되었거나 유효하지 않습니다.');
       throw new Error('Unauthorized');

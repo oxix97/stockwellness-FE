@@ -38,7 +38,6 @@ export function Home() {
   const { valuation, isLoading: isValuationLoading } = usePortfolioSummary();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
-  const { popular } = useStock();
   const { data: sectors, isLoading: isSectorsLoading } = useSector();
   const { data: marketIndexes } = useMarketIndex();
 
@@ -124,11 +123,6 @@ export function Home() {
         <NewListingsSection />
       </Section>
 
-      {/* 인기 검색 */}
-      <Section title="실시간 인기 검색" icon={TrendingUp}>
-        <TrendingList stocks={popular.data} isLoading={popular.isLoading} />
-      </Section>
-
       {/* 섹터 바텀시트 */}
       <SectorBottomSheet
         sector={selectedSector}
@@ -207,36 +201,5 @@ function SectorCard({ sector, onTap }: { sector: SectorRankingItem; onTap: () =>
         </p>
       </div>
     </button>
-  );
-}
-
-function TrendingList({ stocks, isLoading }: { stocks: string[] | undefined; isLoading: boolean }) {
-  if (isLoading) {
-    return (
-      <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
-        {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-card rounded-2xl border border-border overflow-hidden">
-      {stocks?.map((name: string, index: number) => (
-        <Link key={name} to={`/stock/${encodeURIComponent(name)}`}>
-          <motion.div
-            whileTap={{ backgroundColor: "var(--color-secondary)" }}
-            className={`flex items-center justify-between py-3.5 px-4 ${
-              index !== stocks.length - 1 ? "border-b border-border" : ""
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-primary font-bold text-sm w-5">{index + 1}</span>
-              <span className="text-foreground font-medium text-sm">{name}</span>
-            </div>
-            <TrendingUp className="w-4 h-4 text-muted-foreground opacity-40" />
-          </motion.div>
-        </Link>
-      ))}
-    </div>
   );
 }
