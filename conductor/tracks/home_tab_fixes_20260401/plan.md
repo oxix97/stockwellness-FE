@@ -9,9 +9,9 @@
     - [x] Implement Feature (홈 화면에서 상단바 UI 렌더링 제거)
 - [x] Task: Conductor - User Manual Verification 'Phase 1: 기본 UI 및 타이틀 수정' (Protocol in workflow.md) [23b7813]
 
-## Phase 2: AI 주목 섹터 UI 개선
-- [ ] Task: AI 주목 섹터 데이터 Limit 변경 및 가로 스크롤 적용
-    - [ ] Write Tests
-    - [ ] Implement Feature (데이터 fetch 시 limit 파라미터를 10으로 변경)
-    - [ ] Implement Feature (CSS/Tailwind를 활용하여 해당 리스트에 가로 스크롤 적용)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: AI 주목 섹터 UI 개선' (Protocol in workflow.md)
+## Phase 2: AI 주목 섹터 UI 개선 [checkpoint: 9a0461f]
+- [x] Task: AI 주목 섹터 데이터 Limit 변경 및 가로 스크롤 적용 [80fd68e]
+    - [x] Write Tests
+    - [x] Implement Feature (데이터 fetch 시 limit 파라미터를 10으로 변경)
+    - [x] Implement Feature (CSS/Tailwind를 활용하여 해당 리스트에 가로 스크롤 적용)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: AI 주목 섹터 UI 개선' (Protocol in workflow.md) [9a0461f]
