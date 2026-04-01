@@ -219,9 +219,21 @@ export function StockDetail() {
     // 벤치마크: {date, returnRate}를 날짜 기준 Map으로 만들어 빠르게 조회
     const benchmarkMap = new Map(benchmarks.map((b) => [b.date, b.returnRate]));
 
+    // 날짜가 정확히 일치하지 않는 경우(예: 주봉)를 위해 정렬된 벤치마크 날짜 리스트 준비
+    const sortedBenchmarkDates = benchmarks.map(b => b.date).sort();
+
     return {
       candleData: prices.map((p) => {
-        const returnRate = benchmarkMap.get(p.date);
+        let returnRate = benchmarkMap.get(p.date);
+        
+        // 날짜가 정확히 일치하지 않으면 해당 날짜 이전의 가장 가까운 벤치마크 데이터를 찾음
+        if (returnRate === undefined && sortedBenchmarkDates.length > 0) {
+          const closestDate = sortedBenchmarkDates.findLast(date => date <= p.date);
+          if (closestDate) {
+            returnRate = benchmarkMap.get(closestDate);
+          }
+        }
+
         return {
           date: p.date,
           open: p.open,
@@ -449,6 +461,14 @@ function CandleWicks({ data, xAxisMap, yAxisMap }: CandleWicksProps) {
 }
 
 function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
+  if (data.length === 0) {
+    return (
+      <div className="bg-card px-6 py-10 h-[320px] flex items-center justify-center text-muted-foreground font-medium">
+        데이터가 없습니다.
+      </div>
+    );
+  }
+
   const labelMap: Record<string, string> = { "일봉": "일봉", "주봉": "주봉", "월봉": "월봉" };
   const maxVolume = Math.max(...data.map((d) => d.volume || 0), 1);
   const interval = Math.floor(data.length / 4);
