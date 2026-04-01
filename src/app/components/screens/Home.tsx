@@ -91,7 +91,7 @@ export function Home() {
       <Section title="AI가 주목하는 섹터" icon={Flame}>
         <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {isSectorsLoading
-            ? [1, 2, 3].map((i) => (
+            ? [1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="min-w-[240px]">
                   <Skeleton className="h-[140px] w-full rounded-2xl" />
                 </div>
