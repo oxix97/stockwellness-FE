@@ -11,18 +11,24 @@
       "symbol": "005930",
       "quantity": 10,
       "purchasePrice": 70000,
+      "currentPrice": 175800,
       "currency": "KRW",
       "assetType": "STOCK",
       "purchaseAmount": 700000,
+      "currentValue": 1758000,
+      "returnRate": 151.14,
       "targetWeight": 60
     },
     {
       "symbol": "000660",
       "quantity": 5,
       "purchasePrice": 130000,
+      "currentPrice": 874000,
       "currency": "KRW",
       "assetType": "STOCK",
       "purchaseAmount": 650000,
+      "currentValue": 4370000,
+      "returnRate": 572.31,
       "targetWeight": 40
     }
   ],
