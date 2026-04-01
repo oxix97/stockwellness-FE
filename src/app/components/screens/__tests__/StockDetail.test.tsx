@@ -25,6 +25,7 @@ vi.mock("@/hooks/use-watchlist", () => ({
     addItem: { mutate: vi.fn() },
     removeItem: { mutate: vi.fn() },
     createGroup: { mutateAsync: vi.fn() },
+    useIsTickerInWatchlist: () => ({ isInWatchlist: false, containedGroups: [], isLoading: false }),
   }),
 }));
 

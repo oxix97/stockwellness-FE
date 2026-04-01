@@ -114,31 +114,19 @@ export function StockDetail() {
   const navigate = useNavigate();
   const portfolioId = useAuthStore((s) => s.portfolioId);
   const [periodLabel, setPeriodLabel] = useState("일봉");
-  const [isFavorite, setIsFavorite] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [quantity, setQuantity] = useState("1");
   const [purchasePrice, setPurchasePrice] = useState("");
   const { useHistory, useReturns } = useStock();
   const { holdings } = usePortfolio();
   const updatePortfolio = useUpdatePortfolio();
-  const { groups, addItem, removeItem, createGroup } = useWatchlist();
+  const { groups, addItem, removeItem, createGroup, useIsTickerInWatchlist } = useWatchlist();
 
   const ticker = symbol || "";
 
-  // 현재 종목이 등록된 관심 그룹 찾기
-  const registeredGroupId = useMemo(() => {
-    if (!groups.data) return null;
-    // 백엔드 명세상 WatchlistGroup에 포함된 종목 리스트 정보가 없다면, 
-    // 전체를 돌며 확인해야 하지만 현재는 그룹의 id만 알 수 있으므로 
-    // 정밀한 체크를 위해 각 그룹의 아이템들을 조회해야 할 수도 있습니다.
-    // 하지만 우선은 '기본' 그룹이 있는지 확인하고 처리하는 전략을 취합니다.
-    return groups.data.find((g) => g.name === "기본")?.id || groups.data[0]?.id || null;
-  }, [groups.data]);
+  // 현재 종목의 관심 등록 상태 실시간 확인
+  const { isInWatchlist, containedGroups, isLoading: isWatchlistLoading } = useIsTickerInWatchlist(ticker);
 
-  // 실제 관심 등록 여부는 서버 연동 시 복잡하므로, 
-  // 우선은 로컬 상태와 UI 동기화를 위해 기존 isFavorite을 유지하되 handle 클릭 시 서버와 통신하도록 합니다.
-  // (실제 프로덕션에서는 각 그룹의 아이템 리스트를 fetch해서 포함 여부를 판단하는 것이 정확합니다.)
-  
   const handleFavoriteToggle = async () => {
     if (!useAuthStore.getState().accessToken) {
       toast.info("로그인 후 관심 종목을 추가해보세요.");
@@ -146,30 +134,32 @@ export function StockDetail() {
       return;
     }
 
-    if (isFavorite) {
-      // 삭제 (해당 종목이 어느 그룹에 있는지 알아야 함 - 현재는 첫 번째 그룹 가정)
-      if (!registeredGroupId) return;
-      removeItem.mutate({ groupId: registeredGroupId, ticker }, {
-        onSuccess: () => {
-          setIsFavorite(false);
-          toast.success("관심 종목에서 삭제되었습니다.");
-        }
+    if (isWatchlistLoading) return;
+
+    if (isInWatchlist) {
+      // 삭제 (해당 종목이 포함된 모든 그룹에서 제거)
+      containedGroups.forEach(group => {
+        removeItem.mutate({ groupId: group.id, ticker }, {
+          onSuccess: () => toast.success("관심 종목에서 제거되었습니다."),
+          onError: () => toast.error("관심 종목 제거에 실패했습니다.")
+        });
       });
     } else {
       // 추가
-      let targetGroupId = registeredGroupId;
+      let targetGroupId = groups.data?.[0]?.id;
       
       // 그룹이 하나도 없다면 생성 후 추가
       if (!targetGroupId) {
-        const newGroupId = await createGroup.mutateAsync("기본");
-        targetGroupId = newGroupId;
+        try {
+          targetGroupId = await createGroup.mutateAsync("기본");
+        } catch (error) {
+          toast.error("관심 그룹 생성에 실패했습니다.");
+          return;
+        }
       }
 
       addItem.mutate({ groupId: targetGroupId!, body: { ticker } }, {
-        onSuccess: () => {
-          setIsFavorite(true);
-          toast.success("관심 종목에 추가되었습니다.");
-        },
+        onSuccess: () => toast.success("관심 종목에 추가되었습니다."),
         onError: () => toast.error("이미 추가되었거나 추가에 실패했습니다.")
       });
     }
@@ -315,11 +305,14 @@ export function StockDetail() {
     <div className="min-h-screen bg-background">
       <header className="bg-card px-6 py-4 flex items-center justify-between border-b border-border">
         <PageHeader showBack />
-        <button onClick={handleFavoriteToggle} className="p-2 -mr-2">
+        <button 
+          onClick={handleFavoriteToggle} 
+          className="p-2 -mr-2"
+          aria-label="관심 종목"
+          disabled={isWatchlistLoading}
+        >
           <Heart
-            className="w-6 h-6"
-            style={isFavorite ? { fill: CHART_COLORS.up, color: CHART_COLORS.up } : undefined}
-            data-inactive={!isFavorite || undefined}
+            className={`w-6 h-6 transition-colors ${isInWatchlist ? "fill-red-500 stroke-red-500" : "text-muted-foreground"}`}
           />
         </button>
       </header>

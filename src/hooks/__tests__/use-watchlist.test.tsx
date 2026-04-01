@@ -163,4 +163,26 @@ describe("useWatchlist", () => {
     await waitFor(() => expect(result.current.groups.data).toHaveLength(1));
     expect(mockApi.deleteGroup).toHaveBeenCalledWith(1);
   });
+
+  it("useIsTickerInWatchlist — 특정 티커가 포함된 그룹을 정확히 식별", async () => {
+    const groups = [makeWatchlistGroup({ id: 1 }), makeWatchlistGroup({ id: 2, name: "그룹2" })];
+    mockApi.getGroups.mockResolvedValue(groups);
+    
+    const items1 = makeWatchlistItems({ items: [{ ticker: "005930", name: "삼성전자", currentPrice: 70000, fluctuationRate: 1.0, fluctuationAmount: 700, marketType: "KOSPI" }] });
+    const items2 = makeWatchlistItems({ items: [{ ticker: "000660", name: "SK하이닉스", currentPrice: 150000, fluctuationRate: 2.0, fluctuationAmount: 3000, marketType: "KOSPI" }] });
+    
+    mockApi.getItems
+      .mockResolvedValueOnce(items1)
+      .mockResolvedValueOnce(items2);
+
+    const { result } = renderHookWithQuery(() => {
+      const wl = useWatchlist();
+      const status = wl.useIsTickerInWatchlist("005930");
+      return { wl, status };
+    });
+
+    await waitFor(() => expect(result.current.status.isInWatchlist).toBe(true), { timeout: 2000 });
+    expect(result.current.status.containedGroups).toHaveLength(1);
+    expect(result.current.status.containedGroups[0].id).toBe(1);
+  });
 });
