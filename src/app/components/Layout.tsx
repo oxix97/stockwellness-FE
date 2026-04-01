@@ -1,7 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Home, Star, Wallet, User, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { AppBar } from "./AppBar";
 import { useMe } from "@/hooks/use-member";
 
 const NAV_ITEMS = [
@@ -18,11 +17,8 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* 전체 탭 공통 앱바 */}
-      <AppBar />
-
-      {/* 메인 콘텐츠 — 앱바(pt-14) + 하단 네비(pb-20) 여백 확보 */}
-      <main className="flex-1 overflow-y-auto pt-14 pb-20">
+      {/* 메인 콘텐츠 — 하단 네비(pb-20) 여백 확보 */}
+      <main className="flex-1 overflow-y-auto pb-20">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
