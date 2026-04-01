@@ -29,8 +29,8 @@ describe("useSector Limit", () => {
     vi.clearAllMocks();
   });
 
-  it("should call getFluctuationRanking with limit 10", async () => {
-    const mockRanking = Array.from({ length: 10 }, (_, i) => ({
+  it("should call getFluctuationRanking with limit 5", async () => {
+    const mockRanking = Array.from({ length: 5 }, (_, i) => ({
       sectorCode: `S${i}`,
       sectorName: `Sector ${i}`,
       fluctuationRate: 1.5,
@@ -51,7 +51,7 @@ describe("useSector Limit", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(sectorApi.getFluctuationRanking).toHaveBeenCalledWith({ limit: 10 });
-    expect(result.current.data.length).toBe(10);
+    expect(sectorApi.getFluctuationRanking).toHaveBeenCalledWith({ limit: 5 });
+    expect(result.current.data.length).toBe(5);
   });
 });
