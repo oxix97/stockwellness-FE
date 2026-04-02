@@ -53,21 +53,21 @@ describe("useStock hook", () => {
     const mockData = { ticker: "005930", prices: [] };
     (stockApi.getPriceHistory as any).mockResolvedValue(mockData);
 
-    const { result } = renderHook(() => useStock().useHistory("005930", "6M", "WEEKLY"), { wrapper });
+    const { result } = renderHook(() => useStock().useHistory("005930", "1Y", "WEEKLY"), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "6M", "WEEKLY");
+    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "1Y", "WEEKLY");
   });
 
   it("useHistory — MONTHLY 주기로 getPriceHistory를 호출한다", async () => {
     const mockData = { ticker: "005930", prices: [] };
     (stockApi.getPriceHistory as any).mockResolvedValue(mockData);
 
-    const { result } = renderHook(() => useStock().useHistory("005930", "ALL", "MONTHLY"), { wrapper });
+    const { result } = renderHook(() => useStock().useHistory("005930", "5Y", "MONTHLY"), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "ALL", "MONTHLY");
+    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "5Y", "MONTHLY");
   });
 });

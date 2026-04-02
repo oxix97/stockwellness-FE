@@ -105,8 +105,8 @@ function computeRsi(closes: number[], period = 14): number | null {
 const PERIODS = ["일봉", "주봉", "월봉"];
 const PERIOD_CONFIG: Record<string, { period: ChartPeriod; frequency: ChartFrequency }> = {
   "일봉": { period: "3M",  frequency: "DAILY"   },
-  "주봉": { period: "6M",  frequency: "WEEKLY"  },
-  "월봉": { period: "ALL", frequency: "MONTHLY" },
+  "주봉": { period: "1Y",  frequency: "WEEKLY"  },
+  "월봉": { period: "5Y",  frequency: "MONTHLY" },
 };
 
 export function StockDetail() {

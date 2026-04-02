@@ -169,7 +169,7 @@ export type TechnicalIndicators = NonNullable<SectorDetailResponse["technicalInd
 export type LeadingStock = NonNullable<SectorDetailResponse["leadingStocks"]>[number];
 
 /** 주가 차트 조회 기간 */
-export type ChartPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "ALL";
+export type ChartPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "ALL";
 
 /** 주가 차트 집계 단위 */
 export type ChartFrequency = "DAILY" | "WEEKLY" | "MONTHLY";
