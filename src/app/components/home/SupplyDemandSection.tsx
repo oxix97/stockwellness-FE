@@ -67,10 +67,10 @@ function SupplyRow({
         </div>
         <div className="text-right">
           <span className="text-[11px] text-muted-foreground">{dominant} </span>
-          <span className="text-[11px] font-semibold text-primary tabular-nums">{formattedAmt}</span>
+          <span className="text-[11px] font-semibold text-up tabular-nums">{formattedAmt}</span>
         </div>
       </div>
-      <Progress value={progressValue} className="h-1.5" />
+      <Progress value={progressValue} className="h-1.5 [&>[data-slot=progress-indicator]]:bg-up" />
     </div>
   );
 }

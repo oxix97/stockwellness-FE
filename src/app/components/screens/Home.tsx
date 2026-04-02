@@ -77,7 +77,9 @@ export function Home() {
 
       {/* 시장 인덱스 미니카드 */}
       <Section title="시장 현황" icon={BarChart2}>
-        <MarketIndexSection />
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          <MarketIndexSection />
+        </div>
       </Section>
 
       {/* 포트폴리오 수익률 요약 (포트폴리오 있을 때만) */}
@@ -93,7 +95,7 @@ export function Home() {
           {isSectorsLoading
             ? [1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="min-w-[240px]">
-                  <Skeleton className="h-[140px] w-full rounded-2xl" />
+                  <Skeleton className="h-[150px] w-full rounded-2xl" />
                 </div>
               ))
             : sectors?.map((sector, index) => (
@@ -152,15 +154,13 @@ function AssetSummaryCard({ valuation, isLoading }: { valuation: PortfolioValuat
         ) : (
           <>
             <div
-              className="font-bold text-3xl tabular-nums"
-              style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
+              className={`font-bold text-3xl tabular-nums ${isUp ? "text-up" : "text-down"}`}
             >
               {isUp ? "+" : ""}
               {totalReturn.toFixed(2)}%
             </div>
             <div
-              className="text-sm font-medium tabular-nums"
-              style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
+              className={`text-sm font-medium tabular-nums ${isUp ? "text-up" : "text-down"}`}
             >
               {isUp ? "+" : "-"}₩{formatCurrency(Math.abs(totalProfitLoss))}
             </div>
@@ -177,7 +177,7 @@ function SectorCard({ sector, onTap }: { sector: SectorRankingItem; onTap: () =>
   return (
     <button
       onClick={onTap}
-      className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex flex-col justify-between h-[140px] text-left"
+      className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex flex-col justify-between h-[150px] text-left"
     >
       <div className="flex items-start justify-between">
         <span className="text-3xl">{getSectorIcon(sector.sectorName)}</span>
@@ -194,8 +194,7 @@ function SectorCard({ sector, onTap }: { sector: SectorRankingItem; onTap: () =>
       <div>
         <p className="text-foreground font-bold text-base">{sector.sectorName}</p>
         <p
-          className="text-sm font-semibold tabular-nums"
-          style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
+          className={`text-sm font-semibold tabular-nums ${isUp ? "text-up" : "text-down"}`}
         >
           {formatPercent(sector.fluctuationRate)}
         </p>

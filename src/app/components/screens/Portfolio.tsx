@@ -82,15 +82,13 @@ export function Portfolio() {
         {/* 수익 */}
         <div className="flex items-center gap-3 mb-3">
           <span
-            className="text-sm font-semibold tabular-nums"
-            style={{ color: (valuation?.totalReturnRate ?? 0) >= 0 ? "#2EBE7A" : "#EF4444" }}
+            className={`text-sm font-semibold tabular-nums ${(valuation?.totalReturnRate ?? 0) >= 0 ? "text-up" : "text-down"}`}
           >
             {formatPercent(valuation?.totalReturnRate ?? 0)} 누적
           </span>
           <span className="text-muted-foreground text-xs">|</span>
           <span
-            className="text-xs tabular-nums"
-            style={{ color: (valuation?.dailyReturnRate ?? 0) >= 0 ? "#2EBE7A" : "#EF4444" }}
+            className={`text-xs tabular-nums ${(valuation?.dailyReturnRate ?? 0) >= 0 ? "text-up" : "text-down"}`}
           >
             오늘 {formatPercent(valuation?.dailyReturnRate ?? 0)}
           </span>
