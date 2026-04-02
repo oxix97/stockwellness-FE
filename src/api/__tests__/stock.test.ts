@@ -82,4 +82,23 @@ describe("stockApi", () => {
     });
     expect(result).toEqual(mockData);
   });
+
+  it("getPriceHistory — GET /v1/stocks/:ticker/prices/history (MONTHLY) 호출", async () => {
+    const mockData = { 
+      ticker: "005930", 
+      prices: [
+        { date: "2024-01-31", open: 70000, close: 72000, high: 73000, low: 68000, volume: 10000000 },
+        { date: "2024-02-29", open: 72000, close: 75000, high: 76000, low: 71000, volume: 12000000 }
+      ],
+      benchmarks: []
+    };
+    mockClient.get.mockResolvedValue(mockData);
+
+    const result = await stockApi.getPriceHistory("005930", "ALL", "MONTHLY");
+
+    expect(mockClient.get).toHaveBeenCalledWith("/v1/stocks/005930/prices/history", {
+      params: { period: "ALL", frequency: "MONTHLY", includeBenchmark: true },
+    });
+    expect(result).toEqual(mockData);
+  });
 });
