@@ -90,7 +90,7 @@ export function SimulationTab() {
               <Line
                 type="monotone"
                 dataKey="portfolio"
-                stroke="#2EBE7A"
+                stroke="#FF4756"
                 strokeWidth={2}
                 dot={false}
               />

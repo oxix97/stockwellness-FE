@@ -122,7 +122,7 @@ export function BacktestResult() {
         <div className="text-foreground mb-3 font-bold text-5xl">
           ₩ {metrics.finalValue.toLocaleString()}
         </div>
-        <div className="text-primary mb-4 font-bold text-3xl">
+        <div className="text-up mb-4 font-bold text-3xl">
           {metrics.totalReturn >= 0 ? "+" : ""}{metrics.totalReturn}%
         </div>
         <div className="text-muted-foreground font-medium">되었을 거예요!</div>
@@ -139,7 +139,7 @@ export function BacktestResult() {
             <div className="text-right">
               {hasBenchmarkReturn ? (
                 <>
-                  <div className="text-primary font-bold text-3xl">
+                  <div className="text-up font-bold text-3xl">
                     {metrics.outperformance >= 0 ? "+" : ""}{metrics.outperformance.toFixed(1)}%
                   </div>
                   <div className="text-muted-foreground text-sm font-medium">더 높은 수익</div>
@@ -162,8 +162,8 @@ export function BacktestResult() {
       <div className="px-6 py-10">
         <div className="text-foreground mb-6 font-bold text-2xl">상세 성과 지표</div>
         <div className="grid grid-cols-2 gap-4">
-          <MetricCard label="연평균 수익률" value={displayCagr != null ? `${displayCagr}%` : "-"} sub="CAGR" color="text-primary" />
-          <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-[#FF4756]" />
+          <MetricCard label="연평균 수익률" value={displayCagr != null ? `${displayCagr}%` : "-"} sub="CAGR" color="text-up" />
+          <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-down" />
           <MetricCard label="위험 대비 수익" value={displaySharpe ?? "-"} sub="샤프 지수" />
           <MetricCard label="시장 민감도" value={displayBeta ?? "-"} sub="Beta" />
           {displayBestYear != null && (
@@ -171,7 +171,7 @@ export function BacktestResult() {
               label={yearlyStats.best?.year ? `최고 연도 (${yearlyStats.best.year})` : "최고 연도"}
               value={`${displayBestYear > 0 ? "+" : ""}${displayBestYear}%`}
               sub="Best Year"
-              color="text-primary"
+              color="text-up"
             />
           )}
           {displayWorstYear != null && (
@@ -179,7 +179,7 @@ export function BacktestResult() {
               label={yearlyStats.worst?.year ? `최저 연도 (${yearlyStats.worst.year})` : "최저 연도"}
               value={`${displayWorstYear}%`}
               sub="Worst Year"
-              color="text-[#FF4756]"
+              color="text-down"
             />
           )}
         </div>
@@ -241,12 +241,12 @@ function ChartSection({ backtestData }: { backtestData: BacktestDailyResult[] })
               formatter={(value: number) => `₩${value.toLocaleString()}`}
             />
             {mddPeriod.start && mddPeriod.end && mddPeriod.start !== mddPeriod.end && (
-              <ReferenceArea x1={mddPeriod.start} x2={mddPeriod.end} fill="#FF4756" fillOpacity={0.08} strokeOpacity={0} />
+              <ReferenceArea x1={mddPeriod.start} x2={mddPeriod.end} fill="#3182F6" fillOpacity={0.08} strokeOpacity={0} />
             )}
             {hasBenchmarkData && (
               <Line type="monotone" dataKey="benchmarkReturnRate" stroke="#9CA3AF" strokeWidth={2} strokeDasharray="5 5" dot={false} name="벤치마크" />
             )}
-            <Line type="monotone" dataKey="totalValue" stroke="#2EBE7A" strokeWidth={4} dot={false} name="내 포트폴리오" />
+            <Line type="monotone" dataKey="totalValue" stroke="#FF4756" strokeWidth={4} dot={false} name="내 포트폴리오" />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

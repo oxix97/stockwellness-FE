@@ -148,8 +148,7 @@ export function WatchlistItemCard({
               ₩{(stock.currentPrice ?? 0).toLocaleString()}
             </p>
             <p
-              className="text-xs font-medium tabular-nums"
-              style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}
+              className={`text-xs font-medium tabular-nums ${isUp ? "text-up" : "text-down"}`}
             >
               {formatPercent(stock.fluctuationRate ?? 0)}
             </p>

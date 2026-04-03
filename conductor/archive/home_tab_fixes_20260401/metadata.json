@@ -1,0 +1,8 @@
+{
+  "track_id": "home_tab_fixes_20260401",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-04-01T00:00:00Z",
+  "updated_at": "2026-04-01T00:00:00Z",
+  "description": "홈 탭 화면 수정: 맨 위의 상단바 제거, Untitled 라고 되어있는 브라우저 탭 내용을 stockwellness로 변경, AI가 주목하는 섹터 limit 3을 limit 10으로 변경 후 가로 스크롤 적용."
+}

@@ -41,7 +41,7 @@ function SheetBody({ sector }: { sector: SectorData }) {
         {/* 헤더 */}
         <div>
           <h2 className="text-foreground font-bold text-lg">{sector.sectorName}</h2>
-          <p className="text-sm font-semibold tabular-nums" style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}>
+          <p className={`text-sm font-semibold tabular-nums ${isUp ? "text-up" : "text-down"}`}>
             {formatPercent(sector.fluctuationRate)}
           </p>
         </div>
@@ -176,7 +176,7 @@ function LeadingStockRow({ stock }: { stock: LeadingStock }) {
         <p className="text-foreground font-medium text-sm">{stock.name}</p>
         <p className="text-muted-foreground text-xs">{stock.ticker}</p>
       </div>
-      <p className="text-sm font-semibold tabular-nums" style={{ color: isUp ? "#2EBE7A" : "#EF4444" }}>
+      <p className={`text-sm font-semibold tabular-nums ${isUp ? "text-up" : "text-down"}`}>
         {formatPercent(stock.fluctuationRate)}
       </p>
     </div>

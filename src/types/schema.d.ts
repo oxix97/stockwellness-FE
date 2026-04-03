@@ -464,6 +464,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portfolios/{portfolioId}/analysis/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 포트폴리오 통합 분석 요약
+         * @description 포트폴리오 통합 분석 요약
+         */
+        get: operations["portfolio-analysis-summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portfolios/{portfolioId}/analysis/valuation": {
         parameters: {
             query?: never;
@@ -621,6 +641,30 @@ export interface components {
             /** @description 이메일 */
             email: string;
         };
+        "api-v1-portfolios-portfolioId-analysis-summary1301469393": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            data?: {
+                /** @description 가치 평가 정보 */
+                valuation: Record<string, never>;
+                /** @description 종목별 수익 기여도 (Ticker -> Contribution) */
+                itemContributions: Record<string, never>;
+                /** @description 분산도 정보 */
+                diversification: Record<string, never>;
+                /** @description 리밸런싱 정보 */
+                rebalancing: Record<string, never>;
+            };
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
         /** SectorRankingResponse */
         SectorRankingResponse: {
             /** @description 비즈니스 상세 코드 */
@@ -638,56 +682,6 @@ export interface components {
                 /** @description 과열 여부 */
                 isOverheated: boolean;
             }[];
-            /** @description 성공 여부 */
-            success: boolean;
-            /** @description 결과 메시지 */
-            message: string;
-            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
-            errors?: (Record<string, never> | boolean | string | number)[] | null;
-            /** @description 응답 시간 */
-            timestamp: string;
-            /** @description HTTP 상태 코드 */
-            status: number;
-        };
-        "api-v1-stocks-search-1069080236": {
-            /** @description 비즈니스 상세 코드 */
-            code: string;
-            data?: {
-                /** @description 현재 페이지 번호 */
-                number: number;
-                /** @description 페이지 사이즈 */
-                size: number;
-                /** @description 현재 페이지 엘리먼트 수 */
-                numberOfElements: number;
-                /** @description 마지막 페이지 여부 */
-                last: boolean;
-                /** @description 페이징 정보 */
-                pageable: string;
-                sort?: {
-                    /** @description 미정렬 여부 */
-                    unsorted: boolean;
-                    /** @description 정렬 여부 */
-                    sorted: boolean;
-                    /** @description 정렬 정보 비어있음 여부 */
-                    empty: boolean;
-                };
-                /** @description 첫 번째 페이지 여부 */
-                first: boolean;
-                content?: {
-                    /** @description 티커 */
-                    ticker: string;
-                    /** @description 종목명 */
-                    name: string;
-                    /** @description 섹터명 */
-                    sectorName: string;
-                    /** @description 마켓 타입 */
-                    marketType: string;
-                    /** @description 종목 상태 */
-                    status: string;
-                }[];
-                /** @description 결과 비어있음 여부 */
-                empty: boolean;
-            };
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -764,11 +758,79 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
+        "api-v1-portfolios-portfolioId-analysis-valuation-688192913": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            data?: {
+                /** @description 총 수익률 (%) */
+                totalReturnRate: number;
+                /** @description 당일 수익률 (%) */
+                dailyReturnRate: number;
+                /** @description 총 평가 손익 */
+                totalProfitLoss: number;
+                /** @description 당일 평가 손익 */
+                dailyProfitLoss: number;
+                /** @description 초과 수익률 (Alpha) */
+                alpha: number;
+                /** @description 연평균 성장률 (CAGR) */
+                cagr: number;
+                /** @description 샤프 지수 */
+                sharpeRatio: number;
+                /** @description 연간 변동성 */
+                volatility: number;
+                /** @description 최대 낙폭 (MDD) */
+                mdd: number;
+                /** @description 총 매수 금액 */
+                totalPurchaseAmount: number;
+                /** @description 현재 총 자산 가치 */
+                currentTotalValue: number;
+                /** @description 베타 계수 */
+                beta: number;
+            };
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
         "api-v1-watchlist-groups-groupId-items-775687594": {
             /** @description 투자 메모 (선택) */
             note: string;
             /** @description 종목 티커 */
             ticker: string;
+        };
+        "api-v1-portfolios-portfolioId-health-1734542839": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            data?: {
+                /** @description 향후 조치 단계 */
+                nextSteps: (Record<string, never> | boolean | string | number)[];
+                /** @description 진단 요약 */
+                summary: string;
+                /** @description 종목별 기여도 목록 */
+                stockContributions: (Record<string, never> | boolean | string | number)[];
+                /** @description 상세 인사이트 */
+                insight: string;
+                /** @description 종합 점수 */
+                overallScore: number;
+                /** @description 카테고리별 점수 (Map) */
+                categories: (Record<string, never> | boolean | string | number)[];
+            };
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
         };
         "api-v1-watchlist-groups15903716": {
             /** @description 비즈니스 상세 코드 */
@@ -792,26 +854,51 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        /** ReissueRequest */
-        ReissueRequest: {
-            /** @description 리프레시 토큰 */
-            refreshToken: string;
-        };
-        "api-v1-portfolios-25261408": {
+        "api-v1-stocks-ticker10744308": {
             /** @description 비즈니스 상세 코드 */
             code: string;
             data?: {
-                /** @description 이름 */
+                /** @description 20일 이동평균선 */
+                ma20?: number | null;
+                /** @description 대비 */
+                priceChange: number;
+                /** @description 시가총액 */
+                marketCap: number;
+                /** @description 티커 */
+                ticker: string;
+                /** @description 기준 날짜 */
+                baseDate: string;
+                /** @description 등락률 (%) */
+                fluctuationRate: number;
+                /** @description 시가 */
+                openPrice: number;
+                /** @description 현재가 */
+                currentPrice: number;
+                /** @description 거래대금 */
+                tradingValue: number;
+                /** @description 섹터명 */
+                sectorName: string;
+                /** @description 마켓 타입 */
+                marketType: string;
+                /** @description 상장 주식 수 */
+                totalShares: number;
+                /** @description 장 개장 여부 */
+                isMarketOpen: boolean;
+                /** @description 거래량 */
+                volume: number;
+                /** @description 저가 */
+                lowPrice: number;
+                /** @description RSI(14) 지표 */
+                rsi14?: number | null;
+                /** @description 고가 */
+                highPrice: number;
+                /** @description 종목명 */
                 name: string;
-                /** @description 설명 */
-                description: string;
-                /** @description 포트폴리오 ID */
-                id: number;
-                /** @description 총 매수 금액 */
-                totalPurchaseAmount: number;
-                /** @description 포트폴리오 구성 종목 목록 */
-                items: (Record<string, never> | boolean | string | number)[];
-            }[];
+                /** @description AI 기술적 인사이트 */
+                aiInsight: string;
+                /** @description ISIN 코드 */
+                isinCode: string;
+            };
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -822,6 +909,11 @@ export interface components {
             timestamp: string;
             /** @description HTTP 상태 코드 */
             status: number;
+        };
+        /** ReissueRequest */
+        ReissueRequest: {
+            /** @description 리프레시 토큰 */
+            refreshToken: string;
         };
         "api-v1-stocks-search-history486549215": Record<string, never>;
         "api-v1-portfolios-portfolioId-analysis-backtest797805970": {
@@ -886,35 +978,6 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        /** LoginResponse */
-        LoginResponse: {
-            /** @description 비즈니스 상세 코드 */
-            code: string;
-            data?: {
-                /** @description 닉네임 */
-                nickname: string;
-                /** @description 액세스 토큰 */
-                accessToken: string;
-                /** @description 이메일 */
-                email: string;
-                /** @description 가입 일자 */
-                joinedDate: string;
-                /** @description 회원 ID */
-                memberId: number;
-                /** @description 리프레시 토큰 */
-                refreshToken: string;
-            };
-            /** @description 성공 여부 */
-            success: boolean;
-            /** @description 결과 메시지 */
-            message: string;
-            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
-            errors?: (Record<string, never> | boolean | string | number)[] | null;
-            /** @description 응답 시간 */
-            timestamp: string;
-            /** @description HTTP 상태 코드 */
-            status: number;
-        };
         "api-v1-portfolios-portfolioId653085325": {
             /** @description 비즈니스 상세 코드 */
             code: string;
@@ -945,14 +1008,22 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        /** ReissueResponse */
-        ReissueResponse: {
+        /** LoginResponse */
+        LoginResponse: {
             /** @description 비즈니스 상세 코드 */
             code: string;
             data?: {
-                /** @description 새로운 액세스 토큰 */
+                /** @description 닉네임 */
+                nickname: string;
+                /** @description 액세스 토큰 */
                 accessToken: string;
-                /** @description 새로운 리프레시 토큰 */
+                /** @description 이메일 */
+                email: string;
+                /** @description 가입 일자 */
+                joinedDate: string;
+                /** @description 회원 ID */
+                memberId: number;
+                /** @description 리프레시 토큰 */
                 refreshToken: string;
             };
             /** @description 성공 여부 */
@@ -1002,50 +1073,15 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        "api-v1-watchlist-groups288370516": {
-            /** @description 그룹 이름 */
-            name: string;
-        };
-        "api-v1-stocks-ticker1095671400": {
+        /** ReissueResponse */
+        ReissueResponse: {
             /** @description 비즈니스 상세 코드 */
             code: string;
             data?: {
-                /** @description 20일 이동평균선 */
-                ma20?: number | null;
-                /** @description 대비 */
-                priceChange: number;
-                /** @description 시가총액 */
-                marketCap: number;
-                /** @description 티커 */
-                ticker: string;
-                /** @description 기준 날짜 */
-                baseDate: string;
-                /** @description 등락률 (%) */
-                fluctuationRate: number;
-                /** @description 시가 */
-                openPrice: number;
-                /** @description 거래대금 */
-                tradingValue: number;
-                /** @description 마켓 타입 */
-                marketType: string;
-                /** @description 상장 주식 수 */
-                totalShares: number;
-                /** @description 거래량 */
-                volume: number;
-                /** @description 저가 */
-                lowPrice: number;
-                /** @description RSI(14) 지표 */
-                rsi14?: number | null;
-                /** @description 고가 */
-                highPrice: number;
-                /** @description 종목명 */
-                name: string;
-                /** @description AI 기술적 인사이트 */
-                aiInsight: string;
-                /** @description 종가 */
-                closePrice: number;
-                /** @description ISIN 코드 */
-                isinCode: string;
+                /** @description 새로운 액세스 토큰 */
+                accessToken: string;
+                /** @description 새로운 리프레시 토큰 */
+                refreshToken: string;
             };
             /** @description 성공 여부 */
             success: boolean;
@@ -1057,6 +1093,10 @@ export interface components {
             timestamp: string;
             /** @description HTTP 상태 코드 */
             status: number;
+        };
+        "api-v1-watchlist-groups288370516": {
+            /** @description 그룹 이름 */
+            name: string;
         };
         "api-v1-stocks-new-listings562932331": {
             /** @description 비즈니스 상세 코드 */
@@ -1126,32 +1166,6 @@ export interface components {
                 assetType: string;
             }[];
         };
-        "api-v1-portfolios-portfolioId-2030071977": {
-            /** @description 비즈니스 상세 코드 */
-            code: string;
-            data?: {
-                /** @description 이름 */
-                name: string;
-                /** @description 설명 */
-                description: string;
-                /** @description 포트폴리오 ID */
-                id: number;
-                /** @description 총 매수 금액 */
-                totalPurchaseAmount: number;
-                /** @description 포트폴리오 구성 종목 목록 */
-                items: (Record<string, never> | boolean | string | number)[];
-            };
-            /** @description 성공 여부 */
-            success: boolean;
-            /** @description 결과 메시지 */
-            message: string;
-            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
-            errors?: (Record<string, never> | boolean | string | number)[] | null;
-            /** @description 응답 시간 */
-            timestamp: string;
-            /** @description HTTP 상태 코드 */
-            status: number;
-        };
         "api-v1-admin-health-440200854": {
             /** @description 비즈니스 상세 코드 */
             code: string;
@@ -1172,22 +1186,6 @@ export interface components {
             /** @description 응답 메시지 */
             message: string;
             /** @description 상세 에러 리스트 */
-            errors?: (Record<string, never> | boolean | string | number)[] | null;
-            /** @description 응답 시간 */
-            timestamp: string;
-            /** @description HTTP 상태 코드 */
-            status: number;
-        };
-        "api-v1-watchlist-groups620445008": {
-            /** @description 비즈니스 상세 코드 */
-            code: string;
-            /** @description 생성된 그룹 ID */
-            data: number;
-            /** @description 성공 여부 */
-            success: boolean;
-            /** @description 결과 메시지 */
-            message: string;
-            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
             errors?: (Record<string, never> | boolean | string | number)[] | null;
             /** @description 응답 시간 */
             timestamp: string;
@@ -1254,30 +1252,52 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        "api-v1-watchlist-groups-groupId-items104135515": {
+        "api-v1-watchlist-groups620445008": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            /** @description 생성된 그룹 ID */
+            data: number;
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
+        "api-v1-stocks-search-252012140": {
             /** @description 비즈니스 상세 코드 */
             code: string;
             data?: {
-                /** @description 그룹 이름 */
-                groupName: string;
-                items?: {
-                    /** @description 투자 메모 */
-                    note: string;
-                    /** @description 종목 티커 */
+                /** @description 현재 페이지 번호 (0-based) */
+                number: number;
+                /** @description 마지막 페이지 여부 */
+                last: boolean;
+                /** @description 현재 페이지 항목 수 */
+                numberOfElements: number;
+                /** @description 페이지 크기 */
+                size: number;
+                /** @description 다음 페이지 존재 여부 */
+                hasNext: boolean;
+                /** @description 첫 번째 페이지 여부 */
+                first: boolean;
+                content?: {
+                    /** @description 티커 */
                     ticker: string;
-                    /** @description 등락률 */
-                    fluctuationRate: number;
                     /** @description 종목명 */
                     name: string;
-                    /** @description RSI 지표 */
-                    rsi: number;
-                    /** @description 현재가 */
-                    currentPrice: number;
-                    /** @description AI 한줄 분석 */
-                    aiInsight: string;
-                    /** @description RSI 상태 */
-                    rsiStatus: string;
+                    /** @description 섹터명 */
+                    sectorName: string;
+                    /** @description 마켓 타입 */
+                    marketType: string;
+                    /** @description 종목 상태 */
+                    status: string;
                 }[];
+                /** @description 결과 없음 여부 */
+                empty: boolean;
             };
             /** @description 성공 여부 */
             success: boolean;
@@ -1318,28 +1338,30 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        "api-v1-portfolios-portfolioId-analysis-valuation1418848225": {
+        "api-v1-watchlist-groups-groupId-items104135515": {
             /** @description 비즈니스 상세 코드 */
             code: string;
             data?: {
-                /** @description 총 수익률 (%) */
-                totalReturnRate: number;
-                /** @description 당일 수익률 (%) */
-                dailyReturnRate: number;
-                /** @description 총 평가 손익 */
-                totalProfitLoss: number;
-                /** @description 당일 평가 손익 */
-                dailyProfitLoss: number;
-                /** @description 샤프 지수 */
-                sharpeRatio: number;
-                /** @description 최대 낙폭 (MDD) */
-                mdd: number;
-                /** @description 총 매수 금액 */
-                totalPurchaseAmount: number;
-                /** @description 현재 총 자산 가치 */
-                currentTotalValue: number;
-                /** @description 베타 계수 */
-                beta: number;
+                /** @description 그룹 이름 */
+                groupName: string;
+                items?: {
+                    /** @description 투자 메모 */
+                    note: string;
+                    /** @description 종목 티커 */
+                    ticker: string;
+                    /** @description 등락률 */
+                    fluctuationRate: number;
+                    /** @description 종목명 */
+                    name: string;
+                    /** @description RSI 지표 */
+                    rsi: number;
+                    /** @description 현재가 */
+                    currentPrice: number;
+                    /** @description AI 한줄 분석 */
+                    aiInsight: string;
+                    /** @description RSI 상태 */
+                    rsiStatus: string;
+                }[];
             };
             /** @description 성공 여부 */
             success: boolean;
@@ -1382,11 +1404,25 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        "api-v1-portfolios-portfolioId-analysis-correlation-116670467": {
+        "api-v1-portfolios-portfolioId-677020272": {
             /** @description 비즈니스 상세 코드 */
             code: string;
-            /** @description 종목별 상관관계 행렬 데이터 (가변 구조) */
-            data: Record<string, never>;
+            data?: {
+                /** @description 총 수익률 */
+                totalReturnRate: number;
+                /** @description 이름 */
+                name: string;
+                /** @description 설명 */
+                description: string;
+                /** @description 포트폴리오 ID */
+                id: number;
+                /** @description 총 매수 금액 */
+                totalPurchaseAmount: number;
+                /** @description 포트폴리오 구성 종목 목록 */
+                items: (Record<string, never> | boolean | string | number)[];
+                /** @description 총 평가 금액 */
+                currentTotalValue: number;
+            };
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -1398,23 +1434,41 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        "api-v1-portfolios-portfolioId-health-38320959": {
+        "api-v1-portfolios502406471": {
             /** @description 비즈니스 상세 코드 */
             code: string;
             data?: {
-                /** @description 향후 조치 단계 */
-                nextSteps: (Record<string, never> | boolean | string | number)[];
-                /** @description 진단 요약 */
-                summary: string;
-                /** @description 종목별 기여도 목록 */
-                stockContributions: (Record<string, never> | boolean | string | number)[];
-                /** @description 상세 인사이트 */
-                insight: string;
-                /** @description 종합 점수 */
-                overallScore: number;
-                /** @description 카테고리별 점수 (Map) */
-                categories: Record<string, never>;
-            };
+                /** @description 총 수익률 */
+                totalReturnRate: number;
+                /** @description 이름 */
+                name: string;
+                /** @description 설명 */
+                description: string;
+                /** @description 포트폴리오 ID */
+                id: number;
+                /** @description 총 매수 금액 */
+                totalPurchaseAmount: number;
+                /** @description 포트폴리오 구성 종목 목록 */
+                items: (Record<string, never> | boolean | string | number)[];
+                /** @description 총 평가 금액 */
+                currentTotalValue: number;
+            }[];
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
+        "api-v1-portfolios-portfolioId-analysis-correlation-116670467": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            /** @description 종목별 상관관계 행렬 데이터 (가변 구조) */
+            data: Record<string, never>;
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -1530,7 +1584,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api-v1-portfolios-25261408"];
+                    "application/json": components["schemas"]["api-v1-portfolios502406471"];
                 };
             };
         };
@@ -1671,7 +1725,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api-v1-portfolios-portfolioId-2030071977"];
+                    "application/json": components["schemas"]["api-v1-portfolios-portfolioId-677020272"];
                 };
             };
         };
@@ -1792,7 +1846,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api-v1-stocks-search-1069080236"];
+                    "application/json": components["schemas"]["api-v1-stocks-search-252012140"];
                 };
             };
         };
@@ -1815,7 +1869,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api-v1-stocks-ticker1095671400"];
+                    "application/json": components["schemas"]["api-v1-stocks-ticker10744308"];
                 };
             };
         };
@@ -1894,7 +1948,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api-v1-portfolios-portfolioId-health-38320959"];
+                    "application/json": components["schemas"]["api-v1-portfolios-portfolioId-health-1734542839"];
                 };
             };
         };
@@ -2171,6 +2225,34 @@ export interface operations {
             };
         };
     };
+    "portfolio-analysis-summary": {
+        parameters: {
+            query?: {
+                /** @description 분석 시작일 (YYYY-MM-DD) */
+                startDate?: string;
+                /** @description 분석 종료일 (YYYY-MM-DD) */
+                endDate?: string;
+            };
+            header?: never;
+            path: {
+                /** @description 포트폴리오 ID */
+                portfolioId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api-v1-portfolios-portfolioId-analysis-summary1301469393"];
+                };
+            };
+        };
+    };
     "portfolio-analysis-value": {
         parameters: {
             query?: never;
@@ -2189,7 +2271,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api-v1-portfolios-portfolioId-analysis-valuation1418848225"];
+                    "application/json": components["schemas"]["api-v1-portfolios-portfolioId-analysis-valuation-688192913"];
                 };
             };
         };

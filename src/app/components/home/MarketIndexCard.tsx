@@ -1,4 +1,5 @@
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { motion } from "motion/react";
 import { Skeleton } from "@/app/components/ui";
 import { useMarketIndex, MarketIndex } from "@/hooks/use-market-index";
 
@@ -10,58 +11,83 @@ export function MarketIndexSection() {
 
   if (isLoading) {
     return (
-      <div className="flex gap-2 px-4">
+      <>
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="flex-1 h-[90px] rounded-xl" />
+          <Skeleton key={i} className="min-w-[240px] h-[150px] rounded-2xl" />
         ))}
-      </div>
+      </>
     );
   }
 
   if (!data || data.length === 0) return null;
 
   return (
-    <div className="flex gap-2 px-4">
-      {data.map((index) => (
-        <MarketIndexCard key={index.name} index={index} />
+    <>
+      {data.map((index, idx) => (
+        <motion.div
+          key={index.name}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: idx * 0.08 }}
+          className="min-w-[240px]"
+        >
+          <MarketIndexCard index={index} />
+        </motion.div>
       ))}
-    </div>
+    </>
   );
 }
 
 function MarketIndexCard({ index }: { index: MarketIndex }) {
   const isUp = index.fluctuationRate >= 0;
-  const color = isUp ? "#2EBE7A" : "#EF4444";
+  
+  // 시장별 아이콘 결정 로직 (한글/영어 대응)
+  const getIndexIcon = (name: string) => {
+    const upperName = name.toUpperCase();
+    
+    // 한국
+    if (upperName.includes("KOSPI") || upperName.includes("KOSDAQ") || 
+        upperName.includes("코스피") || upperName.includes("코스닥")) {
+      return "🇰🇷";
+    }
+    
+    // 미국
+    if (upperName.includes("S&P") || upperName.includes("NASDAQ") || 
+        upperName.includes("나스닥") || upperName.includes("DOW") || 
+        upperName.includes("다우") || upperName.includes("PHLX") || 
+        upperName.includes("반도체") || upperName.includes("NY") || 
+        upperName.includes("뉴욕")) {
+      return "🇺🇸";
+    }
+    
+    // 기타 글로벌
+    return "🌍";
+  };
 
   return (
-    <div className="flex-1 bg-card rounded-xl p-3 shadow-sm border border-border">
-      <div className="text-muted-foreground text-[10px] font-medium mb-0.5">{index.name}</div>
-      <div className="text-foreground font-bold text-base tabular-nums">
-        {(index.currentPrice ?? 0).toLocaleString()}
+    <div className="bg-card rounded-2xl p-5 shadow-sm border border-border flex flex-col justify-between h-[150px] text-left">
+      <div className="flex items-center gap-3">
+        {/* 상단 좌측: 아이콘 + 시장 이름 */}
+        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-xl shadow-inner shrink-0">
+          {getIndexIcon(index.name)}
+        </div>
+        <div className="min-w-0">
+          <p className="text-foreground font-bold text-base truncate">
+            {index.name}
+          </p>
+        </div>
       </div>
 
-      <div
-        className="text-[11px] font-semibold tabular-nums mb-1"
-        style={{ color }}
-      >
-        {isUp ? "+" : ""}
-        {index.fluctuationRate.toFixed(2)}%
-      </div>
+      <div className="space-y-1">
+        {/* 하단: 지수 및 등락 정보 */}
+        <p className="text-foreground font-bold text-2xl tabular-nums leading-none">
+          {(index.currentPrice ?? 0).toLocaleString()}
+        </p>
 
-      {/* 미니 라인 차트 — 축/격자 없음 */}
-      {index.history.length > 0 && (
-        <ResponsiveContainer width="100%" height={28}>
-          <LineChart data={index.history}>
-            <Line
-              type="monotone"
-              dataKey="close"
-              stroke={color}
-              strokeWidth={1.5}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      )}
+        <p className={`text-sm font-bold tabular-nums ${isUp ? "text-up" : "text-down"}`}>
+          {isUp ? "▲" : "▼"} {Math.abs(index.fluctuationRate).toFixed(2)}%
+        </p>
+      </div>
     </div>
   );
 }

@@ -103,8 +103,8 @@ function ActionCard({ item }: { item: RebalancingItem }) {
     <div
       className={`flex items-center justify-between rounded-xl px-4 py-3 border-l-4 ${
         isSell
-          ? "border-red-400 bg-red-50"
-          : "border-green-400 bg-green-50"
+          ? "border-down/40 bg-down/10"
+          : "border-up/40 bg-up/10"
       }`}
     >
       <div>
@@ -115,7 +115,7 @@ function ActionCard({ item }: { item: RebalancingItem }) {
       </div>
       <p
         className="font-bold text-sm tabular-nums"
-        style={{ color: isSell ? "#EF4444" : "#2EBE7A" }}
+        style={{ color: isSell ? "var(--down)" : "var(--up)" }}
       >
         ≈ ₩{formatCurrency(Math.abs(item.expectedTradeAmount))}
       </p>

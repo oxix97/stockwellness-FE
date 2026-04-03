@@ -4,11 +4,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-<<<<<<< Updated upstream
-- [x] **Track: GitHub Actions 배포 자동화 및 n8n 연동 설정**
-=======
-- [x] **Track: 소셜 로그인 콜백 처리 구현 및 라우팅 개선**
-  *Plan: [./social-login-test-plan.md](./social-login-test-plan.md)*
-- [~] **Track: GitHub Actions 배포 자동화 및 n8n 연동 설정**
->>>>>>> Stashed changes
-  *Link: [./tracks/deployment_automation_20260325/](./tracks/deployment_automation_20260325/)*
+- [~] **Track: 주식 상세 화면의 주봉(1W) 차트 데이터 정합성 오류와 관심 종목(Watchlist) 기능의 비정상적인 동작 수정**
+*Link: [./tracks/stock_chart_watchlist_fixes_20260401/](./tracks/stock_chart_watchlist_fixes_20260401/)*
+

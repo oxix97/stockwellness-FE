@@ -1,8 +1,9 @@
+import { Suspense } from "react";
 import { Outlet, Link, useLocation } from "react-router";
 import { Home, Star, Wallet, User, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { AppBar } from "./AppBar";
 import { useMe } from "@/hooks/use-member";
+import { Skeleton } from "@/app/components/ui";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "홈", size: 24 },
@@ -18,11 +19,8 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* 전체 탭 공통 앱바 */}
-      <AppBar />
-
-      {/* 메인 콘텐츠 — 앱바(pt-14) + 하단 네비(pb-20) 여백 확보 */}
-      <main className="flex-1 overflow-y-auto pt-14 pb-20">
+      {/* 메인 콘텐츠 — 하단 네비(pb-20) 여백 확보 */}
+      <main className="flex-1 overflow-y-auto pb-20">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -31,7 +29,9 @@ export function Layout() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <Outlet />
+            <Suspense fallback={<div className="p-6 space-y-4"><Skeleton className="h-40 w-full rounded-3xl" /><Skeleton className="h-80 w-full rounded-3xl" /></div>}>
+              <Outlet />
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>
