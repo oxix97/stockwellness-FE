@@ -4,7 +4,6 @@ import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
 import { usePortfolioSummary } from "@/hooks/use-portfolio";
-import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { Skeleton } from "@/app/components/ui";
@@ -15,6 +14,8 @@ import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
 import { SectorBottomSheet } from "@/app/components/home/SectorBottomSheet";
 import { SupplyDemandSection } from "@/app/components/home/SupplyDemandSection";
 import { NewListingsSection } from "@/app/components/home/NewListingsSection";
+import { HomeCard, HomeCardSkeleton, getSectorIcon } from "@/app/components/home/HomeCard";
+import { HomeBadge } from "@/app/components/home/HomeListItem";
 
 function getMarketGreeting(kospiRate: number | null): { text: string; emoji: string } {
   if (kospiRate == null) return { text: "오늘의 증시를 불러오는 중이에요", emoji: "📊" };
@@ -22,16 +23,6 @@ function getMarketGreeting(kospiRate: number | null): { text: string; emoji: str
   if (kospiRate <= -0.5) return { text: "오늘의 증시는 비가 내려요", emoji: "🌧️" };
   return { text: "오늘의 증시는 흐림이에요", emoji: "⛅" };
 }
-
-const getSectorIcon = (name: string) => {
-  if (name.includes("바이오") || name.includes("제약")) return "💊";
-  if (name.includes("반도체") || name.includes("전기전자")) return "⚡";
-  if (name.includes("전기차") || name.includes("자동차")) return "🚗";
-  if (name.includes("금융") || name.includes("은행")) return "🏦";
-  if (name.includes("조선") || name.includes("해운")) return "🚢";
-  if (name.includes("철강") || name.includes("에너지")) return "🔥";
-  return "📈";
-};
 
 export function Home() {
   const navigate = useNavigate();
@@ -93,10 +84,8 @@ export function Home() {
       <Section title="AI가 주목하는 섹터" icon={Flame}>
         <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
           {isSectorsLoading
-            ? [1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="min-w-[240px]">
-                  <Skeleton className="h-[150px] w-full rounded-2xl" />
-                </div>
+            ? [1, 2, 3].map((i) => (
+                <HomeCardSkeleton key={i} />
               ))
             : sectors?.map((sector, index) => (
                 <motion.div
@@ -104,10 +93,21 @@ export function Home() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.08 }}
-                  className="min-w-[240px]"
                 >
-                  <SectorCard
-                    sector={sector}
+                  <HomeCard
+                    title={sector.sectorName}
+                    icon={getSectorIcon(sector.sectorName)}
+                    badge={
+                      <HomeBadge className={sector.isOverheated ? "bg-red-100 text-red-600" : ""}>
+                        {sector.isOverheated ? "⚠️ 과열" : "AI 추천"}
+                      </HomeBadge>
+                    }
+                    value={
+                      <span className={sector.fluctuationRate >= 0 ? "text-up" : "text-down"}>
+                        {formatPercent(sector.fluctuationRate)}
+                      </span>
+                    }
+                    description="AI 알고리즘 분석 결과"
                     onTap={() => setSelectedSector(sector)}
                   />
                 </motion.div>
@@ -168,37 +168,5 @@ function AssetSummaryCard({ valuation, isLoading }: { valuation: PortfolioValuat
         )}
       </motion.div>
     </Link>
-  );
-}
-
-function SectorCard({ sector, onTap }: { sector: SectorRankingItem; onTap: () => void }) {
-  const isUp = sector.fluctuationRate >= 0;
-
-  return (
-    <button
-      onClick={onTap}
-      className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex flex-col justify-between h-[150px] text-left"
-    >
-      <div className="flex items-start justify-between">
-        <span className="text-3xl">{getSectorIcon(sector.sectorName)}</span>
-        <span
-          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-            sector.isOverheated
-              ? "bg-red-100 text-red-600"
-              : "bg-primary/10 text-primary"
-          }`}
-        >
-          {sector.isOverheated ? "⚠️ 과열" : "AI 추천"}
-        </span>
-      </div>
-      <div>
-        <p className="text-foreground font-bold text-base">{sector.sectorName}</p>
-        <p
-          className={`text-sm font-semibold tabular-nums ${isUp ? "text-up" : "text-down"}`}
-        >
-          {formatPercent(sector.fluctuationRate)}
-        </p>
-      </div>
-    </button>
   );
 }

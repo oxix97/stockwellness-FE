@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
           // (OAuth2, Spring Security 콜백, API 요청)
           navigateFallbackDenylist: [/^\/oauth2/, /^\/login\/oauth2/, /^\/api/],
         },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
           name: env.VITE_APP_NAME || 'Stockwellness',
           short_name: 'Wellness',

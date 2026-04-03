@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { Outlet, Link, useLocation } from "react-router";
 import { Home, Star, Wallet, User, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useMe } from "@/hooks/use-member";
+import { Skeleton } from "@/app/components/ui";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "홈", size: 24 },
@@ -27,7 +29,9 @@ export function Layout() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <Outlet />
+            <Suspense fallback={<div className="p-6 space-y-4"><Skeleton className="h-40 w-full rounded-3xl" /><Skeleton className="h-80 w-full rounded-3xl" /></div>}>
+              <Outlet />
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>

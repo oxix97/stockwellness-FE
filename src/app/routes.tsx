@@ -1,20 +1,20 @@
+import { lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 import { Layout } from "@/app/components/Layout";
 import { ProtectedRoute } from "@/app/components/shared/ProtectedRoute";
-import {
-  Home,
-  Portfolio,
-  Watchlist,
-  Search,
-  More,
-  NotificationSettings,
-  StockDetail,
-  HealthDiagnosis,
-  BacktestSetup,
-  BacktestResult,
-  Login,
-  AuthCallbackHandler,
-} from "@/app/components/screens";
+
+const Home = lazy(() => import("@/app/components/screens/Home").then(m => ({ default: m.Home })));
+const Portfolio = lazy(() => import("@/app/components/screens/Portfolio").then(m => ({ default: m.Portfolio })));
+const Watchlist = lazy(() => import("@/app/components/screens/Watchlist").then(m => ({ default: m.Watchlist })));
+const Search = lazy(() => import("@/app/components/screens/Search").then(m => ({ default: m.Search })));
+const More = lazy(() => import("@/app/components/screens/More").then(m => ({ default: m.More })));
+const NotificationSettings = lazy(() => import("@/app/components/screens/NotificationSettings").then(m => ({ default: m.NotificationSettings })));
+const StockDetail = lazy(() => import("@/app/components/screens/StockDetail").then(m => ({ default: m.StockDetail })));
+const HealthDiagnosis = lazy(() => import("@/app/components/screens/HealthDiagnosis").then(m => ({ default: m.HealthDiagnosis })));
+const BacktestSetup = lazy(() => import("@/app/components/screens/BacktestSetup").then(m => ({ default: m.BacktestSetup })));
+const BacktestResult = lazy(() => import("@/app/components/screens/BacktestResult").then(m => ({ default: m.BacktestResult })));
+const Login = lazy(() => import("@/app/components/screens/Login").then(m => ({ default: m.Login })));
+const AuthCallbackHandler = lazy(() => import("@/app/components/screens/AuthCallbackHandler").then(m => ({ default: m.AuthCallbackHandler })));
 
 export const router = createBrowserRouter([
   {
