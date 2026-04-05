@@ -37,7 +37,7 @@ describe("useMe", () => {
     expect(mockApi.getMe).not.toHaveBeenCalled();
   });
 
-  it("accessToken 있으면 /me 조회 후 nickname 스토어 업데이트", async () => {
+  it("accessToken 있으면 /me 조회 (스토어 업데이트는 하지 않음)", async () => {
     const profile = {
       id: 1,
       email: "test@example.com",
@@ -47,7 +47,7 @@ describe("useMe", () => {
       createdAt: "2026-01-01T00:00:00",
     };
     mockApi.getMe.mockResolvedValue(profile);
-    setAuthState();  // accessToken 주입
+    setAuthState({ nickname: "기존닉네임" });
 
     const { result } = renderHookWithQuery(() => useMe());
 
@@ -55,7 +55,8 @@ describe("useMe", () => {
     expect(result.current.data!.nickname).toBe("홍길동");
 
     const { useAuthStore } = await import("@/store/auth");
-    expect(useAuthStore.getState().nickname).toBe("홍길동");
+    // queryFn 내부 부수효과 제거 확인
+    expect(useAuthStore.getState().nickname).toBe("기존닉네임");
   });
 
   it("API 오류 시 isError true", async () => {

@@ -66,7 +66,7 @@ describe("useSector hook", () => {
       detailError: false,
     });
     
-    expect(sectorApi.getFluctuationRanking).toHaveBeenCalledWith({ limit: 3 });
+    expect(sectorApi.getFluctuationRanking).toHaveBeenCalledWith({ limit: 10 });
     expect(sectorApi.getSectorDetail).toHaveBeenCalledWith("001");
   });
 

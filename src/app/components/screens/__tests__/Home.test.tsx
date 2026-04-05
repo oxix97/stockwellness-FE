@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Home } from "../Home";
-import { usePortfolioSummary } from "@/hooks/use-portfolio";
+import { usePortfolioSummary, usePortfolioValuation } from "@/hooks/use-portfolio";
 import { useStock } from "@/hooks/use-stock";
 import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
@@ -19,6 +19,7 @@ describe("Home Screen", () => {
     vi.clearAllMocks();
     // Default mock return values
     (usePortfolioSummary as any).mockReturnValue({ valuation: null, isLoading: true });
+    (usePortfolioValuation as any).mockReturnValue({ data: null, isLoading: true });
     (useStock as any).mockReturnValue({ popular: { data: [], isLoading: true }, newListings: { data: [], isLoading: true } });
     (useSector as any).mockReturnValue({ data: [], isLoading: true });
     (useMarketIndex as any).mockReturnValue({ data: [{ name: "KOSPI", fluctuationRate: 0.8, history: [] }] });
@@ -42,6 +43,7 @@ describe("Home Screen", () => {
     ];
 
     (usePortfolioSummary as any).mockReturnValue({ valuation: { currentTotalValue: 1000000 }, isLoading: false });
+    (usePortfolioValuation as any).mockReturnValue({ data: { currentTotalValue: 1000000 }, isLoading: false });
     (useSector as any).mockReturnValue({ data: mockSectors, isLoading: false });
 
     renderWithQuery(

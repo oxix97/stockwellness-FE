@@ -51,7 +51,7 @@ describe("useSector Limit", () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(sectorApi.getFluctuationRanking).toHaveBeenCalledWith({ limit: 5 });
+    expect(sectorApi.getFluctuationRanking).toHaveBeenCalledWith({ limit: 10 });
     expect(result.current.data.length).toBe(5);
   });
 });
