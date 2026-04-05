@@ -36,9 +36,44 @@ export function useUpdatePortfolio() {
 export function usePortfolioSummary() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
-  return useQuery<AnalysisSummaryResponse>({
+  const query = useQuery<AnalysisSummaryResponse>({
     queryKey: ["portfolio", portfolioId, "summary"],
     queryFn: () => portfolioApi.getAnalysisSummary(portfolioId!),
+    enabled: !!portfolioId,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // API 응답 구조가 { valuation: ... } 형태가 아니라 평면적인 PortfolioValuationResponse일 경우를 대비
+  const data = query.data;
+  
+  // 1. data.valuation이 있으면 그것을 사용
+  // 2. data.valuation은 없지만 data 자체가 totalReturnRate를 가지고 있으면 data 자체를 사용
+  const valuation = data?.valuation 
+    ? data.valuation 
+    : (data && (data as any).totalReturnRate !== undefined) 
+      ? (data as unknown as AnalysisSummaryResponse["valuation"]) 
+      : undefined;
+
+  return {
+    valuation,
+    diversification: data?.diversification,
+    advice: data?.advice,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}
+
+/**
+ * 포트폴리오 가치 평가 정보 조회
+ */
+export function usePortfolioValuation() {
+  const portfolioId = useAuthStore((state) => state.portfolioId);
+
+  return useQuery<PortfolioValuationResponse>({
+    queryKey: ["portfolio", portfolioId, "valuation"],
+    queryFn: () => portfolioApi.getValuation(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
   });
@@ -132,15 +167,15 @@ export function usePortfolio() {
       }));
       return {
         radarData: radarData.length > 0 ? radarData : [],
-        overallScore: healthResult.data.overallScore || 0,
+        overallScore: healthResult.data.overallScore,
       };
     }
-    return { radarData: [], overallScore: 0 };
+    return { radarData: [], overallScore: undefined };
   };
 
   return {
-    valuation: summary.data?.valuation,
-    diversification: summary.data?.diversification,
+    valuation: summary.valuation,
+    diversification: summary.diversification,
     advice: analysis.advice,
     holdings: details.data,
     correlation: analysis.correlation,
