@@ -39,7 +39,7 @@ export function NewListingsSection() {
       animate="show"
       className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
     >
-      {data.slice(0, 10).map((stock) => (
+      {data.map((stock) => (
         <NewListingCard key={stock.ticker} stock={stock} />
       ))}
     </motion.div>
