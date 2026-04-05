@@ -1,24 +1,56 @@
-# API 실패 원인 분석 및 해결 결과 (API Failure Fix Result)
+# 배포 스크립트 수정 계획 (deploy-front.sh)
 
-## 1. 최종 분석 결과
-로컬과 배포 환경의 동작 불일치는 다음 세 가지 설정 미흡으로 인해 발생했습니다.
-- **Nginx 요청 처리**: 프론트엔드 Nginx의 `try_files` 설정으로 인해 상위 프록시가 가로채지 못한 API 요청이 `index.html`로 폴백됨.
-- **환경 변수 주입**: Vite 빌드 시점에 `VITE_API_BASE_URL`이 주입되지 않아 클라이언트가 올바른 경로를 인지하지 못함.
-- **네트워크 및 요청 제한**: 인프라 표준과 다른 네트워크 명칭 및 기본 요청 크기 제한(1MB)으로 인한 통신 장애 위험.
+## 📌 목표
+Ubuntu 24.04 서버 환경의 Docker 컨테이너(n8n 등)에서 배포 스크립트 실행 시 발생하는 `curl: command not found` 오류를 해결하고, 스크립트의 안정성을 확보합니다.
 
-## 2. 적용된 수정 사항
-| 구분 | 수정 내용 | 목적 |
-|---|---|---|
-| **Nginx** | `client_max_body_size 10M;` 추가 | 대용량 백테스팅 데이터 처리 허용 |
-| **Dockerfile** | `ARG VITE_API_BASE_URL=/api` 추가 | 빌드 시 상대 경로 주입 (인프라 사양 준수) |
-| **Docker Compose** | `networks: stockwellness-net (external)` | 인프라 공통 네트워크 연동 및 통일 |
-| **CD Workflow** | `build-args` 추가 및 `IMAGE_TAG` 웹훅 전송 | 빌드 시 환경 변수 확정 및 배포 스크립트 연동 |
+## 🛠️ 문제 원인
+1. `deploy-front.sh` 내 `notify_deploy` 함수에서 `curl` 명령어를 사용하여 Webhook 호출을 시도합니다.
+2. 스크립트 최상단에 `set -euo pipefail`이 적용되어 있어, `curl` 명령어가 없는 환경에서 에러가 발생하면 전체 배포 프로세스가 즉시 중단(Exit)됩니다.
+3. 배포 이미지는 정상적으로 다운로드되었으나, 배포 시작 알림(`START`) 단계에서 스크립트가 강제 종료되었습니다.
 
-## 3. 인프라 담당자 협의 내용 반영
-- 백엔드 서비스는 상위 Nginx의 `upstream backend`를 통해 처리되므로 프론트엔드에서는 상대 경로 `/api`를 그대로 사용함.
-- 동일 도메인(Same Origin) 정책에 따라 CORS 문제는 발생하지 않음을 확인.
-- SSL은 상위 Nginx에서 종료되므로 프론트엔드 설정은 간소화 유지.
+## 📝 해결 방안
 
-## 4. 향후 조치
-- `main` 브랜치 푸시 후 n8n 웹훅을 통한 배포 성공 여부 모니터링.
-- 브라우저 개발자 도구(Network 탭)에서 응답 헤더의 `Content-Type: application/json` 여부 최종 확인.
+### 1. 스크립트 방어 로직 추가 (필수)
+실행 환경에 관계없이 스크립트가 비정상 종료되지 않도록 `notify_deploy` 함수를 수정합니다. `curl` 설치 여부를 먼저 확인하고, 없을 경우 로그만 남기고 넘어가도록 방어적 코드를 작성합니다.
+
+- **대상 파일:** `/home/chan/stockwellness-infra/scripts/deploy-front.sh`
+- **수정 내용:**
+  ```bash
+  notify_deploy() {
+      local status="$1"    # START, SUCCESS, FAIL
+      local message="${2:-}"
+      
+      # curl 명령어가 존재하는지 확인
+      if command -v curl >/dev/null 2>&1; then
+          curl -s -X POST -H "Content-Type: application/json" \
+               -d "{\"service\": \"front\", \"status\": \"$status\", \"tag\": \"$IMAGE_TAG\", \"message\": \"$message\", \"slot\": \"${NEXT_SLOT:-}\"}" \
+               "http://localhost:5678/webhook/deploy-notification" > /dev/null || true
+      else
+          log "⚠️ 알림 전송 실패: curl 명령어를 찾을 수 없습니다. (상태: $status)"
+      fi
+  }
+  ```
+
+### 2. Ubuntu 24.04 호스트 환경 조치 (권장)
+스크립트를 실행하는 주체가 호스트 서버(Ubuntu 24.04)라면, 시스템에 `curl` 패키지를 설치합니다.
+
+- **실행 명령어:**
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y curl
+  ```
+
+### 3. Docker 환경 (n8n 컨테이너 내부 실행 시) 조치
+스크립트 주석에 명시된 대로 n8n 컨테이너 내부에서 쉘 스크립트가 실행되는 구조라면, 해당 컨테이너 이미지에 `curl`을 포함시켜야 합니다.
+
+- **대안 A (Dockerfile 커스텀):** n8n 공식 이미지 대신 `curl`을 설치한 커스텀 이미지를 빌드하여 사용합니다.
+  ```dockerfile
+  FROM n8nio/n8n:latest
+  USER root
+  RUN apk add --no-cache curl
+  USER node
+  ```
+- **대안 B (Alpine 기반 패키지 임시 설치):** 스크립트 최상단 혹은 CI 파이프라인에서 컨테이너 기동 후 패키지를 설치합니다. (임시 방편)
+
+## ✅ 결론
+가장 확실하고 안전한 방법은 **1번 방안(스크립트 내 `curl` 존재 여부 체크)**을 우선적으로 적용하여 배포 파이프라인 자체가 중단되는 것을 막는 것입니다. 이후 알림 기능의 정상 동작을 위해 서버(Ubuntu) 또는 컨테이너(n8n) 환경에 `curl` 패키지를 추가 설치하는 것을 권장합니다.
