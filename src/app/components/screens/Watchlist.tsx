@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, X as CloseIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useWatchlist } from "@/hooks/use-watchlist";
-import { Skeleton } from "@/app/components/ui";
+import { Skeleton, Popover, PopoverTrigger, PopoverContent } from "@/app/components/ui";
 import { WatchlistItemCard } from "@/app/components/watchlist/WatchlistItemCard";
 import { AddItemSheet } from "@/app/components/watchlist/AddItemSheet";
 import { toast } from "sonner";
@@ -14,12 +14,16 @@ import { toast } from "sonner";
  * - 빈 상태 개선
  */
 export function Watchlist() {
-  const { groups, useGroupItems, createGroup } = useWatchlist();
+  const { groups, useGroupItems, createGroup, updateGroupName, deleteGroup } = useWatchlist();
   const [activeGroup, setActiveGroup] = useState<number | null>(null);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+
+  // 그룹 편집 상태
+  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
 
   useEffect(() => {
     if (groups.data && groups.data.length > 0 && activeGroup === null) {
@@ -49,6 +53,29 @@ export function Watchlist() {
     });
   };
 
+  const handleUpdateGroupName = () => {
+    if (!editingGroupId || !editName.trim()) return;
+    updateGroupName.mutate(
+      { groupId: editingGroupId, name: editName.trim() },
+      {
+        onSuccess: () => {
+          setEditingGroupId(null);
+          toast.success("그룹 이름이 변경되었습니다.");
+        },
+      }
+    );
+  };
+
+  const handleDeleteGroup = (groupId: number) => {
+    if (!window.confirm("그룹을 삭제하시겠습니까? 포함된 모든 종목이 목록에서 제거됩니다.")) return;
+    deleteGroup.mutate(groupId, {
+      onSuccess: () => {
+        if (activeGroup === groupId) setActiveGroup(groups.data?.[0]?.id ?? null);
+        toast.success("그룹이 삭제되었습니다.");
+      },
+    });
+  };
+
   const handleToggleExpand = (ticker: string) => {
     setExpandedTicker((prev) => (prev === ticker ? null : ticker));
   };
@@ -63,22 +90,70 @@ export function Watchlist() {
           ) : (
             <>
               {groups.data?.map((group) => (
-                <button
-                  key={group.id}
-                  onClick={() => {
-                    setActiveGroup(group.id);
-                    setExpandedTicker(null);
-                  }}
-                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                    activeGroup === group.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground"
-                  }`}
-                >
-                  {group.name}
-                  <span className="ml-1.5 text-[11px] opacity-60">{group.itemCount}</span>
-                </button>
+                <div key={group.id} className="relative shrink-0 group">
+                  <button
+                    onClick={() => {
+                      setActiveGroup(group.id);
+                      setExpandedTicker(null);
+                    }}
+                    className={`px-4 py-2 pr-8 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                      activeGroup === group.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    {group.name}
+                    <span className="ml-1.5 text-[11px] opacity-60">{group.itemCount}</span>
+                  </button>
+                  
+                  {/* 그룹 관리 팝오버 (BLOCKER) */}
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className={`p-1 rounded-full hover:bg-black/5 transition-colors ${activeGroup === group.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-40 p-1" align="start">
+                        <button 
+                          onClick={() => { setEditingGroupId(group.id); setEditName(group.name); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary rounded-md"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> 이름 변경
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteGroup(group.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> 그룹 삭제
+                        </button>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
               ))}
+
+              {/* 이름 변경 모드 */}
+              <AnimatePresence>
+                {editingGroupId && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex items-center gap-2 shrink-0 bg-background border border-primary rounded-full px-2 py-1 shadow-sm"
+                  >
+                    <input
+                      autoFocus
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="bg-transparent text-sm outline-none px-2 w-24"
+                      onKeyDown={(e) => e.key === "Enter" && handleUpdateGroupName()}
+                    />
+                    <button onClick={handleUpdateGroupName} className="text-primary p-1"><Plus className="w-4 h-4 rotate-45" style={{ transform: 'rotate(0deg)' }} /></button>
+                    <button onClick={() => setEditingGroupId(null)} className="text-muted-foreground p-1"><CloseIcon className="w-4 h-4" /></button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {isCreating ? (
                 <div className="flex items-center gap-2 shrink-0">

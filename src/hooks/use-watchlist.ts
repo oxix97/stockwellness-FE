@@ -18,11 +18,12 @@ export function useWatchlist() {
 
   /**
    * 특정 종목이 어느 관심 그룹에 속해 있는지 확인하는 훅
+   * - 불필요한 API 요청 폭증 방지: staleTime을 넉넉히 설정하여 캐시 활용
    */
   const useIsTickerInWatchlist = (ticker: string) => {
     const groupList = groups.data ?? [];
     
-    // 모든 그룹의 아이템을 병렬로 조회
+    // 모든 그룹의 아이템을 병렬로 조회 (이미 캐싱되어 있으면 즉시 반환)
     const itemsQueries = useQueries({
       queries: groupList.map((group) => ({
         queryKey: ["watchlist", "groups", group.id, "items"],
