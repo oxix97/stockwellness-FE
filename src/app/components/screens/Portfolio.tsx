@@ -6,6 +6,7 @@ import { usePortfolio } from "@/hooks/use-portfolio";
 import { useAuthStore } from "@/store/auth";
 import { Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui";
 import { formatCurrency, formatPercent } from "@/utils/format";
+import { calculateHealthBadge } from "@/utils/calculate";
 import { PortfolioWizard } from "@/app/components/portfolio/wizard/PortfolioWizard";
 import { CompositionTab } from "@/app/components/portfolio/tabs/CompositionTab";
 import { SimulationTab } from "@/app/components/portfolio/tabs/SimulationTab";
@@ -56,12 +57,7 @@ export function Portfolio() {
 
   // ── AI 건강 뱃지 ──────────────────────────────────────
   const score = health.overallScore;
-  const healthBadge =
-    score >= 70
-      ? { label: "✅ 안정적", color: "bg-green-50 text-green-700" }
-      : score >= 40
-      ? { label: "⚠️ 주의", color: "bg-amber-50 text-amber-700" }
-      : { label: "🔴 위험", color: "bg-red-50 text-red-700" };
+  const healthBadge = calculateHealthBadge(score);
 
   return (
     <div className="min-h-full pb-6">

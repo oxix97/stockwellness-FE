@@ -118,13 +118,13 @@ export function usePortfolioSimulation(period: ChartPeriod) {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   const query = useQuery({
-    queryKey: ["backtest", "simulation", portfolioId, period],
+    queryKey: ["backtest", "simulation", portfolioId], // period를 queryKey에서 제거하여 한 번만 호출
     queryFn: () =>
       portfolioApi.runBacktest(portfolioId!, {
         strategy: "LUMP_SUM",
         amount: 10_000_000,
         benchmarkTicker: "SPY",
-        period: period as any, // ChartPeriod Union 대응
+        period: "ALL", // 전체 데이터를 가져와서 클라이언트에서 자름
         rebalancingPeriod: "NONE",
       }),
     enabled: !!portfolioId,
@@ -173,6 +173,8 @@ export function useBacktest(period?: string) {
           worstYearRate: data.worstYearRate,
           alpha: data.alpha,
           totalReturnRate: data.totalReturnRate,
+          // 기간 필터링(period)이 있는 경우 클라이언트 재계산값을 우선시할지 여부는 UI 요구사항에 따라 다르나,
+          // 여기서는 '전체 기간' 기준 서버 데이터를 반환함을 명시
         }
       : null,
     /** BE Spring AI 연동 완료 시 제공되는 AI 코멘트. null이면 클라이언트 룰 기반 사용 */

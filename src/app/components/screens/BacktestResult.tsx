@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { Activity, Sparkles } from "lucide-react";
 import { XAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
 import { useBacktest } from "@/hooks/use-backtest";
@@ -9,27 +9,70 @@ import { PageHeader } from "@/app/components/shared";
 
 export function BacktestResult() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const config = location.state || {};
+  const [searchParams] = useSearchParams();
+
+  const config = useMemo(() => {
+    try {
+      const strategy = searchParams.get("strategy") as "DCA" | "LUMP_SUM" | null;
+      const amount = Number(searchParams.get("amount") || 0);
+      const period = searchParams.get("period") as any; // ChartPeriod
+      const rebalancingPeriod = searchParams.get("rebalancingPeriod") as any;
+      const weightsStr = searchParams.get("weights");
+      
+      if (!strategy || !weightsStr) {
+        return null; // 필수 파라미터 누락
+      }
+
+      return {
+        strategy,
+        amount,
+        benchmarkTicker: searchParams.get("benchmarkTicker") || "SPY",
+        period: period || "1y",
+        rebalancingPeriod: rebalancingPeriod || "NONE",
+        weights: JSON.parse(weightsStr)
+      };
+    } catch (e) {
+      console.error("Failed to parse backtest config", e);
+      return null;
+    }
+  }, [searchParams]);
+
   const hasRun = useRef(false);
 
   // useBacktest에 선택된 기간을 전달하여 클라이언트 사이드 슬라이싱 및 지표 계산 활성화
-  const { run, data, isLoading, metrics, serverMetrics, isError, aiComment } = useBacktest(config.period);
+  const { run, data, isLoading, metrics, serverMetrics, isError, aiComment } = useBacktest(config?.period);
 
   useEffect(() => {
-    if (config.strategy && !hasRun.current) {
+    if (config && config.strategy && !hasRun.current) {
       // 서버 로그 분석 결과 period 누락 확인 -> 명시적으로 포함
       run({
         strategy: config.strategy,
-        amount: Number(config.amount),
-        benchmarkTicker: config.benchmarkTicker || "SPY",
-        period: config.period || "1y",
+        amount: config.amount,
+        benchmarkTicker: config.benchmarkTicker,
+        period: config.period,
         weights: config.weights,
-        rebalancingPeriod: config.rebalancingPeriod || "NONE",
+        rebalancingPeriod: config.rebalancingPeriod,
       });
       hasRun.current = true;
     }
   }, [config, run]);
+
+  // 설정값이 없거나 유효하지 않은 경우
+  if (!config) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="text-6xl mb-4">⚠️</div>
+        <div className="text-xl font-bold mb-2">잘못된 접근입니다</div>
+        <div className="text-muted-foreground mb-8">백테스트 설정 정보가 올바르지 않습니다.</div>
+        <button
+          onClick={() => navigate("/portfolio")}
+          className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold"
+        >
+          포트폴리오로 이동
+        </button>
+      </div>
+    );
+  }
 
   // 로딩 중이거나 아직 데이터가 없는 초기 상태 처리
   if (isLoading || (hasRun.current && !data && !isError)) {
