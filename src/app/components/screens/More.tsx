@@ -16,6 +16,7 @@ import {
 } from "@/app/components/ui";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useWithdraw, useUpdateProfile } from "@/hooks/use-member";
+import { calculateInvestorType } from "@/utils/calculate";
 
 /**
  * Task #84 ~ #87 — 마이 탭 완성
@@ -32,12 +33,7 @@ export function More() {
 
   const withdraw = useWithdraw();
 
-  const investorType =
-    health.overallScore >= 70
-      ? "안정형 투자자"
-      : health.overallScore >= 40
-      ? "균형형 투자자"
-      : "공격형 투자자";
+  const investorType = calculateInvestorType(health.overallScore);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const handleLogout = () => {
@@ -68,8 +64,8 @@ export function More() {
             </div>
             <div>
               <p className="text-foreground font-bold text-lg">{nickname ?? "투자자"}님</p>
-              <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-semibold">
-                {investorType}
+              <span className={`bg-primary/10 px-2.5 py-0.5 rounded-full text-xs font-semibold ${investorType.color}`}>
+                {investorType.label}
               </span>
             </div>
           </div>
@@ -323,7 +319,7 @@ function MetricItem({
   highlight?: boolean;
   negative?: boolean;
 }) {
-  const color = negative ? "text-[#FF4756]" : highlight ? "text-primary" : "text-foreground";
+  const color = negative ? "text-down" : highlight ? "text-up" : "text-foreground";
   return (
     <div className="flex flex-col items-center text-center px-2">
       <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide mb-1.5">

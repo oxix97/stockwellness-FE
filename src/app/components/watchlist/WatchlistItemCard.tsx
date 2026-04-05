@@ -55,6 +55,20 @@ export function WatchlistItemCard({
   const isUp = stock.fluctuationRate >= 0;
   const rsiStyle = getRsiBadgeStyle(stock.rsiStatus);
 
+  /** 메모 저장 타이머 클린업 (BLOCKER) */
+  useEffect(() => {
+    return () => {
+      if (saveTimer) clearTimeout(saveTimer);
+    };
+  }, [saveTimer]);
+
+  /** 아코디언 확장 시 스와이프 상태 초기화 (Snap-back) */
+  useEffect(() => {
+    if (isExpanded) {
+      animate(dragX, 0, { duration: 0.2 });
+    }
+  }, [isExpanded, dragX]);
+
   /** 메모 변경 시 1초 debounce 자동 저장 */
   const handleNoteChange = (value: string) => {
     setNote(value);

@@ -4,15 +4,10 @@ import { useAuthStore } from "@/store/auth";
 
 export function useMe() {
   const accessToken = useAuthStore((s) => s.accessToken);
-  const setNickname = useAuthStore((s) => s.setNickname);
 
   return useQuery({
     queryKey: ["member", "me"],
-    queryFn: async () => {
-      const data = await memberApi.getMe();
-      setNickname(data.nickname);
-      return data;
-    },
+    queryFn: () => memberApi.getMe(),
     enabled: !!accessToken,
     staleTime: 5 * 60 * 1000,
   });

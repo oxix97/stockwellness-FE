@@ -10,7 +10,7 @@ export function useSector() {
   // 섹터 등락률 랭킹 조회 (기본 상위 3개)
   const ranking = useQuery({
     queryKey: ["sectors", "ranking", "fluctuation"],
-    queryFn: () => sectorApi.getFluctuationRanking({ limit: 5 }),
+    queryFn: () => sectorApi.getFluctuationRanking({ limit: 10 }),
     staleTime: 5 * 60 * 1000, // 5분 동안 신선한 데이터로 간주
   });
 

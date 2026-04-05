@@ -15,6 +15,8 @@ interface UserState {
     portfolioId: string | null;
     /** 액세스 토큰 */
     accessToken: string | null;
+    /** 리프레시 토큰 (BLOCKER 해결) */
+    refreshToken: string | null;
     /** 가입일 (ISO-8601) */
     joinedDate: string | null;
     /**
@@ -58,6 +60,7 @@ export const useAuthStore = create<UserState>()(
             nickname: null,
             portfolioId: null,
             accessToken: null,
+            refreshToken: null,
             joinedDate: null,
             setAuth: (data) => {
                 set({
@@ -65,8 +68,10 @@ export const useAuthStore = create<UserState>()(
                     email: data.email,
                     nickname: data.nickname,
                     accessToken: data.accessToken,
+                    refreshToken: data.refreshToken,
                     joinedDate: data.joinedDate,
                 });
+                // Axios 인터셉터 등 React 외부 코드 접근용으로 유지하되, persist가 이미 관리함
                 localStorage.setItem("accessToken", data.accessToken);
                 localStorage.setItem("refreshToken", data.refreshToken);
             },
@@ -83,6 +88,7 @@ export const useAuthStore = create<UserState>()(
                     nickname: null,
                     portfolioId: null,
                     accessToken: null,
+                    refreshToken: null,
                     joinedDate: null,
                 });
                 localStorage.clear();

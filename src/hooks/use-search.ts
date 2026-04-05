@@ -3,57 +3,73 @@ import { useState, useEffect } from "react";
 import { stockApi } from "@/api/stock";
 import { StockSearchResponse } from "@/types/api";
 
-const HISTORY_KEY = ["search", "history"];
-const POPULAR_KEY = ["search", "popular"];
+const HISTORY_KEY = ["stocks", "search", "history"];
+const POPULAR_KEY = ["stocks", "popular"];
 
 /**
- * 전체화면 검색 오버레이에서 사용하는 훅.
- * - 인기 검색어 / 최근 검색어 / 실시간 자동완성 (300ms debounce + 무한 스크롤)
+ * 종목 검색 기능을 위한 통합 커스텀 훅
+ * - 인기 검색어 / 최근 검색어 / 실시간 자동완성 (debounced)
  */
-export function useSearch() {
+export function useSearch(initialKeyword: string = "") {
   const queryClient = useQueryClient();
-  const [keyword, setKeyword] = useState("");
-  const [debouncedKeyword, setDebouncedKeyword] = useState("");
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [debouncedKeyword, setDebouncedKeyword] = useState(initialKeyword);
 
+  // 300ms 디바운스 적용
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedKeyword(keyword.trim()), 300);
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(keyword.trim());
+    }, 300);
     return () => clearTimeout(timer);
   }, [keyword]);
 
-  const history = useQuery({
-    queryKey: HISTORY_KEY,
-    queryFn: stockApi.getSearchHistory,
+  // 인기 검색 종목 쿼리
+  const popular = useQuery<string[]>({
+    queryKey: POPULAR_KEY,
+    queryFn: () => stockApi.getPopularSearch().catch(() => []),
+    staleTime: 1000 * 60 * 60,
+    retry: false,
   });
 
-  const popular = useQuery({
-    queryKey: POPULAR_KEY,
-    queryFn: stockApi.getPopularSearch,
+  // 최근 검색어 조회 쿼리
+  const history = useQuery<string[]>({
+    queryKey: HISTORY_KEY,
+    queryFn: () => stockApi.getSearchHistory().catch(() => []),
+    staleTime: 0,
+  });
+
+  // 실시간 검색 (무한 스크롤 지원)
+  const autocomplete = useInfiniteQuery<StockSearchResponse>({
+    queryKey: ["stocks", "search", debouncedKeyword],
+    queryFn: ({ pageParam = 0 }) => stockApi.search(debouncedKeyword, pageParam as number),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: StockSearchResponse) => (lastPage.hasNext ? lastPage.number + 1 : undefined),
+    enabled: debouncedKeyword.length >= 2,
     staleTime: 1000 * 60 * 5,
   });
 
-  const autocomplete = useInfiniteQuery({
-    queryKey: ["search", "autocomplete", debouncedKeyword],
-    queryFn: ({ pageParam = 0 }) => stockApi.search(debouncedKeyword, pageParam),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage: StockSearchResponse) => (lastPage.hasNext ? lastPage.number + 1 : undefined),
-    enabled: debouncedKeyword.length >= 1,
-  });
-
+  // 검색어 개별 삭제
   const deleteHistory = useMutation({
-    mutationFn: stockApi.deleteSearchHistory,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: HISTORY_KEY }),
+    mutationFn: (keyword: string) => stockApi.deleteSearchHistory(keyword),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HISTORY_KEY });
+    },
   });
 
+  // 검색어 전체 삭제
   const clearHistory = useMutation({
-    mutationFn: stockApi.clearSearchHistory,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: HISTORY_KEY }),
+    mutationFn: () => stockApi.clearSearchHistory(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HISTORY_KEY });
+    },
   });
 
   return {
     keyword,
     setKeyword,
-    history,
+    debouncedKeyword,
     popular,
+    history,
     autocomplete,
     deleteHistory,
     clearHistory,

@@ -1,69 +1,41 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Search as SearchIcon, TrendingUp, Clock, X } from "lucide-react";
+import { Search as SearchIcon, TrendingUp, Clock, X, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useStock } from "@/hooks/use-stock";
+import { useInView } from "react-intersection-observer";
+import { useSearch } from "@/hooks/use-search";
 import { Skeleton } from "@/app/components/ui";
 import { Section, StockLogo } from "@/app/components/shared";
 import { StockSearchResult } from "@/types/api";
 
-const RECENT_SEARCHES_KEY = "recent-searches";
-const MAX_RECENT = 10;
-
-function loadRecents(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveRecents(items: string[]) {
-  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(items));
-}
-
 export function Search() {
   const [searchParams] = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("keyword") || "");
-  const [recentSearches, setRecentSearches] = useState<string[]>(loadRecents);
-  const { popular, useSearch } = useStock();
-  const { data: searchResults, isLoading: isSearching } = useSearch(query);
+  const initialKeyword = searchParams.get("keyword") || "";
+  
+  const {
+    keyword,
+    setKeyword,
+    popular,
+    history,
+    autocomplete,
+    deleteHistory,
+    clearHistory
+  } = useSearch(initialKeyword);
+
+  const { data: searchResults, isLoading: isSearching, fetchNextPage, hasNextPage, isFetchingNextPage } = autocomplete;
+  const { ref, inView } = useInView();
 
   const results = searchResults?.pages.flatMap(page => page.content) || [];
 
-  const addRecent = useCallback((keyword: string) => {
-    const trimmed = keyword.trim();
-    if (!trimmed) return;
-    setRecentSearches((prev) => {
-      const next = [trimmed, ...prev.filter((k) => k !== trimmed)].slice(0, MAX_RECENT);
-      saveRecents(next);
-      return next;
-    });
-  }, []);
-
-  const removeRecent = useCallback((keyword: string) => {
-    setRecentSearches((prev) => {
-      const next = prev.filter((k) => k !== keyword);
-      saveRecents(next);
-      return next;
-    });
-  }, []);
-
-  const clearAllRecents = useCallback(() => {
-    saveRecents([]);
-    setRecentSearches([]);
-  }, []);
-
-  // 검색어가 2자 이상으로 안정될 때 최근 검색어에 저장
+  // 무한 스크롤 트리거
   useEffect(() => {
-    if (query.length < 2) return;
-    const timer = setTimeout(() => addRecent(query), 800);
-    return () => clearTimeout(timer);
-  }, [query, addRecent]);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleSelectKeyword = (keyword: string) => {
-    setQuery(keyword);
-    addRecent(keyword);
+  const handleSelectKeyword = (k: string) => {
+    setKeyword(k);
   };
 
   return (
@@ -73,14 +45,14 @@ export function Search() {
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
             placeholder="종목명 또는 종목코드 검색"
             className="w-full pl-12 pr-10 py-4 bg-secondary rounded-2xl border-0 focus:ring-2 focus:ring-primary outline-none transition-all font-bold"
           />
-          {query.length > 0 && (
+          {keyword.length > 0 && (
             <button
-              onClick={() => setQuery("")}
+              onClick={() => setKeyword("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-muted-foreground"
             >
               <X className="w-4 h-4" />
@@ -90,16 +62,22 @@ export function Search() {
       </div>
 
       <div className="px-6 py-6 space-y-6">
-        {query.length >= 2 ? (
-          <SearchResultsList results={results} isLoading={isSearching} />
+        {keyword.length >= 2 ? (
+          <SearchResultsList 
+            results={results} 
+            isLoading={isSearching} 
+            loadMoreRef={ref}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+          />
         ) : (
           <>
-            {recentSearches.length > 0 && (
+            {(history.data?.length ?? 0) > 0 && (
               <RecentSearchesList
-                recents={recentSearches}
+                recents={history.data || []}
                 onSelect={handleSelectKeyword}
-                onRemove={removeRecent}
-                onClearAll={clearAllRecents}
+                onRemove={(k) => deleteHistory.mutate(k)}
+                onClearAll={() => clearHistory.mutate()}
               />
             )}
             <Section title="인기 검색어" icon={TrendingUp} className="px-0">
@@ -169,11 +147,23 @@ function RecentSearchesList({
   );
 }
 
-function SearchResultsList({ results, isLoading }: { results: StockSearchResult[]; isLoading: boolean }) {
+function SearchResultsList({ 
+  results, 
+  isLoading, 
+  loadMoreRef,
+  hasNextPage,
+  isFetchingNextPage 
+}: { 
+  results: StockSearchResult[]; 
+  isLoading: boolean;
+  loadMoreRef: (node?: Element | null) => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage: boolean;
+}) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-3xl" />)}
+        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full rounded-3xl" />)}
       </div>
     );
   }
@@ -192,23 +182,35 @@ function SearchResultsList({ results, isLoading }: { results: StockSearchResult[
   }
 
   return (
-    <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
-      {results.map((stock, index) => (
-        <Link key={stock.ticker} to={`/stock/${stock.ticker}`}>
-          <motion.div
-            whileTap={{ backgroundColor: "var(--color-secondary)" }}
-            className={`px-6 py-5 flex items-center justify-between active:bg-accent transition-colors ${index !== results.length - 1 ? "border-b border-border" : ""}`}
-          >
-            <div className="flex items-center gap-4">
-              <StockLogo name={stock.name} />
-              <div>
-                <div className="text-foreground font-bold">{stock.name}</div>
-                <div className="text-muted-foreground text-xs font-medium">{stock.ticker} | {stock.marketType}</div>
+    <div className="space-y-4">
+      <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
+        {results.map((stock, index) => (
+          <Link key={stock.ticker} to={`/stock/${stock.ticker}`}>
+            <motion.div
+              whileTap={{ backgroundColor: "var(--color-secondary)" }}
+              className={`px-6 py-5 flex items-center justify-between active:bg-accent transition-colors ${index !== results.length - 1 ? "border-b border-border" : ""}`}
+            >
+              <div className="flex items-center gap-4">
+                <StockLogo name={stock.name} />
+                <div>
+                  <div className="text-foreground font-bold">{stock.name}</div>
+                  <div className="text-muted-foreground text-xs font-medium">{stock.ticker} | {stock.marketType}</div>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </Link>
-      ))}
+            </motion.div>
+          </Link>
+        ))}
+      </div>
+      
+      {/* 무한 스크롤 관찰 지점 */}
+      <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+        {isFetchingNextPage && (
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        )}
+        {!hasNextPage && results.length > 0 && (
+          <span className="text-muted-foreground text-xs">마지막 검색 결과입니다.</span>
+        )}
+      </div>
     </div>
   );
 }
@@ -216,7 +218,7 @@ function SearchResultsList({ results, isLoading }: { results: StockSearchResult[
 function PopularKeywordList({ keywords, isLoading, onSelect }: { keywords: string[] | undefined; isLoading: boolean; onSelect: (keyword: string) => void }) {
   if (isLoading) {
     return (
-       <div className="p-4 space-y-4">
+       <div className="space-y-4">
           {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full rounded-2xl" />)}
        </div>
     );

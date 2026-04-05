@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
-import { usePortfolioSummary } from "@/hooks/use-portfolio";
+import { usePortfolioValuation } from "@/hooks/use-portfolio";
 import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { Skeleton } from "@/app/components/ui";
@@ -26,7 +26,7 @@ function getMarketGreeting(kospiRate: number | null): { text: string; emoji: str
 
 export function Home() {
   const navigate = useNavigate();
-  const { valuation, isLoading: isValuationLoading } = usePortfolioSummary();
+  const { data: valuation, isLoading: isValuationLoading } = usePortfolioValuation();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
   const { data: sectors, isLoading: isSectorsLoading } = useSector();

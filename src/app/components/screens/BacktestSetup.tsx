@@ -28,24 +28,6 @@ const rebalancing = [
 
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe", "#00C49F", "#FFBB28", "#FF8042"];
 
-// 임시 종목명 매핑 테이블 (백엔드 미지원 시 보완용)
-const STOCK_NAMES: Record<string, string> = {
-  "005930": "삼성전자",
-  "000660": "SK하이닉스",
-  "005380": "현대차",
-  "035420": "NAVER",
-  "035720": "카카오",
-  "AAPL": "애플",
-  "TSLA": "테슬라",
-  "NVDA": "엔비디아",
-  "MSFT": "마이크로소프트",
-  "AMZN": "아마존",
-  "GOOGL": "알파벳",
-  "META": "메타",
-  "SPY": "S&P 500 ETF",
-  "QQQ": "나스닥 100 ETF",
-};
-
 export function BacktestSetup() {
   const navigate = useNavigate();
   const portfolioId = useAuthStore((s) => s.portfolioId);
@@ -78,7 +60,7 @@ export function BacktestSetup() {
   // 차트 데이터 구성
   const chartData = useMemo(() => {
     return portfolioItems.map((item, idx) => {
-      const displayName = item.name || STOCK_NAMES[item.symbol] || item.symbol;
+      const displayName = item.name || item.symbol;
       return {
         name: displayName,
         value: activeWeights[item.symbol] ?? 0,
@@ -102,16 +84,17 @@ export function BacktestSetup() {
 
   const handleStartBacktest = () => {
     if (!canStart) return;
-    navigate("/backtest/result", {
-      state: {
-        strategy: selectedStrategy,
-        amount: initialAmount,
-        benchmarkTicker: "SPY", // 데이터 가용성이 높은 SPY를 기본값으로 사용
-        period: selectedPeriod,
-        weights: activeWeights,
-        rebalancingPeriod: selectedRebalancing,
-      },
+    
+    const params = new URLSearchParams({
+      strategy: selectedStrategy,
+      amount: initialAmount.toString(),
+      benchmarkTicker: "SPY",
+      period: selectedPeriod,
+      rebalancingPeriod: selectedRebalancing,
+      weights: JSON.stringify(activeWeights)
     });
+
+    navigate(`/backtest/result?${params.toString()}`);
   };
 
   return (
@@ -250,8 +233,8 @@ export function BacktestSetup() {
             {portfolioItems.map((item, idx) => {
               const w = activeWeights[item.symbol] ?? 0;
               const color = COLORS[idx % COLORS.length];
-              const displayName = item.name || STOCK_NAMES[item.symbol] || item.symbol;
-              const hasName = !!(item.name || STOCK_NAMES[item.symbol]);
+              const displayName = item.name || item.symbol;
+              const hasName = !!item.name;
               
               return (
                 <div key={item.symbol} className="bg-card rounded-2xl px-4 py-4 border border-border">
