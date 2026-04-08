@@ -77,8 +77,12 @@ apiClient.interceptors.response.use(
           });
           const tokens = data.data;
 
-          // Zustand store 및 localStorage 업데이트
-          useAuthStore.getState().updateAccessToken(tokens.accessToken);
+          // Zustand store와 localStorage를 같은 토큰 세트로 유지
+          useAuthStore.getState().updateTokens({
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+          });
+          localStorage.setItem("accessToken", tokens.accessToken);
           localStorage.setItem("refreshToken", tokens.refreshToken);
 
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;

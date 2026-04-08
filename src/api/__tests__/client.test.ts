@@ -73,7 +73,7 @@ describe("apiClient 응답 인터셉터 — 봉투 언래핑", () => {
 function setup401Suite() {
   let originalAdapter: any;
   let originalLocation: Location;
-  let mockUpdateAccessToken: ReturnType<typeof vi.fn>;
+  let mockUpdateTokens: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -87,10 +87,10 @@ function setup401Suite() {
     };
     vi.stubGlobal("location", mockLocation);
 
-    mockUpdateAccessToken = vi.fn();
+    mockUpdateTokens = vi.fn();
     mockGetState.mockReturnValue({
       accessToken: "at-old",
-      updateAccessToken: mockUpdateAccessToken,
+      updateTokens: mockUpdateTokens,
       logout: vi.fn(),
     });
 
@@ -115,7 +115,7 @@ function setup401Suite() {
     vi.restoreAllMocks();
   });
 
-  return { getMockUpdateAccessToken: () => mockUpdateAccessToken };
+  return { getMockUpdateTokens: () => mockUpdateTokens };
 }
 
 describe("apiClient 응답 인터셉터 — 401 + refreshToken 없음", () => {
@@ -131,7 +131,7 @@ describe("apiClient 응답 인터셉터 — 401 + refreshToken 없음", () => {
       replace: vi.fn(),
     };
     vi.stubGlobal("location", mockLocation);
-    mockGetState.mockReturnValue({ accessToken: "old-token", updateAccessToken: vi.fn(), logout: vi.fn() });
+    mockGetState.mockReturnValue({ accessToken: "old-token", updateTokens: vi.fn(), logout: vi.fn() });
   });
 
   afterEach(() => {
@@ -156,9 +156,9 @@ describe("apiClient 응답 인터셉터 — 401 + refreshToken 없음", () => {
 });
 
 describe("apiClient 응답 인터셉터 — 재발급 성공", () => {
-  const { getMockUpdateAccessToken } = setup401Suite();
+  const { getMockUpdateTokens } = setup401Suite();
 
-  it("재발급 성공 시 updateAccessToken 호출 + refreshToken 교체 + 원래 요청 재시도", async () => {
+  it("재발급 성공 시 updateTokens 호출 + refreshToken 교체 + 원래 요청 재시도", async () => {
     vi.spyOn(axios, "post").mockResolvedValueOnce({
       data: { data: { accessToken: "at-new", refreshToken: "rt-new" } },
     });
@@ -172,7 +172,7 @@ describe("apiClient 응답 인터셉터 — 재발급 성공", () => {
     const result = await errorInterceptor(error);
 
     expect(axios.post).toHaveBeenCalledWith("/api/v1/auth/reissue", { refreshToken: "rt-old" });
-    expect(getMockUpdateAccessToken()).toHaveBeenCalledWith("at-new");
+    expect(getMockUpdateTokens()).toHaveBeenCalledWith({ accessToken: "at-new", refreshToken: "rt-new" });
     expect(localStorage.getItem("refreshToken")).toBe("rt-new");
     expect(error.config.headers.Authorization).toBe("Bearer at-new");
     expect(result).toBe("retried-data");

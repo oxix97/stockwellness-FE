@@ -29,7 +29,7 @@ interface UserState {
         nickname: string;
         accessToken: string;
         refreshToken: string;
-        joinedDate: string;
+        joinedDate?: string | null;
     }) => void;
     /**
      * 활성 포트폴리오 ID를 설정합니다.
@@ -37,10 +37,9 @@ interface UserState {
      */
     setPortfolioId: (id: string | null) => void;
     /**
-     * 액세스 토큰만 업데이트합니다.
-     * @param accessToken 새 액세스 토큰
+     * 액세스 토큰과 리프레시 토큰을 함께 업데이트합니다.
      */
-    updateAccessToken: (accessToken: string) => void;
+    updateTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
     /** 닉네임을 변경합니다. */
     setNickname: (nickname: string) => void;
     /**
@@ -69,16 +68,17 @@ export const useAuthStore = create<UserState>()(
                     nickname: data.nickname,
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken,
-                    joinedDate: data.joinedDate,
+                    joinedDate: data.joinedDate ?? null,
                 });
                 // Axios 인터셉터 등 React 외부 코드 접근용으로 유지하되, persist가 이미 관리함
                 localStorage.setItem("accessToken", data.accessToken);
                 localStorage.setItem("refreshToken", data.refreshToken);
             },
             setPortfolioId: (id) => set({ portfolioId: id }),
-            updateAccessToken: (accessToken) => {
-                set({ accessToken });
+            updateTokens: ({ accessToken, refreshToken }) => {
+                set({ accessToken, refreshToken });
                 localStorage.setItem("accessToken", accessToken);
+                localStorage.setItem("refreshToken", refreshToken);
             },
             setNickname: (nickname) => set({ nickname }),
             logout: () => {

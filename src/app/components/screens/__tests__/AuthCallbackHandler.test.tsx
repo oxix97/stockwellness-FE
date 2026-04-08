@@ -42,9 +42,11 @@ describe("AuthCallbackHandler Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    sessionStorage.clear();
+    useAuthStore.getState().logout();
   });
 
-  it("should show error if both accessToken and token are missing", async () => {
+  it("should show error if accessToken or refreshToken is missing", async () => {
     render(
       <MemoryRouter initialEntries={["/auth/callback?refreshToken=rt"]}>
         <Routes>
@@ -55,15 +57,15 @@ describe("AuthCallbackHandler Component", () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith("인증 정보가 누락되었습니다. 다시 시도해주세요.");
-      expect(mockNavigate).toHaveBeenCalledWith("/login");
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
     });
   });
 
-  it("should succeed with 'token' parameter instead of 'accessToken'", async () => {
+  it("should redirect to /portfolio when no portfolio exists", async () => {
     (portfolioApi.getMyPortfolios as any).mockResolvedValue([]);
 
     render(
-      <MemoryRouter initialEntries={["/auth/callback?token=valid_token"]}>
+      <MemoryRouter initialEntries={["/auth/callback?accessToken=valid_token&refreshToken=valid_rt"]}>
         <Routes>
           <Route path="/auth/callback" element={<AuthCallbackHandler />} />
         </Routes>
@@ -72,10 +74,9 @@ describe("AuthCallbackHandler Component", () => {
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith("Tester님, 환영합니다!");
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith("/portfolio", { replace: true });
     });
-    
-    // Check if accessToken was set in the store correctly from 'token' param
+
     expect(useAuthStore.getState().accessToken).toBe("valid_token");
   });
 
@@ -98,5 +99,20 @@ describe("AuthCallbackHandler Component", () => {
     
     expect(useAuthStore.getState().portfolioId).toBe("10");
     expect(useAuthStore.getState().accessToken).toBe("valid_at");
+  });
+
+  it("should map callback error codes to safe user messages", async () => {
+    render(
+      <MemoryRouter initialEntries={["/auth/callback?errorCode=A007"]}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallbackHandler />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("소셜 로그인에 실패했습니다. 다시 시도해주세요.");
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
+    });
   });
 });

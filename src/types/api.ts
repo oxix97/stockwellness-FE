@@ -11,12 +11,19 @@ export interface FieldError {
 
 /** 성공 응답 래퍼 — 백엔드 실제 구조 */
 export interface SuccessEnvelope<T> {
+  success: boolean;
+  status: number;
+  code: string;
+  message: string;
   data: T;
   timestamp: string;
+  traceId?: string | null;
+  errors?: FieldError[] | null;
 }
 
 /** 에러 응답 래퍼 */
 export interface ErrorEnvelope {
+  success: false;
   status: number;
   code: string;
   message: string;
@@ -39,19 +46,20 @@ export interface MarketIndexResult {
 /**
  * 주식 상세 정보 타입 (수동 보강)
  */
-export type StockDetailResult = NonNullable<components["schemas"]["api-v1-stocks-ticker1095671400"]["data"]>;
+export type StockDetailResult = NonNullable<components["schemas"]["api-v1-stocks-ticker10744308"]["data"]>;
 
 /**
  * 포트폴리오 건강 진단 타입 (수동 보강)
  */
 export interface StockContribution {
-  ticker: string;
   name: string;
-  contributionScore: number;
+  mainContribution: string;
+  score: number;
   reason: string;
 }
 
-export type DiagnosisResponse = Omit<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-health-38320959"]["data"]>, "stockContributions" | "nextSteps"> & {
+export type DiagnosisResponse = Omit<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-health-864754955"]["data"]>, "categories" | "stockContributions" | "nextSteps"> & {
+  categories: Record<string, number>;
   stockContributions: StockContribution[];
   nextSteps: string[];
 };
@@ -96,7 +104,7 @@ export type ReissueResponse = NonNullable<components["schemas"]["ReissueResponse
 /**
  * 포트폴리오 관련 타입
  */
-export type PortfolioValuationResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-valuation1418848225"]["data"]>;
+export type PortfolioValuationResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-valuation1906810676"]["data"]>;
 
 /** 다각화 분석 전체 데이터 */
 export type PortfolioDiversificationResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-diversification-1682980467"]["data"]>;
@@ -114,7 +122,9 @@ export type CountryRatio = NonNullable<PortfolioDiversificationResponse["country
 export type PortfolioRebalancingResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-rebalancing1494527279"]["data"]>;
 
 /** 리밸런싱 아이템 정보 (추출) */
-export type RebalancingItem = NonNullable<PortfolioRebalancingResponse["items"]>[number];
+export type RebalancingItem = NonNullable<PortfolioRebalancingResponse["items"]>[number] & {
+  name?: string;
+};
 
 export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
 
@@ -192,7 +202,7 @@ export interface BacktestRequest {
    * BE는 이 값을 무시하고 전체 이력 데이터를 반환한다.
    * 실제 기간 슬라이싱은 use-backtest.ts sliceByPeriod()에서 처리.
    */
-  period: ChartPeriod;
+  period?: ChartPeriod;
   /** 리밸런싱 주기 (NONE, MONTHLY, QUARTERLY, YEARLY) */
   rebalancingPeriod: RebalancingPeriod;
   /** 각 종목별 가상 비중 설정 (ticker -> percentage) */
@@ -200,9 +210,9 @@ export interface BacktestRequest {
 }
 
 /** 백테스트 일별 결과 */
-export type BacktestDailyResult = NonNullable<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest695967913"]["data"]>["dailyResults"]>[number];
+export type BacktestDailyResult = NonNullable<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest-1617317571"]["data"]>["dailyResults"]>[number];
 
-export type BacktestResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest695967913"]["data"]>;
+export type BacktestResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest-1617317571"]["data"]>;
 
 /**
  * 주가 데이터 관련 타입
@@ -245,7 +255,7 @@ export interface StockSearchResult {
 /**
  * 주식 검색 응답 타입 (Slice 구조 반영 - 무한 스크롤 적합)
  */
-export type StockSearchResponse = Omit<NonNullable<components["schemas"]["api-v1-stocks-search-1069080236"]["data"]>, "content"> & {
+export type StockSearchResponse = Omit<NonNullable<components["schemas"]["api-v1-stocks-search-252012140"]["data"]>, "content"> & {
   content: StockSearchResult[];
   /** BE SliceResponse hasNext 필드 */
   hasNext: boolean;
