@@ -31,8 +31,8 @@
 *   `src/app/routes.ts` 내용을 `routes.tsx`와 동기화하거나, 사용되지 않는다면 제거를 제안합니다. (현재 `App.tsx`는 `routes.tsx`를 사용 중)
 
 ## 4. 검증 계획
-*   **단위 테스트**: `src/app/components/screens/__tests__/AuthCallback.test.tsx`를 업데이트하여 `token` 파라미터 유입 시에도 정상 동작하는지 검증합니다.
-*   **수동 테스트**: 로컬 환경에서 `http://localhost:5173/auth/callback?token=...` 등의 URL로 직접 접속하여 정상적으로 로그인 처리 및 리다이렉트가 되는지 확인합니다.
+*   **단위 테스트**: `src/app/components/screens/__tests__/AuthCallbackHandler.test.tsx`를 업데이트하여 `accessToken`, `refreshToken`, `errorCode` 계약 기준으로 정상 동작하는지 검증합니다.
+*   **수동 테스트**: 로컬 환경에서 `http://localhost:5173/auth/callback?accessToken=...&refreshToken=...` 또는 `?errorCode=A007` URL로 직접 접속하여 정상적으로 처리되는지 확인합니다.
 
 ## 5. 기타 사항
 *   쿠키 저장 로직의 경우, 현재 `localStorage`를 사용하고 있으므로 사용자 요구사항("localStorage나 Cookie")을 충족합니다. 향후 보안 강화를 위해 쿠키 라이브러리(`js-cookie` 등) 도입이 필요하다면 추가 작업을 진행할 수 있습니다.
