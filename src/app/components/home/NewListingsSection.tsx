@@ -68,7 +68,7 @@ function NewListingCard({ stock }: { stock: NewListingStock }) {
           )}
         </div>
       }
-      value={
+      displayValue={
         <span className="text-primary">{stock.marketType}</span>
       }
       description={

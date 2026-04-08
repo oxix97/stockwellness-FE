@@ -15,8 +15,9 @@ export const sectorApi = {
     marketType?: string; 
     limit?: number 
   }): Promise<SectorRankingResponse> => {
-    const data = await apiClient.get("/v1/sectors/ranking/fluctuation", { params });
-    return data as unknown as SectorRankingResponse;
+    const data = await apiClient.get<any>("/v1/sectors/ranking/fluctuation", { params });
+    // SuccessEnvelope.data.data (중첩 엔벨로프) 대응
+    return (data?.data ?? data) as SectorRankingResponse;
   },
 
   /**
@@ -30,8 +31,8 @@ export const sectorApi = {
     marketType?: string;
     limit?: number;
   }): Promise<SectorSupplyResponse> => {
-    const data = await apiClient.get("/v1/sectors/ranking/supply", { params });
-    return data as unknown as SectorSupplyResponse;
+    const data = await apiClient.get<any>("/v1/sectors/ranking/supply", { params });
+    return (data?.data ?? data) as SectorSupplyResponse;
   },
 
   /**
@@ -41,10 +42,10 @@ export const sectorApi = {
    * @returns 섹터 상세 인사이트, 기술적 지표, 주도주 정보
    */
   getSectorDetail: async (sectorCode: string, date?: string): Promise<SectorDetailResponse> => {
-    const data = await apiClient.get(`/v1/sectors/${sectorCode}/detail`, {
+    const data = await apiClient.get<any>(`/v1/sectors/${sectorCode}/detail`, {
       params: { date } 
     });
-    return data as unknown as SectorDetailResponse;
+    return (data?.data ?? data) as SectorDetailResponse;
   },
 
   /**

@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
+import { TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuthStore } from "@/store/auth";
 import { usePortfolioValuation } from "@/hooks/use-portfolio";
-import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { Skeleton } from "@/app/components/ui";
-import { PortfolioValuationResponse, SectorRankingItem } from "@/types/api";
+import { PortfolioValuationResponse } from "@/types/api";
 import { Section } from "@/app/components/shared";
-import { formatCurrency, formatPercent } from "@/utils/format";
+import { formatCurrency } from "@/utils/format";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
-import { SectorBottomSheet } from "@/app/components/home/SectorBottomSheet";
 import { SupplyDemandSection } from "@/app/components/home/SupplyDemandSection";
+import { SectorRankingSection } from "@/app/components/home/SectorRankingSection";
 import { NewListingsSection } from "@/app/components/home/NewListingsSection";
-import { HomeCard, HomeCardSkeleton, getSectorIcon } from "@/app/components/home/HomeCard";
-import { HomeBadge } from "@/app/components/home/HomeListItem";
+import { SectorBottomSheet, SectorData } from "@/app/components/home/SectorBottomSheet";
 
 function getMarketGreeting(kospiRate: number | null): { text: string; emoji: string } {
   if (kospiRate == null) return { text: "오늘의 증시를 불러오는 중이에요", emoji: "📊" };
@@ -29,19 +27,16 @@ export function Home() {
   const { data: valuation, isLoading: isValuationLoading } = usePortfolioValuation();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
-  const { data: sectors, isLoading: isSectorsLoading } = useSector();
   const { data: marketIndexes } = useMarketIndex();
+  const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
 
   // KOSPI 등락률 기반 인사말
-  const kospiRate = marketIndexes?.find((m) => m.name === "KOSPI")?.fluctuationRate ?? null;
+  const kospiRate = marketIndexes?.find((m) => m.ticker === "0001")?.fluctuationRate ?? null;
   const greeting = getMarketGreeting(kospiRate);
-
-  // 섹터 바텀시트 상태
-  const [selectedSector, setSelectedSector] = useState<(typeof sectors)[number] | null>(null);
 
   return (
     <div className="min-h-full pb-6">
-      {/* 헤더 — 알림 벨 + LIVE 배지 */}
+      {/* 헤더 — 알림 벨 */}
       <header className="px-4 py-3 flex items-center justify-between">
         <motion.p
           initial={{ opacity: 0, x: -16 }}
@@ -51,11 +46,6 @@ export function Home() {
           {nickname ?? "투자자"}님,<br />{greeting.text} {greeting.emoji}
         </motion.p>
         <div className="flex items-center gap-3 shrink-0 self-start mt-1">
-          {/* LIVE 배지 */}
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FF4756]/10 border border-[#FF4756]/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4756] animate-pulse" />
-            <span className="text-[#FF4756] text-[11px] font-bold">LIVE</span>
-          </span>
           {/* 알림 벨 */}
           <button
             onClick={() => navigate("/more/notifications")}
@@ -73,6 +63,11 @@ export function Home() {
         </div>
       </Section>
 
+      {/* 섹터 등락률 랭킹 (Function 26) */}
+      <Section title="실시간 섹터 랭킹" icon={TrendingUp} className="mt-2">
+        <SectorRankingSection onSectorClick={setSelectedSector} />
+      </Section>
+
       {/* 포트폴리오 수익률 요약 (포트폴리오 있을 때만) */}
       {portfolioId && (
         <div className="px-4 mb-2">
@@ -80,44 +75,9 @@ export function Home() {
         </div>
       )}
 
-      {/* 섹터 트렌드 캐러셀 */}
-      <Section title="AI가 주목하는 섹터" icon={Flame}>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-          {isSectorsLoading
-            ? [1, 2, 3].map((i) => (
-                <HomeCardSkeleton key={i} />
-              ))
-            : sectors?.map((sector, index) => (
-                <motion.div
-                  key={sector.sectorCode}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.08 }}
-                >
-                  <HomeCard
-                    title={sector.sectorName}
-                    icon={getSectorIcon(sector.sectorName)}
-                    badge={
-                      <HomeBadge className={sector.isOverheated ? "bg-red-100 text-red-600" : ""}>
-                        {sector.isOverheated ? "⚠️ 과열" : "AI 추천"}
-                      </HomeBadge>
-                    }
-                    value={
-                      <span className={sector.fluctuationRate >= 0 ? "text-up" : "text-down"}>
-                        {formatPercent(sector.fluctuationRate)}
-                      </span>
-                    }
-                    description="AI 알고리즘 분석 결과"
-                    onTap={() => setSelectedSector(sector)}
-                  />
-                </motion.div>
-              ))}
-        </div>
-      </Section>
-
       {/* 수급 상위 섹터 */}
       <Section title="기관·외국인 수급 상위" icon={Zap}>
-        <SupplyDemandSection />
+        <SupplyDemandSection onSectorClick={setSelectedSector} />
       </Section>
 
       {/* 신규 상장 */}
@@ -125,10 +85,10 @@ export function Home() {
         <NewListingsSection />
       </Section>
 
-      {/* 섹터 바텀시트 */}
-      <SectorBottomSheet
-        sector={selectedSector}
-        onClose={() => setSelectedSector(null)}
+      {/* 섹터 상세 정보 바텀 시트 (Function 30, 31) */}
+      <SectorBottomSheet 
+        sector={selectedSector} 
+        onClose={() => setSelectedSector(null)} 
       />
     </div>
   );

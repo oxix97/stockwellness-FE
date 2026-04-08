@@ -29,10 +29,11 @@ describe("useSector Limit", () => {
     vi.clearAllMocks();
   });
 
-  it("should call getFluctuationRanking with limit 5", async () => {
+  it("should call getFluctuationRanking with limit 10", async () => {
     const mockRanking = Array.from({ length: 5 }, (_, i) => ({
       sectorCode: `S${i}`,
       sectorName: `Sector ${i}`,
+      currentPrice: 1000,
       fluctuationRate: 1.5,
       isOverheated: false,
     }));

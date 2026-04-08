@@ -18,24 +18,35 @@ describe("sectorApi", () => {
     vi.clearAllMocks();
   });
 
-  it("getFluctuationRanking — GET /v1/sectors/ranking/fluctuation 호출", async () => {
-    const mockData = { data: [] };
-    mockClient.get.mockResolvedValue(mockData);
+  it("getFluctuationRanking — GET /v1/sectors/ranking/fluctuation 호출 및 언래핑 확인", async () => {
+    const mockResponse = { 
+      code: "COMMON-200",
+      data: [
+        { sectorCode: "IT", sectorName: "정보기술", fluctuationRate: 2.5 }
+      ],
+      success: true 
+    };
+    mockClient.get.mockResolvedValue(mockResponse);
 
     const result = await sectorApi.getFluctuationRanking();
 
     expect(mockClient.get).toHaveBeenCalledWith("/v1/sectors/ranking/fluctuation", { params: undefined });
-    expect(result).toEqual(mockData);
+    // 인터셉터에서 한 번 언래핑된 mockResponse가 들어오고, API에서 data를 한 번 더 언래핑함
+    expect(result).toEqual(mockResponse.data);
   });
 
-  it("getSectorDetail — GET /v1/sectors/:code/detail 호출", async () => {
-    const mockData = { sectorCode: "IT", fluctuationRate: 2.5 };
-    mockClient.get.mockResolvedValue(mockData);
+  it("getSectorDetail — GET /v1/sectors/:code/detail 호출 및 언래핑 확인", async () => {
+    const mockResponse = {
+      code: "COMMON-200",
+      data: { sectorCode: "IT", diagnosisMessage: "긍정적" },
+      success: true
+    };
+    mockClient.get.mockResolvedValue(mockResponse);
 
     const result = await sectorApi.getSectorDetail("IT");
 
     expect(mockClient.get).toHaveBeenCalledWith("/v1/sectors/IT/detail", { params: { date: undefined } });
-    expect(result).toEqual(mockData);
+    expect(result).toEqual(mockResponse.data);
   });
 
   it("compareWithMarket — GET /v1/sectors/:code/comparison 호출", async () => {

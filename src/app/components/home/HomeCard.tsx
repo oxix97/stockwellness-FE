@@ -6,7 +6,8 @@ import { Skeleton } from "@/app/components/ui";
 /**
  * 섹션별 대표 이모지 및 아이콘 반환 유틸리티 (고도화 버전)
  */
-export const getSectorIcon = (name: string) => {
+export const getSectorIcon = (name: string | null | undefined) => {
+  if (!name) return "📊";
   const n = name.toLowerCase().replace(/\s/g, "");
   
   // IT / 기술 / 첨단산업
@@ -50,7 +51,7 @@ interface HomeCardProps extends HTMLMotionProps<"button"> {
   title: string;
   icon?: ReactNode;
   badge?: ReactNode;
-  value?: ReactNode;
+  displayValue?: ReactNode;
   description?: ReactNode;
   onTap?: () => void;
 }
@@ -62,7 +63,7 @@ export function HomeCard({
   title,
   icon,
   badge,
-  value,
+  displayValue,
   description,
   onTap,
   className,
@@ -87,9 +88,9 @@ export function HomeCard({
       <div className="w-full overflow-hidden">
         <p className="text-foreground font-bold text-base truncate">{title}</p>
         <div className="flex flex-col gap-0.5 mt-0.5">
-          {value && (
+          {displayValue && (
             <div className="text-sm font-semibold tabular-nums">
-              {value}
+              {displayValue}
             </div>
           )}
           {description && (

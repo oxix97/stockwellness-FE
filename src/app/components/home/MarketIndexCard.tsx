@@ -1,7 +1,7 @@
-import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { motion } from "motion/react";
 import { Skeleton } from "@/app/components/ui";
-import { useMarketIndex, MarketIndex } from "@/hooks/use-market-index";
+import { useMarketIndex } from "@/hooks/use-market-index";
+import { MarketIndexResult } from "@/types/api";
 
 /**
  * Task #67 — 시장 인덱스 미니카드 (KOSPI / KOSDAQ / S&P500)
@@ -38,7 +38,7 @@ export function MarketIndexSection() {
   );
 }
 
-function MarketIndexCard({ index }: { index: MarketIndex }) {
+function MarketIndexCard({ index }: { index: MarketIndexResult }) {
   const isUp = index.fluctuationRate >= 0;
   
   // 시장별 아이콘 결정 로직 (한글/영어 대응)
@@ -81,7 +81,10 @@ function MarketIndexCard({ index }: { index: MarketIndex }) {
       <div className="space-y-1">
         {/* 하단: 지수 및 등락 정보 */}
         <p className="text-foreground font-bold text-2xl tabular-nums leading-none">
-          {(index.currentPrice ?? 0).toLocaleString()}
+          {(index.currentPrice ?? 0).toLocaleString("ko-KR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </p>
 
         <p className={`text-sm font-bold tabular-nums ${isUp ? "text-up" : "text-down"}`}>
