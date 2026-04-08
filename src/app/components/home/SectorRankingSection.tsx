@@ -80,7 +80,6 @@ function RankingCard({
           {isUp ? "▲ " : "▼ "}{Math.abs(sector.fluctuationRate).toFixed(2)}%
         </span>
       }
-      description={sector.diagnosisMessage || "섹터 분석 정보를 불러오는 중..."}
     />
   );
 }

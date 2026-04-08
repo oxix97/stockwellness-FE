@@ -72,12 +72,9 @@ function NewListingCard({ stock }: { stock: NewListingStock }) {
         <span className="text-primary">{stock.marketType}</span>
       }
       description={
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] font-medium">{stock.ticker}</span>
-          {stock.sectorName && (
-            <span className="text-[10px] text-muted-foreground truncate">{stock.sectorName}</span>
-          )}
-        </div>
+        stock.sectorName && (
+          <span className="text-[10px] text-muted-foreground truncate">{stock.sectorName}</span>
+        )
       }
     />
   );

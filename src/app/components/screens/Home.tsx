@@ -64,7 +64,7 @@ export function Home() {
       </Section>
 
       {/* 섹터 등락률 랭킹 (Function 26) */}
-      <Section title="실시간 섹터 랭킹" icon={TrendingUp} className="mt-2">
+      <Section title="오늘의 업종 지수 랭킹" icon={TrendingUp} className="mt-2">
         <SectorRankingSection onSectorClick={setSelectedSector} />
       </Section>
 
