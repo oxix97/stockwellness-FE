@@ -75,7 +75,7 @@ export function CompositionTab() {
               }`}
             >
               <div className="col-span-2">
-                <p className="text-foreground font-semibold">{item.symbol}</p>
+                <p className="text-foreground font-semibold">{item.name || item.symbol}</p>
                 <p className="text-muted-foreground text-xs">{item.quantity}주</p>
               </div>
               <p className="text-right text-foreground font-medium tabular-nums">

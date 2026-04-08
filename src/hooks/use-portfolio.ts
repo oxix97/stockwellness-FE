@@ -192,12 +192,16 @@ export function usePortfolioSync() {
     try {
       const portfolios = await portfolioApi.getMyPortfolios();
       if (portfolios && portfolios.length > 0) {
-        setPortfolioId(String(portfolios[0].id));
+        const firstPortfolioId = String(portfolios[0].id);
+        setPortfolioId(firstPortfolioId);
+        return firstPortfolioId;
       } else {
         setPortfolioId(null);
+        return null;
       }
     } catch {
       setPortfolioId(null);
+      return null;
     }
   };
 

@@ -70,7 +70,7 @@ function DeviationRow({ item }: { item: RebalancingItem }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-1">
-        <p className="text-foreground font-medium text-sm">{item.symbol}</p>
+        <p className="text-foreground font-medium text-sm">{item.name || item.symbol}</p>
         <div className="flex items-center gap-2 text-xs tabular-nums">
           <span className="text-muted-foreground">목표 {item.targetWeight}%</span>
           <span
@@ -109,7 +109,7 @@ function ActionCard({ item }: { item: RebalancingItem }) {
     >
       <div>
         <p className="text-foreground font-semibold text-sm">
-          {isSell ? "📤 매도" : "📥 매수"} {item.symbol}
+          {isSell ? "📤 매도" : "📥 매수"} {item.name || item.symbol}
         </p>
         <p className="text-muted-foreground text-xs">{qty}주</p>
       </div>
