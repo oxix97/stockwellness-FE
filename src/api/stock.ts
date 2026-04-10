@@ -1,5 +1,14 @@
 import { apiClient } from "./client";
-import { StockPriceHistoryResponse, StockSearchResponse, NewListingStock, ChartPeriod, ChartFrequency, StockDetailResult } from "@/types/api";
+import {
+  StockPriceHistoryResponse,
+  StockSearchResponse,
+  NewListingStock,
+  ChartPeriod,
+  ChartFrequency,
+  StockDetailResult,
+  StockSupplyRankingParams,
+  StockSupplyRankingResponse,
+} from "@/types/api";
 
 /** 종목 수익률 응답 타입 */
 export interface StockReturnsResponse {
@@ -56,6 +65,18 @@ export const stockApi = {
   getNewListings: async (): Promise<NewListingStock[]> => {
     const data = await apiClient.get("/v1/stocks/new-listings");
     return data as unknown as NewListingStock[];
+  },
+
+  /**
+   * 종목 수급 랭킹을 조회합니다.
+   * @param params 조회 조건
+   * @returns 기관/외국인 수급 랭킹
+   */
+  getSupplyRanking: async (
+    params?: StockSupplyRankingParams
+  ): Promise<StockSupplyRankingResponse> => {
+    const data = await apiClient.get("/v1/stocks/ranking/supply", { params });
+    return data as unknown as StockSupplyRankingResponse;
   },
 
   /**

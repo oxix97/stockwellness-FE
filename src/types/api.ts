@@ -43,6 +43,43 @@ export interface MarketIndexResult {
   fluctuationAmount: number;
 }
 
+export type MarketWeatherLevel =
+  | "CLEAR"
+  | "SUNNY"
+  | "PARTLY_CLOUDY"
+  | "CLOUDY"
+  | "FOGGY"
+  | "RAINY"
+  | "STORMY";
+
+export type MarketWeatherReason =
+  | "BROAD_RALLY"
+  | "STEADY_ADVANCE"
+  | "NARROW_ADVANCE"
+  | "SIDEWAYS"
+  | "HIDDEN_WEAKNESS"
+  | "BROAD_SELL_OFF"
+  | "VOLATILE_SELL_OFF"
+  | "INDEX_ONLY_RALLY"
+  | "INDEX_ONLY_ADVANCE"
+  | "INDEX_ONLY_MIXED"
+  | "INDEX_ONLY_WEAKNESS"
+  | "INDEX_ONLY_STORM"
+  | "INDEX_ONLY_SIDEWAYS";
+
+export interface MarketWeatherResult {
+  weatherLevel: MarketWeatherLevel;
+  weatherMessage: string;
+  weatherDescription: string;
+  reasonCode: MarketWeatherReason;
+  asOfDate: string;
+}
+
+export interface MarketDashboardResult {
+  indexes: MarketIndexResult[];
+  weather: MarketWeatherResult;
+}
+
 /**
  * 주식 상세 정보 타입 (수동 보강)
  */
@@ -261,6 +298,32 @@ export type StockSearchResponse = Omit<NonNullable<components["schemas"]["api-v1
   hasNext: boolean;
   // number, last 필드는 기반 스키마에 이미 포함됨
 };
+
+export type TradeDirection = "BUY" | "SELL";
+
+export interface StockSupplyRankingItem {
+  ticker: string;
+  stockName: string;
+  sectorName: string | null;
+  currentPrice: number;
+  fluctuationRate: number;
+  netBuyingQuantity: number;
+  netBuyingAmount: number;
+  transactionAmount: number;
+}
+
+export interface StockSupplyRankingResponse {
+  requestedDate: string | null;
+  effectiveDate: string | null;
+  institutionItems: StockSupplyRankingItem[];
+  foreignItems: StockSupplyRankingItem[];
+}
+
+export interface StockSupplyRankingParams {
+  date?: string;
+  direction?: TradeDirection;
+  limit?: number;
+}
 
 /**
  * 신규 상장 종목 타입

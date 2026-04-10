@@ -135,6 +135,7 @@ VITE_APP_NAME=Stockwellness
 |---|---|
 | API 3계층 패턴 및 코드 예시 | `docs/api-layer.md` |
 | 전체 API 엔드포인트 명세 및 타입 | `docs/api-spec.md` |
+| 종목 수급 랭킹 연동 가이드 | `docs/stock-supply-ranking.md` |
 | 인증 흐름, 인터셉터, 토큰 전략 | `docs/auth.md` |
 | TanStack Query 패턴 및 Query Key | `docs/tanstack-query.md` |
 | 전체 도메인 Query Key 팩토리 목록 | `docs/query-keys.md` |
