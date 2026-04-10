@@ -1,35 +1,56 @@
 import { screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Home } from "../Home";
-import { usePortfolioSummary, usePortfolioValuation } from "@/hooks/use-portfolio";
-import { useStock } from "@/hooks/use-stock";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { MemoryRouter } from "react-router";
 import { renderWithQuery } from "@/test/test-utils";
 
 // 훅 모킹
-vi.mock("@/hooks/use-portfolio");
-vi.mock("@/hooks/use-stock");
 vi.mock("@/hooks/use-market-index");
+vi.mock("@/app/components/home/StockSupplyRankingSection", () => ({
+  StockSupplyRankingSection: () => <div>종목 수급 랭킹 섹션</div>,
+}));
+vi.mock("@/app/components/home/SectorRankingSection", () => ({
+  SectorRankingSection: () => <div>섹터 랭킹 섹션</div>,
+}));
+vi.mock("@/app/components/home/NewListingsSection", () => ({
+  NewListingsSection: () => <div>신규 상장 섹션</div>,
+}));
+vi.mock("@/app/components/home/MarketIndexCard", () => ({
+  MarketIndexSection: () => <div>시장 현황 섹션</div>,
+}));
+vi.mock("@/app/components/home/SectorBottomSheet", () => ({
+  SectorBottomSheet: () => null,
+}));
 
 describe("Home Screen", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock return values
-    (usePortfolioSummary as any).mockReturnValue({ valuation: null, isLoading: true });
-    (usePortfolioValuation as any).mockReturnValue({ data: null, isLoading: true });
-    (useStock as any).mockReturnValue({ popular: { data: [], isLoading: true }, newListings: { data: [], isLoading: true } });
-    (useMarketIndex as any).mockReturnValue({ data: [{ ticker: "0001", name: "코스피 종합", fluctuationRate: 0.8, history: [] }] });
+    (useMarketIndex as any).mockReturnValue({
+      data: {
+        indexes: [{ ticker: "0001", name: "코스피 종합", fluctuationRate: 0.8, fluctuationAmount: 10, currentPrice: 2600 }],
+        weather: {
+          weatherLevel: "SUNNY",
+          weatherMessage: "오늘의 증시는 맑음이에요",
+          weatherDescription: "주요 지수가 고르게 오르며 투자심리가 비교적 안정적인 편이에요",
+          reasonCode: "STEADY_ADVANCE",
+          asOfDate: "2026-04-08",
+        },
+      },
+      isLoading: false,
+      isError: false,
+    });
   });
 
-  it("로딩 중일 때 스켈레톤을 표시한다", () => {
+  it("홈 탭에 종목 수급 랭킹 섹션을 표시한다", () => {
     renderWithQuery(
       <MemoryRouter>
         <Home />
       </MemoryRouter>
     );
 
-    const skeletons = document.querySelectorAll(".animate-pulse");
-    expect(skeletons.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("종목 수급 랭킹 섹션")).toHaveLength(2);
+    expect(screen.getByText((content) => content.includes("오늘의 증시는 맑음이에요") && content.includes("🌤️"))).toBeInTheDocument();
+    expect(screen.getByText("주요 지수가 고르게 오르며 투자심리가 비교적 안정적인 편이에요")).toBeInTheDocument();
   });
 });
