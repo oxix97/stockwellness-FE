@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { useSector } from "@/hooks/use-sector";
-import { HomeCard, HomeCardSkeleton, getSectorIcon } from "./HomeCard";
+import { HomeCard, HomeCardSkeleton } from "./HomeCard";
 import { HomeBadge } from "./HomeListItem";
-import { formatPercent } from "@/utils/format";
+import { getSectorIcon } from "./sector-icon";
 
 const containerVariants = {
   hidden: { opacity: 0 },

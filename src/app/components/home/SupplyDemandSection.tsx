@@ -2,8 +2,9 @@ import { motion } from "motion/react";
 import { Progress } from "@/app/components/ui";
 import { useSupply } from "@/hooks/use-supply";
 import { SectorSupplyItem } from "@/types/api";
-import { HomeCard, HomeCardSkeleton, getSectorIcon } from "./HomeCard";
+import { HomeCard, HomeCardSkeleton } from "./HomeCard";
 import { HomeBadge } from "./HomeListItem";
+import { getSectorIcon } from "./sector-icon";
 
 const containerVariants = {
   hidden: { opacity: 0 },

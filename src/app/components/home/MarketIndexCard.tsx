@@ -8,6 +8,7 @@ import { MarketIndexResult } from "@/types/api";
  */
 export function MarketIndexSection() {
   const { data, isLoading } = useMarketIndex();
+  const indexes = data?.indexes;
 
   if (isLoading) {
     return (
@@ -19,11 +20,11 @@ export function MarketIndexSection() {
     );
   }
 
-  if (!data || data.length === 0) return null;
+  if (!indexes || indexes.length === 0) return null;
 
   return (
     <>
-      {data.map((index, idx) => (
+      {indexes.map((index, idx) => (
         <motion.div
           key={index.name}
           initial={{ opacity: 0, scale: 0.95 }}
