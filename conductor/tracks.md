@@ -6,8 +6,3 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [~] **Track: 주식 상세 화면의 주봉(1W) 차트 데이터 정합성 오류와 관심 종목(Watchlist) 기능의 비정상적인 동작 수정**
 *Link: [./tracks/stock_chart_watchlist_fixes_20260401/](./tracks/stock_chart_watchlist_fixes_20260401/)*
-
----
-
-- [x] **Track: @watchlist.md 파일을 구현**
-*Link: [./tracks/watchlist_api_20260411/](./tracks/watchlist_api_20260411/)*
