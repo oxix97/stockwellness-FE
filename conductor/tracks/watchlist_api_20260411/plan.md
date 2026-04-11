@@ -1,10 +1,10 @@
 # Implementation Plan: Watchlist API Integration & UI Implementation
 
-## Phase 1: API Client & Types Setup
-- [ ] Task: `src/types/api.ts`에 WatchlistGroup, WatchlistItemDetail, WatchlistItemListResponse 타입 인터페이스 정의
-- [ ] Task: `src/api/watchlist.ts`에 그룹 관리(POST, GET, PATCH, DELETE) 및 종목 관리(POST, GET, DELETE, PATCH) API 통신 로직 구현
-- [ ] Task: `docs/query-keys.md` 및 관련 파일에 Watchlist API를 위한 React Query Key Factory 정의
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: API Client & Types Setup' (Protocol in workflow.md)
+## Phase 1: API Client & Types Setup [checkpoint: a7c37ce]
+- [x] Task: `src/types/api.ts`에 WatchlistGroup, WatchlistItemDetail, WatchlistItemListResponse 타입 인터페이스 정의 5f1042f
+- [x] Task: `src/api/watchlist.ts`에 그룹 관리(POST, GET, PATCH, DELETE) 및 종목 관리(POST, GET, DELETE, PATCH) API 통신 로직 구현 5f1042f
+- [x] Task: `docs/query-keys.md` 및 관련 파일에 Watchlist API를 위한 React Query Key Factory 정의 5f1042f
+- [x] Task: Conductor - User Manual Verification 'Phase 1: API Client & Types Setup' (Protocol in workflow.md) a7c37ce
 
 ## Phase 2: Custom Hooks (useWatchlist)
 - [ ] Task: `src/hooks/use-watchlist.ts` 생성 후 그룹 관리(조회, 추가, 수정, 삭제)를 위한 `useQuery`, `useMutation` 훅 구현
