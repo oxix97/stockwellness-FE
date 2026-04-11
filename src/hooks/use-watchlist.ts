@@ -94,7 +94,7 @@ export function useWatchlist() {
   });
 
   const addItem = useMutation({
-    mutationFn: ({ groupId, body }: { groupId: number; body: AddWatchlistItemRequest }) =>
+    mutationFn: ({ groupId, body }: { groupId: number; body: AddWatchlistItemRequest & { name?: string } }) =>
       watchlistApi.addItem(groupId, body),
     onMutate: async ({ groupId, body }) => {
       await queryClient.cancelQueries({ queryKey: watchlistKeys.items(groupId) });
@@ -103,7 +103,7 @@ export function useWatchlist() {
       if (previousItems) {
         const newItem: WatchlistItemDetail = {
           ticker: body.ticker,
-          name: body.ticker, // temporary fallback
+          name: body.name || body.ticker, // temporary fallback
           currentPrice: null,
           fluctuationRate: null,
           note: body.note || "",

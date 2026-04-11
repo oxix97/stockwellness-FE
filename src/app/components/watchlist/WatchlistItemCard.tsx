@@ -159,12 +159,12 @@ export function WatchlistItemCard({
           {/* 가격 + 등락률 */}
           <div className="text-right shrink-0 ml-2">
             <p className="text-foreground font-semibold text-sm tabular-nums">
-              ₩{(stock.currentPrice ?? 0).toLocaleString()}
+              {stock.currentPrice !== null ? `₩${stock.currentPrice.toLocaleString()}` : "-"}
             </p>
             <p
-              className={`text-xs font-medium tabular-nums ${isUp ? "text-up" : "text-down"}`}
+              className={`text-xs font-medium tabular-nums ${stock.fluctuationRate !== null && stock.fluctuationRate >= 0 ? "text-up" : stock.fluctuationRate !== null ? "text-down" : "text-muted-foreground"}`}
             >
-              {formatPercent(stock.fluctuationRate ?? 0)}
+              {stock.fluctuationRate !== null ? formatPercent(stock.fluctuationRate) : "-"}
             </p>
           </div>
         </button>
@@ -181,7 +181,20 @@ export function WatchlistItemCard({
               className="overflow-hidden"
             >
               <div className="px-4 pb-4">
-                <p className="text-xs text-muted-foreground mb-1.5 font-medium">📝 나의 메모</p>
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-xs text-muted-foreground font-medium">📝 나의 메모</p>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`${stock.name} 종목을 관심 그룹에서 삭제하시겠습니까?`)) {
+                        handleDelete();
+                      }
+                    }}
+                    className="text-xs text-destructive flex items-center gap-1 hover:underline"
+                  >
+                    <X className="w-3 h-3" /> 삭제
+                  </button>
+                </div>
                 <textarea
                   value={note}
                   onChange={(e) => handleNoteChange(e.target.value)}

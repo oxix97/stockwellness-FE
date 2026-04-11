@@ -35,7 +35,7 @@ export function AddItemSheet({ groupId, existingTickers, onClose }: AddItemSheet
   const handleAdd = (ticker: string, name: string) => {
     if (isAdded(ticker)) return;
     addItem.mutate(
-      { groupId, body: { ticker } },
+      { groupId, body: { ticker, name } as any }, // casting as any to allow extra property for optimistic update
       {
         onSuccess: () => {
           setAddedInSession((prev) => [...prev, ticker]);
