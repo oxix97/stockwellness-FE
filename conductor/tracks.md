@@ -9,5 +9,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: @watchlist.md 파일을 구현**
+- [x] **Track: @watchlist.md 파일을 구현**
 *Link: [./tracks/watchlist_api_20260411/](./tracks/watchlist_api_20260411/)*
