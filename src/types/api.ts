@@ -343,19 +343,26 @@ export type HoldingStock = PortfolioItemResponse & {
 /**
  * 관심 종목 관련 타입
  */
-export type WatchlistGroup = NonNullable<components["schemas"]["api-v1-watchlist-groups15903716"]["data"]>[number];
+export interface WatchlistGroup {
+  id: number;
+  name: string;
+  itemCount: number;
+}
 
-/** 관심 종목 상세 응답 전체 */
-export type WatchlistItemsResponse = NonNullable<components["schemas"]["api-v1-watchlist-groups-groupId-items104135515"]["data"]>;
-
-/** 개별 관심 종목 (추출) */
-export type WatchlistStock = NonNullable<WatchlistItemsResponse["items"]>[number];
+export interface WatchlistItemDetail {
+  ticker: string;
+  name: string;
+  currentPrice: number | null;
+  fluctuationRate: number | null;
+  note: string;
+  rsi: number | null;
+  rsiStatus: string;
+  aiInsight: string;
+}
 
 export interface WatchlistItemListResponse {
-  /** 그룹 이름 */
   groupName: string;
-  /** 종목 리스트 */
-  items: WatchlistStock[];
+  items: WatchlistItemDetail[];
 }
 
 /** 포트폴리오 종목 간 상관관계 행렬 (ticker → ticker → 상관계수) */
