@@ -146,7 +146,7 @@ describe("AddItemSheet", () => {
 
     await waitFor(() => {
       expect(mockAddItem).toHaveBeenCalledWith(
-        { groupId: 1, body: { ticker: "005930" } },
+        { groupId: 1, body: { ticker: "005930", name: "삼성전자" } as any },
         expect.any(Object)
       );
     });

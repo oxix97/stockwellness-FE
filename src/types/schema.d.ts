@@ -340,6 +340,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/stocks/ranking/supply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 종목 수급 랭킹 조회
+         * @description 지정된 조건(매수/매도 방향)에 따라 기관과 외국인 종목 순매수량/순매도량 순위를 함께 조회합니다.
+         */
+        get: operations["stock-supply-ranking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stocks/search/history": {
         parameters: {
             query?: never;
@@ -721,6 +741,38 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
+        /** SectorSupplyResponse */
+        SectorSupplyResponse: {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            /** @description 섹터 수급 리스트 */
+            data: {
+                /** @description 기관 연속 매수 일수 */
+                instConsecutiveBuyDays: number;
+                /** @description 외국인 순매수 금액 */
+                netForeignBuyAmount: number;
+                /** @description 외국인 연속 매수 일수 */
+                foreignConsecutiveBuyDays: number;
+                /** @description 섹터 코드 */
+                sectorCode: string;
+                /** @description 기관 순매수 금액 */
+                netInstBuyAmount: number;
+                /** @description 외국인/기관 합산 순매수 금액 */
+                netTotalBuyAmount: number;
+                /** @description 섹터명 */
+                sectorName: string;
+            }[];
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
         /** SectorRankingResponse */
         SectorRankingResponse: {
             /** @description 비즈니스 상세 코드 */
@@ -738,6 +790,70 @@ export interface components {
                 /** @description 과열 여부 */
                 isOverheated: boolean;
             }[];
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
+        "api-v1-stocks-ranking-supply-555221257": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            data?: {
+                /** @description 기관 기준 종목 수급 랭킹 리스트 */
+                institutionItems: {
+                    /**
+                     * Format: int64
+                     * @description 기관 순매수 수량
+                     */
+                    netBuyingQuantity: number;
+                    /** @description 기관 순매수 금액 */
+                    netBuyingAmount: number;
+                    /** @description 티커 */
+                    ticker: string;
+                    /** @description 종목명 */
+                    stockName: string;
+                    /** @description 거래대금 */
+                    transactionAmount: number;
+                    /** @description 전일 대비 등락률 (%) */
+                    fluctuationRate: number;
+                    /** @description 기준일 종가 */
+                    currentPrice: number;
+                    /** @description 업종명 */
+                    sectorName?: string | null;
+                }[];
+                /** @description 사용자가 요청한 날짜 */
+                requestedDate?: string | null;
+                /** @description 외국인 기준 종목 수급 랭킹 리스트 */
+                foreignItems: {
+                    /**
+                     * Format: int64
+                     * @description 외국인 순매수 수량
+                     */
+                    netBuyingQuantity: number;
+                    /** @description 외국인 순매수 금액 */
+                    netBuyingAmount: number;
+                    /** @description 티커 */
+                    ticker: string;
+                    /** @description 종목명 */
+                    stockName: string;
+                    /** @description 거래대금 */
+                    transactionAmount: number;
+                    /** @description 전일 대비 등락률 (%) */
+                    fluctuationRate: number;
+                    /** @description 기준일 종가 */
+                    currentPrice: number;
+                    /** @description 업종명 */
+                    sectorName?: string | null;
+                }[];
+                /** @description 실제 랭킹 산정 기준 날짜 */
+                effectiveDate?: string | null;
+            };
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -962,22 +1078,6 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        "api-v1-stocks-popular-search-808622291": {
-            /** @description 비즈니스 상세 코드 */
-            code: string;
-            /** @description 인기 검색어 목록 */
-            data: (Record<string, never> | boolean | string | number)[];
-            /** @description 성공 여부 */
-            success: boolean;
-            /** @description 결과 메시지 */
-            message: string;
-            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
-            errors?: (Record<string, never> | boolean | string | number)[] | null;
-            /** @description 응답 시간 */
-            timestamp: string;
-            /** @description HTTP 상태 코드 */
-            status: number;
-        };
         /** LoginResponse */
         LoginResponse: {
             /** @description 비즈니스 상세 코드 */
@@ -996,6 +1096,22 @@ export interface components {
                 /** @description 리프레시 토큰 */
                 refreshToken: string;
             };
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
+        "api-v1-stocks-popular-search-808622291": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            /** @description 인기 검색어 목록 */
+            data: (Record<string, never> | boolean | string | number)[];
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -1266,22 +1382,6 @@ export interface components {
             /** @description HTTP 상태 코드 */
             status: number;
         };
-        "api-v1-watchlist-groups620445008": {
-            /** @description 비즈니스 상세 코드 */
-            code: string;
-            /** @description 생성된 그룹 ID */
-            data: number;
-            /** @description 성공 여부 */
-            success: boolean;
-            /** @description 결과 메시지 */
-            message: string;
-            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
-            errors?: (Record<string, never> | boolean | string | number)[] | null;
-            /** @description 응답 시간 */
-            timestamp: string;
-            /** @description HTTP 상태 코드 */
-            status: number;
-        };
         /** SectorDetailResponse */
         SectorDetailResponse: {
             /** @description 비즈니스 상세 코드 */
@@ -1331,6 +1431,22 @@ export interface components {
                 /** @description 과열 진단 여부 */
                 isOverheated: boolean;
             };
+            /** @description 성공 여부 */
+            success: boolean;
+            /** @description 결과 메시지 */
+            message: string;
+            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
+            errors?: (Record<string, never> | boolean | string | number)[] | null;
+            /** @description 응답 시간 */
+            timestamp: string;
+            /** @description HTTP 상태 코드 */
+            status: number;
+        };
+        "api-v1-watchlist-groups620445008": {
+            /** @description 비즈니스 상세 코드 */
+            code: string;
+            /** @description 생성된 그룹 ID */
+            data: number;
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -1450,24 +1566,24 @@ export interface components {
             /** @description 비교 대상 대표 벤치마크 티커 (예: KOSPI, SPY) */
             benchmarkTicker: string;
         };
-        /** SectorSupplyResponse */
-        SectorSupplyResponse: {
+        "api-v1-portfolios502406471": {
             /** @description 비즈니스 상세 코드 */
             code: string;
-            /** @description 섹터 수급 리스트 */
-            data: {
-                /** @description 기관 연속 매수 일수 */
-                instConsecutiveBuyDays: number;
-                /** @description 외국인 순매수 금액 */
-                netForeignBuyAmount: number;
-                /** @description 외국인 연속 매수 일수 */
-                foreignConsecutiveBuyDays: number;
-                /** @description 섹터 코드 */
-                sectorCode: string;
-                /** @description 기관 순매수 금액 */
-                netInstBuyAmount: number;
-                /** @description 섹터명 */
-                sectorName: string;
+            data?: {
+                /** @description 총 수익률 */
+                totalReturnRate: number;
+                /** @description 이름 */
+                name: string;
+                /** @description 설명 */
+                description: string;
+                /** @description 포트폴리오 ID */
+                id: number;
+                /** @description 총 매수 금액 */
+                totalPurchaseAmount: number;
+                /** @description 포트폴리오 구성 종목 목록 */
+                items: (Record<string, never> | boolean | string | number)[];
+                /** @description 총 평가 금액 */
+                currentTotalValue: number;
             }[];
             /** @description 성공 여부 */
             success: boolean;
@@ -1499,36 +1615,6 @@ export interface components {
                 /** @description 총 평가 금액 */
                 currentTotalValue: number;
             };
-            /** @description 성공 여부 */
-            success: boolean;
-            /** @description 결과 메시지 */
-            message: string;
-            /** @description 상세 필드 에러 목록 (성공 시 빈 리스트) */
-            errors?: (Record<string, never> | boolean | string | number)[] | null;
-            /** @description 응답 시간 */
-            timestamp: string;
-            /** @description HTTP 상태 코드 */
-            status: number;
-        };
-        "api-v1-portfolios502406471": {
-            /** @description 비즈니스 상세 코드 */
-            code: string;
-            data?: {
-                /** @description 총 수익률 */
-                totalReturnRate: number;
-                /** @description 이름 */
-                name: string;
-                /** @description 설명 */
-                description: string;
-                /** @description 포트폴리오 ID */
-                id: number;
-                /** @description 총 매수 금액 */
-                totalPurchaseAmount: number;
-                /** @description 포트폴리오 구성 종목 목록 */
-                items: (Record<string, never> | boolean | string | number)[];
-                /** @description 총 평가 금액 */
-                currentTotalValue: number;
-            }[];
             /** @description 성공 여부 */
             success: boolean;
             /** @description 결과 메시지 */
@@ -2125,6 +2211,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SectorDetailResponse"];
+                };
+            };
+        };
+    };
+    "stock-supply-ranking": {
+        parameters: {
+            query?: {
+                /** @description 조회 날짜 (yyyy-MM-dd) */
+                date?: string;
+                /** @description 매수/매도 방향 (BUY, SELL) */
+                direction?: string;
+                /** @description 조회 개수 (1 이상) */
+                limit?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api-v1-stocks-ranking-supply-555221257"];
                 };
             };
         };
