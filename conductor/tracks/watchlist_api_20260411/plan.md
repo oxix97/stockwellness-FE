@@ -24,3 +24,6 @@
 - [x] Task: 각 항목의 메모(Note)를 인라인 혹은 다이얼로그 형태로 수정할 수 있는 UI 통합 8fcf8c9
 - [x] Task: 카드 컴포넌트에 스와이프 혹은 액션 메뉴를 통한 종목 삭제 기능 추가 8fcf8c9
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Item List & Note Editing UI' (Protocol in workflow.md) 1b72c4a
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 4f8cbc0
