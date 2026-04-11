@@ -6,11 +6,11 @@
 - [x] Task: `docs/query-keys.md` 및 관련 파일에 Watchlist API를 위한 React Query Key Factory 정의 5f1042f
 - [x] Task: Conductor - User Manual Verification 'Phase 1: API Client & Types Setup' (Protocol in workflow.md) a7c37ce
 
-## Phase 2: Custom Hooks (useWatchlist)
-- [ ] Task: `src/hooks/use-watchlist.ts` 생성 후 그룹 관리(조회, 추가, 수정, 삭제)를 위한 `useQuery`, `useMutation` 훅 구현
-- [ ] Task: 그룹 관리에 대한 낙관적 업데이트(Optimistic Updates) 로직(`onMutate`, `onError`, `onSettled` 등) 구현
-- [ ] Task: `use-watchlist.ts`에 종목 관리(추가, 삭제) 및 메모 수정(PATCH) 훅과 낙관적 업데이트 로직 추가
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Custom Hooks (useWatchlist)' (Protocol in workflow.md)
+## Phase 2: Custom Hooks (useWatchlist) [checkpoint: b08088e]
+- [x] Task: `src/hooks/use-watchlist.ts` 생성 후 그룹 관리(조회, 추가, 수정, 삭제)를 위한 `useQuery`, `useMutation` 훅 구현 1144c70
+- [x] Task: 그룹 관리에 대한 낙관적 업데이트(Optimistic Updates) 로직(`onMutate`, `onError`, `onSettled` 등) 구현 1144c70
+- [x] Task: `use-watchlist.ts`에 종목 관리(추가, 삭제) 및 메모 수정(PATCH) 훅과 낙관적 업데이트 로직 추가 1144c70
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Custom Hooks (useWatchlist)' (Protocol in workflow.md) b08088e
 
 ## Phase 3: Watchlist UI & Bottom Sheet Navigation
 - [ ] Task: `src/app/components/watchlist/WatchlistBottomSheet.tsx` 구현하여 바텀 시트 기반의 그룹 네비게이션 적용
