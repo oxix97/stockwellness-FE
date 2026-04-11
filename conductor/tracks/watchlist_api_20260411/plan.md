@@ -12,15 +12,15 @@
 - [x] Task: `use-watchlist.ts`에 종목 관리(추가, 삭제) 및 메모 수정(PATCH) 훅과 낙관적 업데이트 로직 추가 1144c70
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Custom Hooks (useWatchlist)' (Protocol in workflow.md) b08088e
 
-## Phase 3: Watchlist UI & Bottom Sheet Navigation
-- [ ] Task: `src/app/components/watchlist/WatchlistBottomSheet.tsx` 구현하여 바텀 시트 기반의 그룹 네비게이션 적용
-- [ ] Task: 메인 Watchlist 화면(`src/app/components/screens/Watchlist.tsx`)에 바텀 시트 통합
-- [ ] Task: 그룹 생성, 이름 변경, 삭제를 처리하는 UI(`WatchlistGroupManager.tsx` 또는 관련 컴포넌트) 구현
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Watchlist UI & Bottom Sheet Navigation' (Protocol in workflow.md)
+## Phase 3: Watchlist UI & Bottom Sheet Navigation [checkpoint: 1b72c4a]
+- [x] Task: `src/app/components/watchlist/WatchlistBottomSheet.tsx` 구현하여 바텀 시트 기반의 그룹 네비게이션 적용 8fcf8c9
+- [x] Task: 메인 Watchlist 화면(`src/app/components/screens/Watchlist.tsx`)에 바텀 시트 통합 8fcf8c9
+- [x] Task: 그룹 생성, 이름 변경, 삭제를 처리하는 UI(`WatchlistGroupManager.tsx` 또는 관련 컴포넌트) 구현 8fcf8c9
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Watchlist UI & Bottom Sheet Navigation' (Protocol in workflow.md) 1b72c4a
 
-## Phase 4: Item List & Note Editing UI
-- [ ] Task: 개별 종목 정보(티커, 가격, RSI, AI 인사이트, 메모)를 렌더링하는 `WatchlistItemCard.tsx` 컴포넌트 구현
-- [ ] Task: 선택된 활성 그룹의 종목 리스트를 렌더링하도록 메인 Watchlist 화면 업데이트
-- [ ] Task: 각 항목의 메모(Note)를 인라인 혹은 다이얼로그 형태로 수정할 수 있는 UI 통합
-- [ ] Task: 카드 컴포넌트에 스와이프 혹은 액션 메뉴를 통한 종목 삭제 기능 추가
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Item List & Note Editing UI' (Protocol in workflow.md)
+## Phase 4: Item List & Note Editing UI [checkpoint: 1b72c4a]
+- [x] Task: 개별 종목 정보(티커, 가격, RSI, AI 인사이트, 메모)를 렌더링하는 `WatchlistItemCard.tsx` 컴포넌트 구현 8fcf8c9
+- [x] Task: 선택된 활성 그룹의 종목 리스트를 렌더링하도록 메인 Watchlist 화면 업데이트 8fcf8c9
+- [x] Task: 각 항목의 메모(Note)를 인라인 혹은 다이얼로그 형태로 수정할 수 있는 UI 통합 8fcf8c9
+- [x] Task: 카드 컴포넌트에 스와이프 혹은 액션 메뉴를 통한 종목 삭제 기능 추가 8fcf8c9
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Item List & Note Editing UI' (Protocol in workflow.md) 1b72c4a
