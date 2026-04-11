@@ -4,18 +4,22 @@ import { renderHookWithQuery } from "@/test/test-utils";
 import { makeWatchlistGroup, makeWatchlistItems } from "@/test/fixtures";
 import { useWatchlist } from "../use-watchlist";
 
-vi.mock("@/api/watchlist", () => ({
-  watchlistApi: {
-    getGroups: vi.fn(),
-    getItems: vi.fn(),
-    createGroup: vi.fn(),
-    addItem: vi.fn(),
-    removeItem: vi.fn(),
-    updateItemNote: vi.fn(),
-    updateGroupName: vi.fn(),
-    deleteGroup: vi.fn(),
-  },
-}));
+vi.mock("@/api/watchlist", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api/watchlist")>();
+  return {
+    ...actual,
+    watchlistApi: {
+      getGroups: vi.fn(),
+      getItems: vi.fn(),
+      createGroup: vi.fn(),
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      updateItemNote: vi.fn(),
+      updateGroupName: vi.fn(),
+      deleteGroup: vi.fn(),
+    },
+  };
+});
 
 import { watchlistApi } from "@/api/watchlist";
 
