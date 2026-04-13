@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
 import { SuccessEnvelope } from "@/types/api";
 
@@ -107,7 +108,6 @@ apiClient.interceptors.response.use(
 
     // 403 에러 처리: 접근 권한 없음 (PortfolioAccessDeniedException)
     if (error.response?.status === 403) {
-      const { toast } = await import("sonner");
       toast.error("접근 권한이 없습니다.");
     }
 
