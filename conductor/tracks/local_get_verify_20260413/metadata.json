@@ -1,0 +1,8 @@
+{
+  "track_id": "local_get_verify_20260413",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-04-13T00:00:00Z",
+  "updated_at": "2026-04-13T00:00:00Z",
+  "description": "로컬 서버와 백엔드 서버를 현제 로컬에서 연동중이야. 실제 Controller들을 GET 방식으로 호출하고 정상 응답하는지 검토하려고해."
+}
