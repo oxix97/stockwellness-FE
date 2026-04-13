@@ -8,28 +8,30 @@
   "backendUrl": "http://localhost:8080",
   "originalPortfolioItems": [
     {
-      "symbol": "005930",
-      "quantity": 10,
-      "purchasePrice": 70000,
-      "currentPrice": 175800,
+      "symbol": "000660",
+      "name": "SK하이닉스",
+      "quantity": 1,
+      "purchasePrice": 930000,
+      "currentPrice": 1027000,
       "currency": "KRW",
       "assetType": "STOCK",
-      "purchaseAmount": 700000,
-      "currentValue": 1758000,
-      "returnRate": 151.14,
-      "targetWeight": 60
+      "purchaseAmount": 930000,
+      "currentValue": 1027000,
+      "returnRate": 10.43,
+      "targetWeight": 0
     },
     {
-      "symbol": "000660",
-      "quantity": 5,
-      "purchasePrice": 130000,
-      "currentPrice": 874000,
+      "symbol": "005930",
+      "name": "삼성전자",
+      "quantity": 1,
+      "purchasePrice": 186300,
+      "currentPrice": 206000,
       "currency": "KRW",
       "assetType": "STOCK",
-      "purchaseAmount": 650000,
-      "currentValue": 4370000,
-      "returnRate": 572.31,
-      "targetWeight": 40
+      "purchaseAmount": 186300,
+      "currentValue": 206000,
+      "returnRate": 10.57,
+      "targetWeight": 0
     }
   ],
   "portfolioName": "포트폴리오 테스트",

@@ -2,16 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { waitFor, act } from "@testing-library/react";
 import { renderHookWithQuery, setAuthState, clearAuthState } from "@/test/test-utils";
 import { useBacktest, usePortfolioSimulation, sliceByPeriod, computeMetrics, Period } from "../use-backtest";
-import type { BacktestResponse } from "@/types/api";
+import type { BacktestResponse, PortfolioInceptionChartResponse } from "@/types/api";
 
 vi.mock("@/api/portfolio", () => ({
   portfolioApi: {
     runBacktest: vi.fn(),
+    getInceptionChart: vi.fn(),
   },
 }));
 
 import { portfolioApi } from "@/api/portfolio";
 const mockRunBacktest = portfolioApi.runBacktest as ReturnType<typeof vi.fn>;
+const mockGetInceptionChart = portfolioApi.getInceptionChart as ReturnType<typeof vi.fn>;
 
 /** 거래일 N일치 더미 백테스트 결과 생성 */
 function makeDailyResults(n: number): BacktestResponse["dailyResults"] {
@@ -218,12 +220,16 @@ describe("usePortfolioSimulation", () => {
     // clearAuthState 후 portfolioId 없음
     const { result } = renderHookWithQuery(() => usePortfolioSimulation("1Y"));
     expect(result.current.data).toBeUndefined();
-    expect(mockRunBacktest).not.toHaveBeenCalled();
+    expect(mockGetInceptionChart).not.toHaveBeenCalled();
   });
 
   it("portfolioId 있으면 자동 조회", async () => {
-    const dailyResults = makeDailyResults(5);
-    mockRunBacktest.mockResolvedValue({ dailyResults });
+    const dailyResults: PortfolioInceptionChartResponse["dailyResults"] = Array.from({ length: 5 }, (_, i) => ({
+      date: `2025-01-${String(i + 1).padStart(2, "0")}`,
+      portfolioReturnRate: i * 0.1,
+      benchmarkReturnRates: { "2001": i * 0.05 },
+    }));
+    mockGetInceptionChart.mockResolvedValue({ portfolioInceptionDate: "2025-01-01", dailyResults, comparisons: [] });
     setAuthState({ portfolioId: "1" });
 
     const { result } = renderHookWithQuery(() => usePortfolioSimulation("1Y"));
@@ -233,8 +239,12 @@ describe("usePortfolioSimulation", () => {
   });
 
   it("period 변경 시 동일 queryKey — API 재호출 없이 클라이언트 필터링", async () => {
-    const dailyResults = makeDailyResults(30);
-    mockRunBacktest.mockResolvedValue({ dailyResults });
+    const dailyResults: PortfolioInceptionChartResponse["dailyResults"] = Array.from({ length: 30 }, (_, i) => ({
+      date: `2025-01-${String(i + 1).padStart(2, "0")}`,
+      portfolioReturnRate: i * 0.1,
+      benchmarkReturnRates: { "2001": i * 0.05 },
+    }));
+    mockGetInceptionChart.mockResolvedValue({ portfolioInceptionDate: "2025-01-01", dailyResults, comparisons: [] });
     setAuthState({ portfolioId: "1" });
 
     // 1Y로 첫 조회
@@ -249,6 +259,6 @@ describe("usePortfolioSimulation", () => {
     await waitFor(() => expect(result.current.data).toBeDefined());
 
     // API는 최초 1번만 호출
-    expect(mockRunBacktest).toHaveBeenCalledTimes(1);
+    expect(mockGetInceptionChart).toHaveBeenCalledTimes(1);
   });
 });

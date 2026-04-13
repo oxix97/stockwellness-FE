@@ -49,6 +49,7 @@ export function makeDiversification(overrides?: Partial<PortfolioDiversification
 export function makeRebalancingItem(overrides?: Partial<RebalancingItem>): RebalancingItem {
   return {
     symbol: "005930",
+    name: "삼성전자",
     currentWeight: 55,
     targetWeight: 50,
     diffWeight: 5,
@@ -86,11 +87,15 @@ export function makePortfolio(overrides?: Partial<PortfolioResponse>): Portfolio
     items: [
       {
         symbol: "005930",
+        name: "삼성전자",
         quantity: 10,
         purchasePrice: 70_000,
+        currentPrice: 75_000,
         currency: "KRW",
         assetType: "STOCK",
         purchaseAmount: 700_000,
+        currentValue: 750_000,
+        returnRate: 7.1,
         targetWeight: 50,
       },
     ],
