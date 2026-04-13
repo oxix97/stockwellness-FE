@@ -49,11 +49,13 @@ export const stockApi = {
    * 검색어로 주식 종목을 검색합니다.
    * @param keyword 검색어 (종목명 또는 티커)
    * @param page 페이지 번호 (0부터 시작)
+   * @param sectorCode 업종 코드 (필요 시)
+   * @param sectorName 업종명 (필요 시, 코스피/코스닥 통합 검색용)
    * @returns 검색 결과 리스트 (Slice 형태)
    */
-  search: async (keyword: string, page = 0): Promise<StockSearchResponse> => {
+  search: async (keyword: string, page = 0, sectorCode?: string, sectorName?: string): Promise<StockSearchResponse> => {
     const data = await apiClient.get<StockSearchResponse>("/v1/stocks/search", {
-      params: { keyword, page, size: 20 },
+      params: { keyword, page, sectorCode, sectorName, size: 20 },
     });
     return data as unknown as StockSearchResponse;
   },

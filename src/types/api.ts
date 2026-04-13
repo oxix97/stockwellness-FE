@@ -107,7 +107,8 @@ export type DiagnosisResponse = Omit<NonNullable<components["schemas"]["api-v1-p
 export interface AnalysisSummaryResponse {
   valuation: PortfolioValuationResponse;
   diversification: PortfolioDiversificationResponse;
-  advice?: AdviceResponse | null;
+  rebalancing: PortfolioRebalancingResponse;
+  itemContributions: Record<string, number>;
 }
 
 /**
@@ -159,9 +160,7 @@ export type CountryRatio = NonNullable<PortfolioDiversificationResponse["country
 export type PortfolioRebalancingResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-rebalancing1494527279"]["data"]>;
 
 /** 리밸런싱 아이템 정보 (추출) */
-export type RebalancingItem = NonNullable<PortfolioRebalancingResponse["items"]>[number] & {
-  name?: string;
-};
+export type RebalancingItem = NonNullable<PortfolioRebalancingResponse["items"]>[number];
 
 export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
 
@@ -170,12 +169,15 @@ export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
  */
 export interface PortfolioItemResponse {
   symbol: string;
-  name?: string;
+  name: string;
   quantity: number;
   purchasePrice: number;
+  currentPrice?: number;
   currency: string;
   assetType: AssetType;
   purchaseAmount: number;
+  currentValue?: number;
+  returnRate?: number;
   targetWeight: number;
 }
 
@@ -250,6 +252,24 @@ export interface BacktestRequest {
 export type BacktestDailyResult = NonNullable<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest-1617317571"]["data"]>["dailyResults"]>[number];
 
 export type BacktestResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest-1617317571"]["data"]>;
+
+export interface InceptionChartDailyResult {
+  date: string;
+  portfolioReturnRate: number;
+  benchmarkReturnRates: Record<string, number>;
+}
+
+export interface InceptionChartComparison {
+  indexName: string;
+  ticker: string;
+  totalReturn: number;
+}
+
+export interface PortfolioInceptionChartResponse {
+  portfolioInceptionDate: string;
+  dailyResults: InceptionChartDailyResult[];
+  comparisons: InceptionChartComparison[];
+}
 
 /**
  * 주가 데이터 관련 타입
