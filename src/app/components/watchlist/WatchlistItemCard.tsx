@@ -21,11 +21,11 @@ type RsiStatus = "OVERBOUGHT" | "OVERSOLD" | "NEUTRAL" | string;
 function getRsiBadgeStyle(status: RsiStatus) {
   switch (status) {
     case "OVERBOUGHT":
-      return { className: "bg-amber-50 border-amber-200 text-amber-700", label: "과매수" };
+      return { className: "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/12 dark:border-amber-400/20 dark:text-amber-200", label: "과매수" };
     case "OVERSOLD":
-      return { className: "bg-green-50 border-green-200 text-green-700", label: "과매도" };
+      return { className: "bg-green-50 border-green-200 text-green-700 dark:bg-emerald-500/12 dark:border-emerald-400/20 dark:text-emerald-200", label: "과매도" };
     default:
-      return { className: "bg-gray-100 border-gray-200 text-gray-600", label: "중립" };
+      return { className: "bg-gray-100 border-gray-200 text-gray-600 dark:bg-secondary dark:border-border dark:text-muted-foreground", label: "중립" };
   }
 }
 
@@ -122,50 +122,57 @@ export function WatchlistItemCard({
         className="bg-card"
       >
         {/* 기본 행 — 높이 72px 고정 */}
-        <button
-          onClick={onToggleExpand}
-          className="w-full flex items-center justify-between px-4 h-[72px] text-left"
-        >
+        <button onClick={onToggleExpand} className="w-full px-4 py-4 text-left">
           {/* 로고 + 종목 정보 */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/stock/${stock.ticker}`);
-              }}
-              className="w-10 h-10 shrink-0 bg-primary/10 rounded-xl flex items-center justify-center"
-            >
-              <span className="text-primary font-bold text-sm">{stock.name[0]}</span>
-            </div>
-            <div className="min-w-0">
-              <p className="text-foreground font-semibold text-sm truncate">{stock.name}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                {stock.aiInsight && (
-                  <p className="text-muted-foreground text-[11px] truncate max-w-[120px]">
-                    {stock.aiInsight}
-                  </p>
-                )}
-                {stock.rsiStatus && (
-                  <span
-                    className={`text-[10px] border rounded-full px-1.5 py-0.5 font-medium shrink-0 ${rsiStyle.className}`}
-                  >
-                    {rsiStyle.label}
-                  </span>
-                )}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/stock/${stock.ticker}`);
+                }}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-primary/10"
+              >
+                <span className="text-primary font-bold text-sm">{stock.name[0]}</span>
               </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-semibold text-foreground">{stock.name}</p>
+                  {stock.rsiStatus && (
+                    <span
+                      className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${rsiStyle.className}`}
+                    >
+                      {rsiStyle.label}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{stock.ticker}</p>
+              </div>
+            </div>
+
+            {/* 가격 + 등락률 */}
+            <div className="ml-2 shrink-0 text-right">
+              <p className="text-sm font-semibold text-foreground tabular-nums">
+                {stock.currentPrice !== null ? `₩${stock.currentPrice.toLocaleString()}` : "-"}
+              </p>
+              <p
+                className={`text-xs font-medium tabular-nums ${stock.fluctuationRate !== null && stock.fluctuationRate >= 0 ? "text-up" : stock.fluctuationRate !== null ? "text-down" : "text-muted-foreground"}`}
+              >
+                {stock.fluctuationRate !== null ? formatPercent(stock.fluctuationRate) : "-"}
+              </p>
             </div>
           </div>
 
-          {/* 가격 + 등락률 */}
-          <div className="text-right shrink-0 ml-2">
-            <p className="text-foreground font-semibold text-sm tabular-nums">
-              {stock.currentPrice !== null ? `₩${stock.currentPrice.toLocaleString()}` : "-"}
-            </p>
-            <p
-              className={`text-xs font-medium tabular-nums ${stock.fluctuationRate !== null && stock.fluctuationRate >= 0 ? "text-up" : stock.fluctuationRate !== null ? "text-down" : "text-muted-foreground"}`}
-            >
-              {stock.fluctuationRate !== null ? formatPercent(stock.fluctuationRate) : "-"}
-            </p>
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-secondary/65 px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">AI Signal</p>
+              <p className="mt-1 truncate text-[11px] text-foreground/80">
+                {stock.aiInsight || "아직 AI 요약이 없습니다. 메모와 함께 관찰하세요."}
+              </p>
+            </div>
+            <span className="rounded-full border border-border/60 bg-card px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+              {isExpanded ? "열림" : "탭해 확장"}
+            </span>
           </div>
         </button>
 

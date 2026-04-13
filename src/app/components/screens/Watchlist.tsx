@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
-import { Plus, Search, ChevronDown } from "lucide-react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import { Plus, ChevronDown, Sparkles, FolderTree, Radar, TriangleAlert } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner";
 import { useWatchlist } from "@/hooks/use-watchlist";
-import { Skeleton } from "@/app/components/ui";
+import { Button, Skeleton } from "@/app/components/ui";
+import { ContextHeader, GardenEmptyState, Section } from "@/app/components/shared";
 import { WatchlistItemCard } from "@/app/components/watchlist/WatchlistItemCard";
 import { AddItemSheet } from "@/app/components/watchlist/AddItemSheet";
 import { WatchlistBottomSheet } from "@/app/components/watchlist/WatchlistBottomSheet";
-import { toast } from "sonner";
 
 export function Watchlist() {
   const { groups, useGroupItems, createGroup, updateGroupName, deleteGroup } = useWatchlist();
@@ -31,6 +32,9 @@ export function Watchlist() {
     if (!itemsQuery.dataUpdatedAt) return null;
     return new Date(itemsQuery.dataUpdatedAt);
   }, [itemsQuery.dataUpdatedAt]);
+
+  const aiInsightCount = stocks.filter((stock) => Boolean(stock.aiInsight)).length;
+  const cautionCount = stocks.filter((stock) => stock.rsiStatus === "OVERBOUGHT" || stock.rsiStatus === "OVERSOLD").length;
 
   const handleCreateGroup = (name: string) => {
     createGroup.mutate(name, {
@@ -59,56 +63,109 @@ export function Watchlist() {
   };
 
   return (
-    <div className="min-h-full pb-6 relative">
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-        {groups.isLoading ? (
-          <Skeleton className="h-8 w-32 rounded-lg" />
-        ) : (
-          <button
-            onClick={() => setIsGroupSheetOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 -ml-3 rounded-xl hover:bg-secondary active:scale-[0.98] transition-all"
-          >
-            <span className="text-xl font-bold text-foreground">{activeGroupName}</span>
-            <ChevronDown className="w-5 h-5 text-muted-foreground" />
-          </button>
-        )}
+    <div className="min-h-full pb-8">
+      <div className="px-4 pt-4">
+        <ContextHeader
+          variant="watch"
+          eyebrow="Watch Garden"
+          title={
+            <div>
+              <button
+                onClick={() => setIsGroupSheetOpen(true)}
+                className="flex items-center gap-2 rounded-2xl border border-border/60 bg-card/70 px-3 py-2 text-left"
+              >
+                <span className="text-[28px] font-bold leading-tight tracking-tight text-foreground">{activeGroupName}</span>
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+          }
+          description="지금 점검할 종목을 먼저 보여주고, 필요할 때 메모와 AI 인사이트를 열어 깊게 확인할 수 있게 구성했습니다."
+          actions={
+            <Button onClick={() => setIsAddSheetOpen(true)} className="rounded-2xl">
+              <Plus className="h-4 w-4" />
+              종목 추가
+            </Button>
+          }
+          ornament={
+            <div className="absolute bottom-4 right-4 flex gap-2">
+              <div className="rounded-2xl border border-border/50 bg-card/72 px-3 py-2 backdrop-blur-sm">
+                <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  <Radar className="h-3 w-3 text-primary" />
+                  Monitor
+                </div>
+                <p className="mt-1 text-sm font-bold text-foreground">{aiInsightCount} signals</p>
+              </div>
+            </div>
+          }
+          footer={
+            <div className="grid grid-cols-3 gap-2">
+              <SummaryChip label="종목 수" value={`${stocks.length}개`} />
+              <SummaryChip label="AI 인사이트" value={`${aiInsightCount}개`} />
+              <SummaryChip label="주의 신호" value={`${cautionCount}개`} icon={<TriangleAlert className="h-3 w-3 text-amber-500" />} />
+            </div>
+          }
+        />
       </div>
 
-      <div className="px-4">
-        {itemsQuery.isLoading ? (
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="px-4 py-4 border-b border-border last:border-0">
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ))}
-          </div>
-        ) : stocks.length > 0 ? (
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
-            {stocks.map((stock, index) => (
-              <WatchlistItemCard
-                key={stock.ticker}
-                stock={stock}
-                groupId={activeGroup!}
-                isLast={index === stocks.length - 1}
-                isExpanded={expandedTicker === stock.ticker}
-                onToggleExpand={() => handleToggleExpand(stock.ticker)}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState onAdd={() => setIsAddSheetOpen(true)} hasGroup={!!activeGroup} />
-        )}
-      </div>
+      <Section
+        title="오늘 체크할 종목"
+        subtitle="AI 코멘트와 RSI 신호를 함께 보면서 확장형 카드로 관리합니다."
+        icon={Sparkles}
+        className="pt-6"
+      >
+        <div className="px-0">
+          {itemsQuery.isLoading ? (
+            <div className="overflow-hidden rounded-[28px] border border-border bg-card">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="border-b border-border px-4 py-4 last:border-0">
+                  <Skeleton className="h-14 w-full" />
+                </div>
+              ))}
+            </div>
+          ) : stocks.length > 0 ? (
+            <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+              {stocks.map((stock, index) => (
+                <WatchlistItemCard
+                  key={stock.ticker}
+                  stock={stock}
+                  groupId={activeGroup!}
+                  isLast={index === stocks.length - 1}
+                  isExpanded={expandedTicker === stock.ticker}
+                  onToggleExpand={() => handleToggleExpand(stock.ticker)}
+                />
+              ))}
+            </div>
+          ) : (
+            <GardenEmptyState
+              title="아직 이 정원에 심은 종목이 없어요"
+              description="관심 종목을 추가하면 RSI 신호와 AI 한줄 인사이트를 함께 쌓아가며 관리할 수 있습니다."
+              actionLabel="첫 종목 추가"
+              onAction={() => setIsAddSheetOpen(true)}
+            />
+          )}
+        </div>
+      </Section>
 
       {lastUpdatedAt && stocks.length > 0 && (
-        <p className="text-muted-foreground text-xs text-center mt-4 mb-2">
-          마지막 업데이트:{" "}
-          {lastUpdatedAt.toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
+        <Section
+          title="그룹 관리"
+          subtitle="관심 그룹 전환과 수정은 아래 시트에서 한 번에 처리합니다."
+          icon={FolderTree}
+          className="pb-4"
+          rightContent={
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setIsGroupSheetOpen(true)}>
+              그룹 편집
+            </Button>
+          }
+        >
+          <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+            마지막 업데이트:{" "}
+            {lastUpdatedAt.toLocaleTimeString("ko-KR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </div>
+        </Section>
       )}
 
       <AnimatePresence>
@@ -119,9 +176,9 @@ export function Watchlist() {
             exit={{ scale: 0, opacity: 0, y: 20 }}
             onClick={() => setIsAddSheetOpen(true)}
             aria-label="종목 추가"
-            className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/20 flex items-center justify-center z-40"
+            className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20"
           >
-            <Plus className="w-7 h-7" />
+            <Plus className="h-7 w-7" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -155,33 +212,14 @@ export function Watchlist() {
   );
 }
 
-function EmptyState({ onAdd, hasGroup }: { onAdd: () => void; hasGroup: boolean }) {
+function SummaryChip({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center py-20 text-center"
-    >
-      <div className="text-5xl mb-5">📊</div>
-      <p className="text-foreground font-semibold text-base mb-2">
-        관심 종목을 추가해<br />AI 진단을 받아보세요
-      </p>
-      <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-        RSI 뱃지와 AI 한줄 분석이<br />매일 자동으로 업데이트됩니다
-      </p>
-      <button
-        onClick={() => {
-          if (hasGroup) {
-            onAdd();
-          } else {
-            document.querySelector<HTMLButtonElement>('[aria-label="검색"]')?.click();
-          }
-        }}
-        className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold text-sm"
-      >
-        <Search className="w-4 h-4" />
-        첫 종목 추가하기
-      </button>
-    </motion.div>
+    <div className="rounded-2xl border border-border/60 bg-card/70 px-3 py-3">
+      <div className="flex items-center gap-1">
+        {icon}
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      </div>
+      <p className="mt-1 text-sm font-bold text-foreground">{value}</p>
+    </div>
   );
 }
