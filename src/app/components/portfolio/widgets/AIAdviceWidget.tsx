@@ -70,33 +70,45 @@ export function AIAdviceWidget() {
   };
 
   return (
-    <div className="bg-card rounded-2xl p-5 border border-border space-y-4">
+    <div className="relative overflow-hidden rounded-[28px] border border-primary/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] p-5 space-y-4">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/12 blur-2xl" />
+        <div className="absolute right-6 top-5 h-14 w-14 rounded-full border border-primary/10" />
+      </div>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="relative z-10 flex items-center gap-2">
           <div className="bg-primary/10 p-1.5 rounded-lg">
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <span className="font-bold text-sm">AI 포트폴리오 진단</span>
         </div>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="relative z-10 text-[10px] text-muted-foreground">
           업데이트: {format(new Date(advice.createdAt), "yyyy.MM.dd HH:mm")}
         </span>
       </div>
 
-      <div className="space-y-3">
+      <div className="relative z-10 space-y-3">
         <div className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-bold ${getActionStyles(advice.action)}`}>
           {advice.action}
         </div>
-        
-        <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 p-4 rounded-xl border border-border/50">
-          {advice.content}
+
+        <div className="grid grid-cols-[1fr_auto] gap-3 rounded-2xl border border-border/50 bg-card/80 p-4">
+          <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+            {advice.content}
+          </div>
+          <div className="hidden sm:flex flex-col items-end justify-between">
+            <div className="rounded-full border border-border/60 bg-secondary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Strategy
+            </div>
+            <BrainCircuit className="h-5 w-5 text-primary/70" />
+          </div>
         </div>
       </div>
 
       <Button
         variant="ghost"
         size="sm"
-        className="w-full text-xs text-muted-foreground hover:text-primary h-9 gap-2 transition-colors"
+        className="relative z-10 w-full text-xs text-muted-foreground hover:text-primary h-9 gap-2 transition-colors"
         onClick={handleRefresh}
         disabled={createAdviceMutation.isPending}
       >

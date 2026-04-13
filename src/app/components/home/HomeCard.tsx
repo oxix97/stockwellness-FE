@@ -32,7 +32,7 @@ export function HomeCard({
       whileTap={{ scale: 0.98 }}
       onClick={onTap}
       className={cn(
-        "relative w-full min-w-[240px] overflow-hidden rounded-2xl border p-4 text-left",
+        "relative w-full min-w-[240px] overflow-hidden rounded-[24px] border p-4 text-left",
         "border-border/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.94))]",
         "shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)]",
         "dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(28,28,30,0.98),rgba(18,18,20,0.94))]",
@@ -78,7 +78,7 @@ export function HomeCard({
  */
 export function HomeCardSkeleton() {
   return (
-    <div className="relative min-w-[240px] h-[150px] overflow-hidden rounded-2xl border border-border/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.94))] p-4 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(28,28,30,0.98),rgba(18,18,20,0.94))] dark:shadow-[0_14px_30px_-20px_rgba(0,0,0,0.6)] flex flex-col justify-between">
+    <div className="relative min-w-[240px] h-[150px] overflow-hidden rounded-[24px] border border-border/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.94))] p-4 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(28,28,30,0.98),rgba(18,18,20,0.94))] dark:shadow-[0_14px_30px_-20px_rgba(0,0,0,0.6)] flex flex-col justify-between">
       <div className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent dark:via-white/12" />
       <div className="flex items-start justify-between">
         <Skeleton className="h-9 w-9 rounded-xl bg-black/5 dark:bg-white/8" />

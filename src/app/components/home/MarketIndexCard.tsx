@@ -77,7 +77,7 @@ function MarketIndexCard({ index }: { index: MarketIndexResult }) {
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-xl shadow-inner shrink-0">
           {getIndexIcon(index.name)}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-foreground font-bold text-base truncate">
             {index.name}
           </p>
