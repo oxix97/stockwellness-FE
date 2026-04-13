@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter } from "react-router";
 import { Layout } from "@/app/components/Layout";
 import { ProtectedRoute } from "@/app/components/shared/ProtectedRoute";
 

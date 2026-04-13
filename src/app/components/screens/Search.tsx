@@ -9,23 +9,38 @@ import { Section, StockLogo } from "@/app/components/shared";
 import { StockSearchResult } from "@/types/api";
 
 export function Search() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialKeyword = searchParams.get("keyword") || "";
+  const initialSectorCode = searchParams.get("sectorCode") || "";
+  const initialSectorName = searchParams.get("sectorName") || "";
   
   const {
     keyword,
     setKeyword,
+    sectorCode,
+    setSectorCode,
+    sectorName,
+    setSectorName,
     popular,
     history,
     autocomplete,
     deleteHistory,
     clearHistory
-  } = useSearch(initialKeyword);
+  } = useSearch(initialKeyword, initialSectorCode, initialSectorName);
 
   const { data: searchResults, isLoading: isSearching, fetchNextPage, hasNextPage, isFetchingNextPage } = autocomplete;
   const { ref, inView } = useInView();
 
   const results = searchResults?.pages.flatMap(page => page.content) || [];
+
+  const handleClearSector = () => {
+    setSectorCode("");
+    setSectorName("");
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("sectorCode");
+    newParams.delete("sectorName");
+    setSearchParams(newParams);
+  };
 
   // 무한 스크롤 트리거
   useEffect(() => {
@@ -47,7 +62,7 @@ export function Search() {
             type="text"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="종목명 또는 종목코드 검색"
+            placeholder={initialSectorName ? `${initialSectorName} 내 종목 검색` : "종목명 또는 종목코드 검색"}
             className="w-full pl-12 pr-10 py-4 bg-secondary rounded-2xl border-0 focus:ring-2 focus:ring-primary outline-none transition-all font-bold"
           />
           {keyword.length > 0 && (
@@ -59,10 +74,24 @@ export function Search() {
             </button>
           )}
         </div>
+        {(sectorCode || sectorName) && (
+          <div className="flex items-center gap-2 mt-3 overflow-x-auto scrollbar-hide">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shrink-0"
+            >
+              <span>업종: {sectorName || sectorCode}</span>
+              <button onClick={handleClearSector}>
+                <X className="w-3 h-3" />
+              </button>
+            </motion.div>
+          </div>
+        )}
       </div>
 
       <div className="px-6 py-6 space-y-6">
-        {keyword.length >= 2 ? (
+        {keyword.length >= 2 || ((sectorCode || sectorName) && keyword.length >= 0) ? (
           <SearchResultsList 
             results={results} 
             isLoading={isSearching} 

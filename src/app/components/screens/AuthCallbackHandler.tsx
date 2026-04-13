@@ -9,6 +9,7 @@ interface JwtPayload {
   sub: string;       // memberId
   email?: string;
   nickname?: string;
+  createdAt?: string;
 }
 
 const CALLBACK_ERROR_MESSAGES: Record<string, string> = {
@@ -59,7 +60,7 @@ export function AuthCallbackHandler() {
           nickname: decoded.nickname || "사용자",
           accessToken,
           refreshToken,
-          joinedDate: null,
+          joinedDate: decoded.createdAt || null,
         });
 
         const portfolioId = await syncPortfolio();

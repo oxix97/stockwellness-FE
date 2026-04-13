@@ -36,35 +36,34 @@ export function useSector(limit = 10) {
   // 랭킹 데이터가 배열인지 확인 (API 레이어에서 언래핑하나 타입 안전성 위해 체크)
   const rankingList = Array.isArray(ranking.data) ? ranking.data : [];
 
-  // 랭킹 데이터에 상세 진단 메시지와 주도주 정보를 결합
-  // 개별 detail 쿼리 실패 시에도 랭킹 데이터는 유지하고 부분 데이터를 반환
-  const combinedData =
-    rankingList.map((item, index) => {
-      const detail = details[index];
-      const isDetailError = detail?.isError ?? false;
-      const detailData = detail?.data;
+  // 1. 등락률 랭킹 아이템과 상세 정보를 매핑
+  const combinedData = rankingList.map((item, index) => {
+    const detail = details[index];
+    const isDetailError = detail?.isError ?? false;
+    const detailData = detail?.data;
 
-      return {
-        ...item,
-        // UI 컴포넌트 편의를 위해 필드명 통일 (ranking은 fluctuationRate, detail도 fluctuationRate)
-        fluctuationRate: item.fluctuationRate ?? 0,
-        diagnosisMessage: isDetailError
-          ? "진단 정보를 불러오지 못했습니다."
-          : detailData?.diagnosisMessage ?? "",
-        leadingStocks: isDetailError
-          ? []
-          : detailData?.leadingStocks ?? [],
-        technicalIndicators: isDetailError
-          ? null
-          : detailData?.technicalIndicators ?? null,
-        detailLoading: detail?.isLoading ?? false,
-        detailError: isDetailError,
-      };
-    }) ?? [];
+    return {
+      ...item,
+      fluctuationRate: item.fluctuationRate ?? 0,
+      diagnosisMessage: isDetailError
+        ? "진단 정보를 불러오지 못했습니다."
+        : detailData?.diagnosisMessage ?? "",
+      leadingStocks: isDetailError
+        ? []
+        : detailData?.leadingStocks ?? [],
+      technicalIndicators: isDetailError
+        ? null
+        : detailData?.technicalIndicators ?? null,
+      detailLoading: detail?.isLoading ?? false,
+      detailError: isDetailError,
+      // 바텀시트에서 개별 상세 조회가 필요한 경우를 대비해 원본 보관 (백엔드 통합 시 1개 요소만 가짐)
+      originGroup: [item]
+    };
+  });
 
   /**
    * 섹터 시장 비교 데이터 쿼리
-   * @param sectorCode 섹터 코드
+  ...
    * @param date 조회 기준 날짜
    */
   const useComparison = (sectorCode: string, date?: string) => useQuery<SectorComparisonResponse>({

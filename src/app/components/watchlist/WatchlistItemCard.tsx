@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "motion/react";
-import { WatchlistStock } from "@/types/api";
+import { WatchlistItemDetail } from "@/types/api";
 import { formatPercent } from "@/utils/format";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { toast } from "sonner";
 
 interface WatchlistItemCardProps {
-  stock: WatchlistStock;
+  stock: WatchlistItemDetail;
   groupId: number;
   isLast: boolean;
   isExpanded: boolean;
@@ -52,7 +52,7 @@ export function WatchlistItemCard({
   const deleteOpacity = useTransform(dragX, [-80, -20], [1, 0]);
   const SWIPE_THRESHOLD = -72;
 
-  const isUp = stock.fluctuationRate >= 0;
+  // const isUp = stock.fluctuationRate !== null && stock.fluctuationRate >= 0;
   const rsiStyle = getRsiBadgeStyle(stock.rsiStatus);
 
   /** 메모 저장 타이머 클린업 (BLOCKER) */

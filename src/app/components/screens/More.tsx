@@ -75,8 +75,8 @@ export function More() {
               value={
                 joinedDate
                   ? new Date(joinedDate).toLocaleDateString("ko-KR", {
-                      year: "numeric", month: "2-digit",
-                    }).slice(0, 7)
+                      year: "numeric", month: "2-digit", day: "2-digit",
+                    })
                   : "—"
               }
             />
@@ -85,7 +85,7 @@ export function More() {
               label="총 수익률"
               value={
                 valuation?.totalReturnRate != null
-                  ? `${valuation.totalReturnRate >= 0 ? "+" : ""}${valuation.totalReturnRate.toFixed(1)}%`
+                  ? `${valuation.totalReturnRate >= 0 ? "▲ " : "▼ "}${Math.abs(valuation.totalReturnRate).toFixed(1)}%`
                   : "—"
               }
               highlight={

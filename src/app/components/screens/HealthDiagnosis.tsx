@@ -1,14 +1,17 @@
 import { useNavigate } from "react-router";
 import { FlaskConical, Activity } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
-import { usePortfolio } from "@/hooks/use-portfolio";
+import { usePortfolio, usePortfolioAdvice, usePortfolioCorrelation } from "@/hooks/use-portfolio";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
 import { CorrelationMatrix, AdviceResponse } from "@/types/api";
 
 export function HealthDiagnosis() {
   const navigate = useNavigate();
-  const { health, advice, correlation, isLoading } = usePortfolio();
+  const { health, isLoading: isPortfolioLoading } = usePortfolio();
+  const advice = usePortfolioAdvice();
+  const correlation = usePortfolioCorrelation();
+  const isLoading = isPortfolioLoading || advice.isLoading || correlation.isLoading;
 
   if (isLoading) {
     return (
@@ -24,13 +27,13 @@ export function HealthDiagnosis() {
     <div className="min-h-screen bg-background pb-10">
       <PageHeader title="포트폴리오 건강 검진" showBack />
 
-      <ScoreCard score={health.overallScore} adviceContent={advice?.content} />
+      <ScoreCard score={health.overallScore} adviceContent={advice.data?.content} />
 
       <RadarSection data={health.radarData} />
 
-      {correlation && <CorrelationSection matrix={correlation} />}
+      {correlation.data && <CorrelationSection matrix={correlation.data} />}
 
-      <PrescriptionSection advice={advice} onBacktest={() => navigate("/backtest/setup")} />
+      <PrescriptionSection advice={advice.data} onBacktest={() => navigate("/backtest/setup")} />
     </div>
   );
 }

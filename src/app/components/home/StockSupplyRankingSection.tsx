@@ -23,8 +23,7 @@ function formatShareQuantity(value: number) {
   }
 
   const absValue = Math.abs(Math.round(value));
-  const sign = value > 0 ? "+ " : value < 0 ? "- " : "";
-  return `${sign}${absValue.toLocaleString("ko-KR")}주`;
+  return `${absValue.toLocaleString("ko-KR")}주`;
 }
 
 function formatEffectiveDate(date: string) {
@@ -40,7 +39,7 @@ function formatFluctuationRate(value: number) {
     return "0.00%";
   }
 
-  const sign = value > 0 ? "+" : "-";
+  const sign = value > 0 ? "▲ " : "▼ ";
   return `${sign}${Math.abs(value).toFixed(2)}%`;
 }
 
@@ -96,8 +95,14 @@ function getTone(direction: TradeDirection) {
         "min-w-[240px] h-[140px] border-red-100/80 hover:border-red-300/40 dark:border-red-400/10 dark:hover:border-red-400/25 dark:bg-card",
       decoration: (
         <>
-          <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-red-400/10 blur-2xl dark:bg-red-400/15" />
-          <div className="absolute left-0 top-0 h-16 w-full bg-gradient-to-br from-red-500/10 via-orange-400/6 to-transparent dark:from-red-400/14 dark:via-orange-300/8" />
+          {/* Breathing Glow */}
+          <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-red-400/20 blur-2xl animate-healing-breath dark:bg-red-400/25" />
+          <div className="absolute left-0 top-0 h-20 w-full bg-gradient-to-br from-red-500/12 via-orange-400/8 to-transparent dark:from-red-400/16 dark:via-orange-300/10" />
+          
+          {/* Edge Highlight */}
+          <div className="absolute left-0 top-0 h-px w-24 bg-gradient-to-r from-red-500/40 via-red-400/10 to-transparent" />
+          <div className="absolute left-0 top-0 w-px h-16 bg-gradient-to-b from-red-500/40 via-red-400/10 to-transparent" />
+          
           <div className="absolute left-4 top-4 h-px w-14 rotate-[-24deg] bg-gradient-to-r from-transparent via-red-300/50 to-transparent dark:via-red-300/35" />
         </>
       ),
@@ -118,8 +123,14 @@ function getTone(direction: TradeDirection) {
       "min-w-[240px] h-[140px] border-sky-100/90 hover:border-sky-300/40 dark:border-sky-400/10 dark:hover:border-sky-400/25 dark:bg-card",
     decoration: (
       <>
-        <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-400/10 blur-2xl dark:bg-sky-400/15" />
-        <div className="absolute right-0 top-0 h-16 w-full bg-gradient-to-bl from-sky-500/10 via-blue-400/6 to-transparent dark:from-sky-400/14 dark:via-blue-300/8" />
+        {/* Breathing Glow */}
+        <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-400/20 blur-2xl animate-healing-breath dark:bg-sky-400/25" />
+        <div className="absolute right-0 top-0 h-20 w-full bg-gradient-to-bl from-sky-500/12 via-blue-400/8 to-transparent dark:from-sky-400/16 dark:via-blue-300/10" />
+        
+        {/* Edge Highlight */}
+        <div className="absolute right-0 top-0 h-px w-24 bg-gradient-to-l from-sky-500/40 via-sky-400/10 to-transparent" />
+        <div className="absolute right-0 top-0 w-px h-16 bg-gradient-to-b from-sky-500/40 via-sky-400/10 to-transparent" />
+
         <div className="absolute right-4 top-4 h-px w-16 bg-gradient-to-r from-transparent via-sky-300/50 to-transparent dark:via-sky-300/35" />
         <div className="absolute right-6 top-8 h-px w-10 bg-gradient-to-r from-transparent via-blue-200/40 to-transparent dark:via-blue-200/30" />
       </>

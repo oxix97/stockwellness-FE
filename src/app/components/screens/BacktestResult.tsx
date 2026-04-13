@@ -212,7 +212,7 @@ export function BacktestResult() {
           {displayBestYear != null && (
             <MetricCard
               label={yearlyStats.best?.year ? `최고 연도 (${yearlyStats.best.year})` : "최고 연도"}
-              value={`${displayBestYear > 0 ? "+" : ""}${displayBestYear}%`}
+              value={`${displayBestYear > 0 ? "▲ " : "▼ "}${Math.abs(displayBestYear)}%`}
               sub="Best Year"
               color="text-up"
             />
@@ -328,5 +328,8 @@ function MetricCard({ label, value, sub, color = "text-foreground" }: {
       <div className={`${color} mb-1 font-bold text-3xl`}>{value}</div>
       <div className="text-muted-foreground text-xs font-bold uppercase">{sub}</div>
     </div>
+  );
+}
+   </div>
   );
 }

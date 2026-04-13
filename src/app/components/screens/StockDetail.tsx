@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+// Vite Hot Reload Trigger
 import { useParams, useNavigate } from "react-router";
 import { Heart } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Customized } from "recharts";
@@ -412,7 +413,7 @@ function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectio
       </div>
       {dailyRate != null && (
         <div className={`font-bold text-lg ${isUp ? "text-up" : "text-down"}`}>
-          어제보다 {isUp ? "+" : ""}{dailyRate.toFixed(2)}%
+          어제보다 {isUp ? "▲ " : "▼ "}{Math.abs(dailyRate).toFixed(2)}%
         </div>
       )}
     </div>
@@ -672,11 +673,11 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
                 ) : (
                   <>
                     <span className={`text-center font-bold text-sm ${isUp ? "text-up" : "text-down"}`}>
-                      {stockRate != null ? `${stockRate > 0 ? "+" : ""}${stockRate}%` : "-"}
+                      {stockRate != null ? `${stockRate > 0 ? "▲ " : "▼ "}${Math.abs(stockRate)}%` : "-"}
                     </span>
                     <span className="text-right font-bold text-sm text-foreground">
                       {benchRate != null
-                        ? `${benchRate > 0 ? "+" : ""}${benchRate}%`
+                        ? `${benchRate > 0 ? "▲ " : "▼ "}${Math.abs(benchRate)}%`
                         : <span className="text-muted-foreground font-medium">데이터 없음</span>}
                     </span>
                   </>

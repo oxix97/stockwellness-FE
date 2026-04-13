@@ -97,6 +97,13 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-card: 24px;
   --radius-button: 16px;
+
+  --animate-healing-breath: healing-breath 8s ease-in-out infinite;
+
+  @keyframes healing-breath {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.3; }
+  }
 }
 
 @layer base {

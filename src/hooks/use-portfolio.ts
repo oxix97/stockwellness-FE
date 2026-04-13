@@ -2,7 +2,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { portfolioApi } from "@/api/portfolio";
 import { useAuthStore } from "@/store/auth";
-import { CreatePortfolioRequest, UpdatePortfolioRequest, AssetRatio, DiagnosisResponse, AnalysisSummaryResponse } from "@/types/api";
+import {
+  CreatePortfolioRequest,
+  UpdatePortfolioRequest,
+  DiagnosisResponse,
+  AnalysisSummaryResponse,
+  AdviceResponse,
+  CorrelationMatrix,
+  PortfolioValuationResponse,
+} from "@/types/api";
 
 export function useCreatePortfolio() {
   const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
@@ -30,6 +38,19 @@ export function useUpdatePortfolio() {
   });
 }
 
+export function useDeletePortfolio() {
+  const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => portfolioApi.deletePortfolio(String(id)),
+    onSuccess: () => {
+      setPortfolioId(null);
+      queryClient.invalidateQueries({ queryKey: ["portfolio"] });
+    },
+  });
+}
+
 /**
  * 포트폴리오 요약 정보 조회 (가치 평가 + 분산도 + 최신 조언)
  */
@@ -42,22 +63,13 @@ export function usePortfolioSummary() {
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
   });
-
-  // API 응답 구조가 { valuation: ... } 형태가 아니라 평면적인 PortfolioValuationResponse일 경우를 대비
   const data = query.data;
-  
-  // 1. data.valuation이 있으면 그것을 사용
-  // 2. data.valuation은 없지만 data 자체가 totalReturnRate를 가지고 있으면 data 자체를 사용
-  const valuation = data?.valuation 
-    ? data.valuation 
-    : (data && (data as any).totalReturnRate !== undefined) 
-      ? (data as unknown as AnalysisSummaryResponse["valuation"]) 
-      : undefined;
 
   return {
-    valuation,
+    valuation: data?.valuation,
     diversification: data?.diversification,
-    advice: data?.advice,
+    rebalancing: data?.rebalancing,
+    itemContributions: data?.itemContributions,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
@@ -74,6 +86,20 @@ export function usePortfolioValuation() {
   return useQuery<PortfolioValuationResponse>({
     queryKey: ["portfolio", portfolioId, "valuation"],
     queryFn: () => portfolioApi.getValuation(portfolioId!),
+    enabled: !!portfolioId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+/**
+ * 포트폴리오 리밸런싱 가이드 조회
+ */
+export function usePortfolioRebalancing() {
+  const portfolioId = useAuthStore((state) => state.portfolioId);
+
+  return useQuery({
+    queryKey: ["portfolio", portfolioId, "rebalancing"],
+    queryFn: () => portfolioApi.getRebalancing(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
   });
@@ -107,46 +133,51 @@ export function usePortfolioDetails() {
   });
 }
 
-/**
- * 포트폴리오 분석 정보 (AI 조언, 상관관계, 리밸런싱) 조회
- */
-export function usePortfolioAnalysis() {
+export function usePortfolioAdvice() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
+  const queryClient = useQueryClient();
 
-  const queryConfig = {
+  return useQuery<AdviceResponse>({
+    queryKey: ["portfolio", portfolioId, "advice"],
+    queryFn: async () => {
+      try {
+        return await portfolioApi.getAdvice(portfolioId!);
+      } catch (error) {
+        if (!isAxiosError(error) || error.response?.status !== 404) {
+          throw error;
+        }
+
+        const created = await portfolioApi.createAdvice(portfolioId!);
+        queryClient.invalidateQueries({ queryKey: ["portfolio", portfolioId, "advice"] });
+        return created;
+      }
+    },
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
-  };
-
-  const advice = useQuery({
-    queryKey: ["portfolio", portfolioId, "advice"],
-    queryFn: () =>
-      portfolioApi.getAdvice(portfolioId!).catch((error) => {
-        // 아직 AI 조언이 생성되지 않은 경우 (매주 월요일 배치 전) → null로 처리
-        if (isAxiosError(error) && error.response?.status === 404) return null;
-        throw error;
-      }),
-    ...queryConfig,
   });
+}
 
-  const correlation = useQuery({
+export function useCreateAdvice() {
+  const portfolioId = useAuthStore((state) => state.portfolioId);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => portfolioApi.createAdvice(portfolioId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["portfolio", portfolioId, "advice"] });
+    },
+  });
+}
+
+export function usePortfolioCorrelation() {
+  const portfolioId = useAuthStore((state) => state.portfolioId);
+
+  return useQuery<CorrelationMatrix>({
     queryKey: ["portfolio", portfolioId, "correlation"],
     queryFn: () => portfolioApi.getCorrelation(portfolioId!),
-    ...queryConfig,
+    enabled: !!portfolioId,
+    staleTime: 1000 * 60 * 5,
   });
-
-  const rebalancing = useQuery({
-    queryKey: ["portfolio", portfolioId, "rebalancing"],
-    queryFn: () => portfolioApi.getRebalancing(portfolioId!),
-    ...queryConfig,
-  });
-
-  return {
-    advice: advice.data,
-    correlation: correlation.data,
-    rebalancing: rebalancing.data,
-    isLoading: advice.isLoading || correlation.isLoading || rebalancing.isLoading,
-  };
 }
 
 /**
@@ -155,7 +186,6 @@ export function usePortfolioAnalysis() {
 export function usePortfolio() {
   const summary = usePortfolioSummary();
   const details = usePortfolioDetails();
-  const analysis = usePortfolioAnalysis();
   const healthResult = usePortfolioHealth();
 
   const getHealthScore = () => {
@@ -176,10 +206,8 @@ export function usePortfolio() {
   return {
     valuation: summary.valuation,
     diversification: summary.diversification,
-    advice: analysis.advice,
     holdings: details.data,
-    correlation: analysis.correlation,
-    isLoading: summary.isLoading || details.isLoading || analysis.isLoading || healthResult.isLoading,
+    isLoading: summary.isLoading || details.isLoading || healthResult.isLoading,
     health: getHealthScore(),
   };
 }

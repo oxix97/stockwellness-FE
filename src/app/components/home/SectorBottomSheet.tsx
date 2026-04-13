@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import { Sheet, SheetContent } from "@/app/components/ui";
 import { LeadingStock, TechnicalIndicators, SectorComparisonResponse } from "@/types/api";
 import { formatPercent } from "@/utils/format";
@@ -65,6 +66,12 @@ function SheetBody({
   isComparisonLoading: boolean
 }) {
   const isUp = sector.fluctuationRate >= 0;
+  const navigate = useNavigate();
+
+  const handleViewAll = () => {
+    // 이름 기반 통합 검색을 위해 sectorName을 전달 (sectorCode는 비워서 통합 검색 유도)
+    navigate(`/search?sectorName=${encodeURIComponent(sector.sectorName)}`);
+  };
 
   return (
     <div className="overflow-y-auto max-h-[80vh] scrollbar-hide">
@@ -78,7 +85,7 @@ function SheetBody({
         <div>
           <h2 className="text-foreground font-bold text-xl">{sector.sectorName}</h2>
           <p className={`text-lg font-bold tabular-nums ${isUp ? "text-up" : "text-down"}`}>
-            {isUp ? "+" : ""}{formatPercent(sector.fluctuationRate)}
+            {formatPercent(sector.fluctuationRate)}
           </p>
         </div>
 
@@ -105,31 +112,54 @@ function SheetBody({
         {/* 기술적 지표 */}
         <TechnicalIndicatorCard ti={sector.technicalIndicators || null} loading={!!sector.detailLoading} />
 
-        {/* 주도주 */}
-        {((sector.leadingStocks && sector.leadingStocks.length > 0) || sector.detailLoading) && (
-          <div className="pb-4">
-            <h3 className="text-foreground font-bold text-sm mb-3">섹터 주도주</h3>
-            {sector.detailLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex justify-between items-center">
-                    <div className="space-y-1">
-                      <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
-                      <div className="h-3 w-12 bg-muted/50 rounded animate-pulse" />
-                    </div>
-                    <div className="h-4 w-16 bg-muted/50 rounded animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {sector.leadingStocks?.slice(0, 5).map((stock) => (
-                  <LeadingStockRow key={stock.ticker} stock={stock} />
-                ))}
-              </div>
+        {/* 주도주 및 전체 종목 연결 */}
+        <div className="pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-foreground font-bold text-sm">섹터 종목</h3>
+            {!sector.detailLoading && sector.leadingStocks && sector.leadingStocks.length > 0 && (
+              <button 
+                onClick={handleViewAll}
+                className="text-primary text-xs font-bold"
+              >
+                전체 보기
+              </button>
             )}
           </div>
-        )}
+          
+          {sector.detailLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex justify-between items-center">
+                  <div className="space-y-1">
+                    <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
+                    <div className="h-3 w-12 bg-muted/50 rounded animate-pulse" />
+                  </div>
+                  <div className="h-4 w-16 bg-muted/50 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {sector.leadingStocks && sector.leadingStocks.length > 0 ? (
+                sector.leadingStocks.slice(0, 5).map((stock) => (
+                  <LeadingStockRow key={stock.ticker} stock={stock} />
+                ))
+              ) : (
+                <button 
+                  onClick={handleViewAll}
+                  className="w-full py-6 text-center bg-secondary/20 rounded-2xl border border-dashed border-border hover:bg-secondary/30 transition-colors group"
+                >
+                  <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                    주도주 데이터 분석 중이거나 정보가 부족합니다.
+                  </p>
+                  <p className="mt-2 text-primary text-xs font-bold flex items-center justify-center gap-1">
+                    이 섹터의 모든 종목 보기 <span>→</span>
+                  </p>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

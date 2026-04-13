@@ -1,7 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { portfolioApi } from "@/api/portfolio";
-import { BacktestRequest, BacktestResponse, ChartPeriod } from "@/types/api";
+import { BacktestRequest, BacktestResponse, ChartPeriod, PortfolioInceptionChartResponse } from "@/types/api";
 import { useAuthStore } from "@/store/auth";
+
+export type Period = ChartPeriod;
 
 const PERIOD_DAYS: Record<string, number> = {
   "1W": 7,
@@ -9,17 +11,15 @@ const PERIOD_DAYS: Record<string, number> = {
   "3M": 90,
   "6M": 180,
   "1Y": 365,
-  "3Y": 365 * 3,
-  "ALL": Infinity,
 };
 
 /**
  * 백테스트 결과를 기간별로 필터링합니다.
  */
 export function sliceByPeriod(
-  results: BacktestResponse["dailyResults"] | undefined,
+  results: { date: string }[] | undefined,
   period: string
-): BacktestResponse["dailyResults"] {
+): typeof results {
   if (!results || results.length === 0) return [];
   
   const upperPeriod = period.toUpperCase();
@@ -40,34 +40,40 @@ export function sliceByPeriod(
 /**
  * 백테스트 일별 결과로부터 성과 지표를 계산합니다.
  */
-export function computeMetrics(results: BacktestResponse["dailyResults"] | undefined) {
+export function computeMetrics(results: any[] | undefined) {
   if (!results || results.length === 0) return null;
 
   const first = results[0];
   const last = results[results.length - 1];
 
-  const totalReturn = last.returnRate ?? 0;
-  const benchmarkReturn = last.benchmarkReturnRate ?? 0;
-  const finalValue = last.totalValue ?? 0;
-  const initialInvested = first.totalInvested ?? first.totalValue ?? 1;
+  // 필드명 호환성 처리 (Backtest vs InceptionChart)
+  const totalReturn = last.returnRate ?? last.portfolioReturnRate ?? 0;
+  const benchmarkReturn = last.benchmarkReturnRate ?? (last.benchmarkReturnRates ? Object.values(last.benchmarkReturnRates)[0] : 0) ?? 0;
+  
+  const totalValue = last.totalValue ?? (1 + (totalReturn / 100)); // 기준값 1
+  const initialValue = first.totalValue ?? (1 + (first.returnRate ?? first.portfolioReturnRate ?? 0) / 100);
 
-  // MDD: 구간 최고점 대비 최대 낙폭
-  let peak = first.totalValue || 0;
+  // MDD: 구간 최고점 대비 최대 낙폭 (수익률 기반으로 계산)
+  let peak = -Infinity;
   let mdd = 0;
   for (const r of results) {
-    if (r.totalValue > peak) peak = r.totalValue;
-    const drawdown = peak > 0 ? (r.totalValue - peak) / peak : 0;
+    const val = r.returnRate ?? r.portfolioReturnRate ?? 0;
+    if (val > peak) peak = val;
+    const drawdown = (val - peak);
     if (drawdown < mdd) mdd = drawdown;
   }
 
   // CAGR: 연평균 성장률 (거래일 252일 기준)
+  // 수익률(%)을 배수로 변환하여 계산: (1 + r/100)
   const years = Math.max(0.1, results.length / 252);
-  const cagr = (Math.pow(Math.max(0.01, finalValue / initialInvested), 1 / years) - 1) * 100;
+  const finalMultiplier = 1 + (totalReturn / 100);
+  const initialMultiplier = 1 + (results[0].returnRate ?? results[0].portfolioReturnRate ?? 0) / 100;
+  const cagr = (Math.pow(Math.max(0.01, finalMultiplier / initialMultiplier), 1 / years) - 1) * 100;
 
   // Sharpe Ratio: 일별 수익률의 평균 / 표준편차 * sqrt(252)
   const dailyReturns = results.slice(1).map((r, i) => {
-    const prevRate = results[i].returnRate ?? 0;
-    return (r.returnRate ?? 0) - prevRate;
+    const prevRate = results[i].returnRate ?? results[i].portfolioReturnRate ?? 0;
+    return (r.returnRate ?? r.portfolioReturnRate ?? 0) - prevRate;
   });
   
   let sharpeRatio = 0;
@@ -77,37 +83,13 @@ export function computeMetrics(results: BacktestResponse["dailyResults"] | undef
     sharpeRatio = variance > 0 ? (meanReturn / Math.sqrt(variance)) * Math.sqrt(252) : 0;
   }
 
-  // Beta: 포트폴리오 일별 수익률과 벤치마크 일별 수익률의 공분산 / 벤치마크 분산
-  const benchmarkDailyReturns = results.slice(1).map((r, i) => {
-    const prevRate = results[i].benchmarkReturnRate ?? 0;
-    return (r.benchmarkReturnRate ?? 0) - prevRate;
-  });
-  
-  let beta = 1;
-  if (benchmarkDailyReturns.length > 0 && dailyReturns.length === benchmarkDailyReturns.length) {
-    const meanBenchmark = benchmarkDailyReturns.reduce((a, b) => a + b, 0) / benchmarkDailyReturns.length;
-    const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
-    
-    const covariance = dailyReturns.reduce((acc, r, i) =>
-      acc + (r - meanReturn) * (benchmarkDailyReturns[i] - meanBenchmark), 0
-    ) / dailyReturns.length;
-    
-    const benchmarkVariance = benchmarkDailyReturns.reduce((a, b) =>
-      a + Math.pow(b - meanBenchmark, 2), 0
-    ) / benchmarkDailyReturns.length;
-    
-    beta = benchmarkVariance > 0 ? covariance / benchmarkVariance : 1;
-  }
-
   return {
-    finalValue,
     totalReturn: +totalReturn.toFixed(1),
     benchmarkReturn: +benchmarkReturn.toFixed(1),
     outperformance: +(totalReturn - benchmarkReturn).toFixed(1),
-    mdd: +(mdd * 100).toFixed(1),
+    mdd: +Math.abs(mdd).toFixed(1),
     sharpeRatio: +sharpeRatio.toFixed(2),
     cagr: +cagr.toFixed(1),
-    beta: +beta.toFixed(2),
   };
 }
 
@@ -117,16 +99,9 @@ export function computeMetrics(results: BacktestResponse["dailyResults"] | undef
 export function usePortfolioSimulation(period: ChartPeriod) {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
-  const query = useQuery({
+  const query = useQuery<PortfolioInceptionChartResponse>({
     queryKey: ["backtest", "simulation", portfolioId], // period를 queryKey에서 제거하여 한 번만 호출
-    queryFn: () =>
-      portfolioApi.runBacktest(portfolioId!, {
-        strategy: "LUMP_SUM",
-        amount: 10_000_000,
-        benchmarkTicker: "SPY",
-        period: "ALL", // 전체 데이터를 가져와서 클라이언트에서 자름
-        rebalancingPeriod: "NONE",
-      }),
+    queryFn: () => portfolioApi.getInceptionChart(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 10,
   });
