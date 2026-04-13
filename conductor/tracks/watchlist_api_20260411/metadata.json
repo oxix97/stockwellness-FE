@@ -1,8 +1,0 @@
-{
-  "track_id": "watchlist_api_20260411",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-04-11T17:00:00Z",
-  "updated_at": "2026-04-11T17:00:00Z",
-  "description": "@watchlist.md 파일을 구현"
-}
