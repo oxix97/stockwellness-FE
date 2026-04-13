@@ -330,6 +330,3 @@ function MetricCard({ label, value, sub, color = "text-foreground" }: {
     </div>
   );
 }
-   </div>
-  );
-}

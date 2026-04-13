@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   User, Settings, HelpCircle, Bell, Palette, LogOut,
-  Sun, Moon, Monitor, ChevronRight,
+  Sun, Moon, Monitor, ChevronRight, Sparkles, ShieldCheck, Flower2, BadgePercent,
 } from "lucide-react";
-import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import {
@@ -14,25 +13,18 @@ import {
   AlertDialogTrigger,
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/app/components/ui";
+import { AppBrandMark, ContextHeader, Section } from "@/app/components/shared";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useWithdraw, useUpdateProfile } from "@/hooks/use-member";
+import { useAuthStore } from "@/store/auth";
 import { calculateInvestorType } from "@/utils/calculate";
 
-/**
- * Task #84 ~ #87 — 마이 탭 완성
- * - 닉네임 변경 모달 (#84)
- * - 알림 설정 라우팅 (#85)
- * - 회원 탈퇴 AlertDialog (#86)
- * - 메뉴 항목 연결 (#87)
- */
 export function More() {
   const navigate = useNavigate();
   const { nickname, logout, joinedDate } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { holdings, valuation, health } = usePortfolio();
-
   const withdraw = useWithdraw();
-
   const investorType = calculateInvestorType(health.overallScore);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
 
@@ -54,162 +46,208 @@ export function More() {
   };
 
   return (
-    <div className="min-h-full pb-6">
-      {/* 프로필 카드 */}
-      <div className="px-4 pt-4 pb-3">
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center shrink-0">
-              <User className="w-7 h-7 text-white" />
+    <div className="min-h-full pb-8">
+      <div className="px-4 pt-4">
+        <ContextHeader
+          variant="profile"
+          eyebrow="My Garden"
+          title={
+            <div>
+              <p className="text-[28px] font-bold leading-tight tracking-tight text-foreground">
+                {nickname ?? "투자자"}님의
+                <br />
+                투자 정원
+              </p>
+            </div>
+          }
+          description="프로필, 투자 성향, 앱 환경 설정을 한 화면에서 정리하고 관리할 수 있는 허브입니다."
+          actions={
+            <div className="flex flex-col items-end gap-2">
+              <AppBrandMark compact />
+              <div className="rounded-2xl border border-border/60 bg-card/72 px-3 py-2 text-right backdrop-blur-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Identity</p>
+                <p className={`mt-1 text-sm font-bold ${investorType.color}`}>{investorType.label}</p>
+              </div>
+            </div>
+          }
+          ornament={
+            <div className="absolute bottom-4 right-4 flex gap-2">
+              <div className="rounded-full border border-border/50 bg-card/76 px-3 py-1.5 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1"><Flower2 className="h-3 w-3 text-primary" /> profile</span>
+              </div>
+            </div>
+          }
+          footer={
+            <div className="grid grid-cols-3 gap-2">
+              <MetricTile
+                label="가입일"
+                value={
+                  joinedDate
+                    ? new Date(joinedDate).toLocaleDateString("ko-KR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })
+                    : "—"
+                }
+              />
+              <MetricTile label="보유 종목" value={`${holdings?.items?.length ?? "—"}개`} />
+              <MetricTile
+                label="총 수익률"
+                value={
+                  valuation?.totalReturnRate != null
+                    ? `${valuation.totalReturnRate >= 0 ? "▲ " : "▼ "}${Math.abs(valuation.totalReturnRate).toFixed(1)}%`
+                    : "—"
+                }
+                tone={
+                  valuation?.totalReturnRate != null
+                    ? valuation.totalReturnRate >= 0
+                      ? "up"
+                      : "down"
+                    : "neutral"
+                }
+                icon={<BadgePercent className="h-3 w-3 text-primary/80" />}
+              />
+            </div>
+          }
+        />
+      </div>
+
+      <Section
+        title="투자 페르소나"
+        subtitle="현재 포트폴리오 상태를 기반으로 내 투자 정체성을 정리합니다."
+        icon={Sparkles}
+        className="pt-6 pb-4"
+      >
+        <div className="rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+              <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-foreground font-bold text-lg">{nickname ?? "투자자"}님</p>
-              <span className={`bg-primary/10 px-2.5 py-0.5 rounded-full text-xs font-semibold ${investorType.color}`}>
-                {investorType.label}
-              </span>
+              <p className={`text-base font-bold ${investorType.color}`}>{investorType.label}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                포트폴리오 건강 점수와 보유 구조를 기준으로 앱이 읽어낸 현재 투자 성향입니다.
+              </p>
             </div>
           </div>
-          <div className="grid grid-cols-3 pt-4 border-t border-primary/10 divide-x divide-primary/10">
-            <MetricItem
-              label="가입일"
-              value={
-                joinedDate
-                  ? new Date(joinedDate).toLocaleDateString("ko-KR", {
-                      year: "numeric", month: "2-digit", day: "2-digit",
-                    })
-                  : "—"
-              }
-            />
-            <MetricItem label="보유 종목" value={`${holdings?.items?.length ?? "—"}개`} />
-            <MetricItem
-              label="총 수익률"
-              value={
-                valuation?.totalReturnRate != null
-                  ? `${valuation.totalReturnRate >= 0 ? "▲ " : "▼ "}${Math.abs(valuation.totalReturnRate).toFixed(1)}%`
-                  : "—"
-              }
-              highlight={
-                valuation?.totalReturnRate != null
-                  ? valuation.totalReturnRate >= 0
-                  : false
-              }
-              negative={
-                valuation?.totalReturnRate != null
-                  ? valuation.totalReturnRate < 0
-                  : false
-              }
-            />
-          </div>
         </div>
-      </div>
+      </Section>
 
-      {/* 계정 설정 */}
-      <SectionTitle label="계정 설정" />
-      <div className="mx-4 bg-card rounded-2xl border border-border overflow-hidden">
-        {/* 닉네임 변경 */}
-        <MenuItem
-          icon={User}
-          title="닉네임 변경"
-          onClick={() => setShowNicknameModal(true)}
-        />
-        {/* 알림 설정 */}
-        <MenuItem
-          icon={Bell}
-          title="알림 설정"
-          onClick={() => navigate("/more/notifications")}
-          isLast
-        />
-      </div>
+      <Section title="계정 설정" subtitle="프로필과 알림 관련 설정을 관리합니다." icon={User} className="pb-4">
+        <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+          <MenuItem icon={User} title="닉네임 변경" description="앱 전역에서 보이는 나의 표시 이름을 수정합니다." onClick={() => setShowNicknameModal(true)} />
+          <MenuItem icon={Bell} title="알림 설정" description="리밸런싱, 관심 종목, 이벤트 알림을 관리합니다." onClick={() => navigate("/more/notifications")} isLast />
+        </div>
+      </Section>
 
-      {/* 앱 설정 */}
-      <SectionTitle label="앱 설정" />
-      <div className="mx-4 bg-card rounded-2xl border border-border overflow-hidden">
-        {/* 테마 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="w-full flex items-center justify-between px-4 py-3.5 border-b border-border text-left">
-              <div className="flex items-center gap-3">
-                <Palette className="w-4 h-4 text-muted-foreground" />
-                <span className="text-foreground text-sm font-medium">테마 설정</span>
-              </div>
-              <span className="text-muted-foreground text-xs">
-                {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
-              </span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36 rounded-xl">
-            <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 py-2.5 text-sm">
-              <Sun className="w-4 h-4" /> 라이트
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 py-2.5 text-sm">
-              <Moon className="w-4 h-4" /> 다크
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 py-2.5 text-sm">
-              <Monitor className="w-4 h-4" /> 시스템
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <Section title="환경 허브" subtitle="테마, 앱 환경, 지원 진입점을 같은 구조로 정리했습니다." icon={Palette} className="pb-4">
+        <div className="space-y-3">
+          <SettingsGroupCard
+            icon={Palette}
+            title="테마 설정"
+            description="라이트, 다크, 시스템 모드를 같은 규칙으로 전환합니다."
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full">
+                  <MenuItem
+                    icon={Palette}
+                    title="현재 테마"
+                    description="앱 전체 색상 모드를 즉시 전환합니다."
+                    trailing={
+                      <span className="rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+                        {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
+                      </span>
+                    }
+                    isLast
+                  />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 py-2.5 text-sm">
+                  <Sun className="h-4 w-4" /> 라이트
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 py-2.5 text-sm">
+                  <Moon className="h-4 w-4" /> 다크
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 py-2.5 text-sm">
+                  <Monitor className="h-4 w-4" /> 시스템
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SettingsGroupCard>
 
-        {/* 앱 설정, 고객 지원 */}
-        <MenuItem
-          icon={Settings}
-          title="앱 설정"
-          onClick={() => toast.info("준비 중입니다.")}
-        />
-        <MenuItem
-          icon={HelpCircle}
-          title="고객 지원"
-          onClick={() => toast.info("준비 중입니다.")}
-          isLast
-        />
-      </div>
+          <SettingsGroupCard
+            icon={Settings}
+            title="앱 설정"
+            description="추가 환경 설정과 실험 기능 진입점을 같은 형식으로 유지합니다."
+          >
+            <MenuItem
+              icon={Settings}
+              title="일반 설정"
+              description="앱 사용 환경과 이후 확장될 기능 설정을 모아둡니다."
+              onClick={() => toast.info("준비 중입니다.")}
+              isLast
+            />
+          </SettingsGroupCard>
 
-      {/* 로그아웃 */}
-      <SectionTitle label="계정" />
-      <div className="mx-4 bg-card rounded-2xl border border-border overflow-hidden">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border text-left"
-        >
-          <LogOut className="w-4 h-4 text-muted-foreground" />
-          <span className="text-foreground text-sm font-medium">로그아웃</span>
-        </button>
+          <SettingsGroupCard
+            icon={HelpCircle}
+            title="고객 지원"
+            description="도움말, 문의, 제품 가이드를 같은 구조로 진입할 수 있게 정리했습니다."
+          >
+            <MenuItem
+              icon={HelpCircle}
+              title="도움 및 문의"
+              description="문의, 도움말, 제품 가이드 진입점입니다."
+              onClick={() => toast.info("준비 중입니다.")}
+              isLast
+            />
+          </SettingsGroupCard>
+        </div>
+      </Section>
 
-        {/* 회원 탈퇴 — AlertDialog */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button className="w-full flex items-center gap-3 px-4 py-3.5 text-left">
-              <span className="w-4 h-4" />
-              <span className="text-red-500 text-sm font-medium">회원 탈퇴</span>
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="rounded-2xl mx-4">
-            <AlertDialogHeader>
-              <AlertDialogTitle>정말 탈퇴하시겠습니까?</AlertDialogTitle>
-              <AlertDialogDescription>
-                탈퇴 시 모든 포트폴리오와 관심 종목 데이터가 영구 삭제됩니다.
-                이 작업은 되돌릴 수 없습니다.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-xl">취소</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleWithdraw}
-                className="bg-red-500 hover:bg-red-600 rounded-xl"
-              >
-                탈퇴하기
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      <Section title="계정" subtitle="로그아웃 및 탈퇴 관련 동작입니다." icon={LogOut}>
+        <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+          <MenuItem icon={LogOut} title="로그아웃" description="현재 계정 세션을 종료하고 로그인 화면으로 돌아갑니다." onClick={handleLogout} />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="flex w-full items-center justify-between px-4 py-4 text-left">
+                <div className="flex items-start gap-3">
+                  <span className="mt-1 h-4 w-4 rounded-full bg-red-500/12" />
+                  <div>
+                    <span className="block text-sm font-medium text-red-500">회원 탈퇴</span>
+                    <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                      포트폴리오와 관심 종목 데이터를 포함한 계정 정보를 모두 삭제합니다.
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="mx-4 rounded-2xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>정말 탈퇴하시겠습니까?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  탈퇴 시 모든 포트폴리오와 관심 종목 데이터가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-xl">취소</AlertDialogCancel>
+                <AlertDialogAction onClick={handleWithdraw} className="rounded-xl bg-red-500 hover:bg-red-600">
+                  탈퇴하기
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </Section>
 
-      {/* 버전 */}
-      <p className="text-center text-muted-foreground text-xs mt-6 mb-4">
+      <p className="mt-6 mb-4 text-center text-xs text-muted-foreground">
         Stockwellness v1.0.0 · © 2026 Stockwellness
       </p>
 
-      {/* 닉네임 변경 모달 */}
       <NicknameEditModal
         open={showNicknameModal}
         currentNickname={nickname ?? ""}
@@ -219,7 +257,6 @@ export function More() {
   );
 }
 
-// ── 닉네임 변경 모달 (#84) ─────────────────────────────────
 function NicknameEditModal({
   open, currentNickname, onClose,
 }: {
@@ -244,7 +281,7 @@ function NicknameEditModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="rounded-2xl mx-4">
+      <DialogContent className="mx-4 rounded-2xl">
         <DialogHeader>
           <DialogTitle>닉네임 변경</DialogTitle>
         </DialogHeader>
@@ -255,19 +292,16 @@ function NicknameEditModal({
             onChange={(e) => setValue(e.target.value)}
             placeholder="새 닉네임 입력"
             maxLength={20}
-            className="w-full h-11 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none text-[15px]"
+            className="h-11 w-full rounded-xl bg-secondary px-4 text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
           />
           <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-3 rounded-xl bg-secondary text-foreground font-semibold text-sm"
-            >
+            <button onClick={onClose} className="flex-1 rounded-xl bg-secondary py-3 text-sm font-semibold text-foreground">
               취소
             </button>
             <button
               onClick={handleSave}
               disabled={updateProfile.isPending || !value.trim()}
-              className="flex-1 py-3 rounded-xl bg-primary text-white font-semibold text-sm disabled:opacity-40"
+              className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-40"
             >
               {updateProfile.isPending ? "저장 중..." : "저장"}
             </button>
@@ -278,56 +312,87 @@ function NicknameEditModal({
   );
 }
 
-// ── 공통 서브 컴포넌트 ─────────────────────────────────────
-function SectionTitle({ label }: { label: string }) {
-  return (
-    <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider px-4 pt-5 pb-2">
-      {label}
-    </p>
-  );
-}
-
 function MenuItem({
-  icon: Icon, title, onClick, isLast = false,
+  icon: Icon, title, description, onClick, trailing, isLast = false,
 }: {
   icon: React.ElementType;
   title: string;
-  onClick: () => void;
+  description: string;
+  onClick?: () => void;
+  trailing?: ReactNode;
   isLast?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-4 py-3.5 text-left ${
-        !isLast ? "border-b border-border" : ""
-      }`}
+      className={`flex w-full items-center justify-between px-4 py-4 text-left ${!isLast ? "border-b border-border" : ""}`}
     >
-      <div className="flex items-center gap-3">
-        <Icon className="w-4 h-4 text-muted-foreground" />
-        <span className="text-foreground text-sm font-medium">{title}</span>
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 rounded-xl bg-secondary/75 p-2">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div>
+          <span className="block text-sm font-medium text-foreground">{title}</span>
+          <span className="mt-1 block text-xs leading-5 text-muted-foreground">{description}</span>
+        </div>
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-50" />
+      <div className="flex items-center gap-2">
+        {trailing}
+        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
+      </div>
     </button>
   );
 }
 
-function MetricItem({
-  label, value, highlight, negative,
+function SettingsGroupCard({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+      <div className="border-b border-border/80 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+            <Icon className="h-4.5 w-4.5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{title}</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+          </div>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function MetricTile({
+  label,
+  value,
+  tone = "neutral",
+  icon,
 }: {
   label: string;
   value: string;
-  highlight?: boolean;
-  negative?: boolean;
+  tone?: "neutral" | "up" | "down";
+  icon?: ReactNode;
 }) {
-  const color = negative ? "text-down" : highlight ? "text-up" : "text-foreground";
+  const toneClassName = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-foreground";
+
   return (
-    <div className="flex flex-col items-center text-center px-2">
-      <p className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide mb-1.5">
-        {label}
-      </p>
-      <p className={`font-bold text-sm tabular-nums ${color}`}>
-        {value}
-      </p>
+    <div className="rounded-2xl border border-border/60 bg-card/70 px-3 py-3 text-center">
+      <div className="flex items-center justify-center gap-1">
+        {icon}
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      </div>
+      <p className={`mt-1 text-sm font-bold tabular-nums ${toneClassName}`}>{value}</p>
     </div>
   );
 }

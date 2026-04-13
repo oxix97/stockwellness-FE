@@ -5,6 +5,8 @@ import { cn } from "@/app/components/ui/utils";
 interface SectionProps {
   /** 섹션 제목 */
   title: string;
+  /** 섹션 보조 설명 */
+  subtitle?: string;
   /** 아이콘 (Lucide 아이콘 컴포넌트 또는 이모지 문자열) */
   icon?: LucideIcon | string;
   /** 섹션 내부 콘텐츠 */
@@ -22,6 +24,7 @@ interface SectionProps {
  */
 export function Section({ 
   title, 
+  subtitle,
   icon: Icon, 
   children, 
   className = "",
@@ -32,19 +35,24 @@ export function Section({
     <section className={cn("px-4 pb-8", className)}>
       {/* 섹션 헤더 */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          {Icon && (
-            typeof Icon === "string" ? (
-              <span className="text-2xl">{Icon}</span>
-            ) : (
-              <div className="p-1.5 rounded-lg bg-primary/5 text-primary">
-                <Icon className="w-5 h-5" />
-              </div>
-            )
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            {Icon && (
+              typeof Icon === "string" ? (
+                <span className="text-2xl">{Icon}</span>
+              ) : (
+                <div className="p-1.5 rounded-lg bg-primary/8 text-primary">
+                  <Icon className="w-5 h-5" />
+                </div>
+              )
+            )}
+            <h2 className="text-foreground font-bold text-xl tracking-tight">
+              {title}
+            </h2>
+          </div>
+          {subtitle && (
+            <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
           )}
-          <h2 className="text-foreground font-bold text-xl tracking-tight">
-            {title}
-          </h2>
         </div>
         
         {href ? (

@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router";
 import { ChevronLeft, Bell } from "lucide-react";
+import { cn } from "@/app/components/ui/utils";
+import { AppBrandMark } from "./AppBrandMark";
 
 interface PageHeaderProps {
   /** 헤더 제목 */
@@ -21,19 +23,17 @@ export function PageHeader({ title, showBack, showNotifications, logo, className
   const navigate = useNavigate();
 
   return (
-    <header className={`bg-card px-6 py-4 flex items-center border-b border-border min-h-[72px] ${className || ""}`}>
+    <header className={cn("bg-background/85 backdrop-blur-md px-4 py-3 flex items-center border-b border-border min-h-[68px] sticky top-0 z-30", className)}>
       {/* 뒤로 가기 버튼 */}
       {showBack && (
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 mr-2">
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 mr-2 rounded-full hover:bg-secondary">
           <ChevronLeft className="w-6 h-6" />
         </button>
       )}
       
       {/* 앱 서비스 로고 */}
       {logo && (
-        <div className="text-primary font-bold text-2xl mr-auto">
-          Stockwellness
-        </div>
+        <AppBrandMark className="mr-auto" />
       )}
 
       {/* 페이지 타이틀 */}
@@ -45,7 +45,7 @@ export function PageHeader({ title, showBack, showNotifications, logo, className
 
       {/* 알림 버튼 */}
       {showNotifications && (
-        <button className="p-2 -mr-2 ml-auto">
+        <button className="p-2 -mr-2 ml-auto rounded-full hover:bg-secondary">
           <Bell className="w-6 h-6 text-foreground" />
         </button>
       )}
