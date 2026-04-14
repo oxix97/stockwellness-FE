@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/app/components/ui";
 import { usePortfolioSummary } from "@/hooks/use-portfolio";
+import { AssetRatio } from "@/types/api";
 
 const CHART_COLORS = [
   "#2EBE7A",
@@ -27,7 +28,7 @@ export function DiversificationWidget() {
   const sectorData = diversification?.sectorRatios ?? [];
   const countryData = diversification?.countryRatios ?? [];
 
-  const renderPieChart = (title: string, data: any[]) => {
+  const renderPieChart = (title: string, data: AssetRatio[]) => {
     if (data.length === 0) return null;
     return (
       <div className="bg-card rounded-2xl p-4 border border-border">
@@ -36,8 +37,8 @@ export function DiversificationWidget() {
           <PieChart>
             <Pie
               data={data}
-              dataKey="ratio"
-              nameKey="category"
+              dataKey="value"
+              nameKey="name"
               cx="50%"
               cy="50%"
               innerRadius={55}

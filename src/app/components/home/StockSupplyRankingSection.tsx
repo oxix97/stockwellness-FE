@@ -22,8 +22,13 @@ function formatShareQuantity(value: number) {
     return "-";
   }
 
+  if (value === 0) {
+    return "0주";
+  }
+
   const absValue = Math.abs(Math.round(value));
-  return `${absValue.toLocaleString("ko-KR")}주`;
+  const sign = value > 0 ? "+ " : "- ";
+  return `${sign}${absValue.toLocaleString("ko-KR")}주`;
 }
 
 function formatEffectiveDate(date: string) {
@@ -39,7 +44,7 @@ function formatFluctuationRate(value: number) {
     return "0.00%";
   }
 
-  const sign = value > 0 ? "▲ " : "▼ ";
+  const sign = value > 0 ? "+" : "-";
   return `${sign}${Math.abs(value).toFixed(2)}%`;
 }
 
@@ -92,7 +97,7 @@ function getTone(direction: TradeDirection) {
       channelBadgeClassName:
         "border border-orange-200/60 bg-orange-100/70 text-orange-700 dark:border-orange-400/15 dark:bg-orange-400/10 dark:text-orange-200",
       cardClassName:
-        "min-w-[240px] h-[140px] border-red-100/80 hover:border-red-300/40 dark:border-red-400/10 dark:hover:border-red-400/25 dark:bg-card",
+        "min-w-[var(--mobile-scroll-card-width)] h-[calc(var(--mobile-scroll-card-height)-2px)] border-red-100/80 hover:border-red-300/40 lg:min-w-0 dark:border-red-400/10 dark:hover:border-red-400/25 dark:bg-card",
       decoration: (
         <>
           {/* Breathing Glow */}
@@ -119,8 +124,8 @@ function getTone(direction: TradeDirection) {
       "border border-blue-200/60 bg-blue-500/12 text-blue-600 dark:border-blue-400/20 dark:bg-blue-500/18 dark:text-blue-200",
     channelBadgeClassName:
       "border border-sky-200/60 bg-sky-100/70 text-sky-700 dark:border-sky-400/15 dark:bg-sky-400/10 dark:text-sky-200",
-    cardClassName:
-      "min-w-[240px] h-[140px] border-sky-100/90 hover:border-sky-300/40 dark:border-sky-400/10 dark:hover:border-sky-400/25 dark:bg-card",
+      cardClassName:
+        "min-w-[var(--mobile-scroll-card-width)] h-[calc(var(--mobile-scroll-card-height)-2px)] border-sky-100/90 hover:border-sky-300/40 lg:min-w-0 dark:border-sky-400/10 dark:hover:border-sky-400/25 dark:bg-card",
     decoration: (
       <>
         {/* Breathing Glow */}
@@ -239,7 +244,7 @@ function RankingCarousel({
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
+        className="responsive-scroll-row"
       >
         {items.length === 0 ? (
           <EmptyRankingCard direction={direction} channel={channel} />
@@ -280,13 +285,13 @@ export function StockSupplyRankingSection({
       >
         <div className="space-y-3">
           <div className="px-1 text-base font-bold text-foreground">{getRankingTitle(direction, "institution")}</div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          <div className="responsive-scroll-row">
             {[1, 2, 3].map((index) => (
               <HomeCardSkeleton key={`institution-${index}`} />
             ))}
           </div>
           <div className="px-1 pt-2 text-base font-bold text-foreground">{getRankingTitle(direction, "foreign")}</div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          <div className="responsive-scroll-row">
             {[1, 2, 3].map((index) => (
               <HomeCardSkeleton key={`foreign-${index}`} />
             ))}

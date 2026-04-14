@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Plus, Edit2, Trash2, Check } from "lucide-react";
 import { WatchlistGroup } from "@/types/api";
+import { useViewportType } from "@/app/components/ui/use-mobile";
 
 interface WatchlistBottomSheetProps {
   groups: WatchlistGroup[];
@@ -24,6 +25,8 @@ export function WatchlistBottomSheet({
   onDeleteGroup,
   isLoading,
 }: WatchlistBottomSheetProps) {
+  const viewport = useViewportType();
+  const isDesktop = viewport === "desktop";
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
@@ -55,15 +58,21 @@ export function WatchlistBottomSheet({
         className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
       />
       <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
+        initial={isDesktop ? { opacity: 0, scale: 0.96, y: 16 } : { y: "100%" }}
+        animate={isDesktop ? { opacity: 1, scale: 1, y: 0 } : { y: 0 }}
+        exit={isDesktop ? { opacity: 0, scale: 0.96, y: 16 } : { y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="fixed bottom-0 left-0 right-0 bg-background rounded-t-3xl shadow-xl z-50 flex flex-col max-h-[80vh]"
+        className={`fixed bg-background shadow-xl z-50 flex flex-col ${
+          isDesktop
+            ? "left-1/2 top-1/2 max-h-[78vh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[32px] border border-border"
+            : "bottom-0 left-0 right-0 max-h-[80vh] rounded-t-3xl"
+        }`}
       >
-        <div className="flex justify-center pt-3 pb-2" onClick={onClose}>
-          <div className="w-12 h-1.5 bg-muted rounded-full" />
-        </div>
+        {!isDesktop && (
+          <div className="flex justify-center pt-3 pb-2" onClick={onClose}>
+            <div className="w-12 h-1.5 bg-muted rounded-full" />
+          </div>
+        )}
 
         <div className="px-6 pb-4 flex items-center justify-between border-b border-border">
           <h2 className="text-xl font-bold text-foreground">관심 그룹</h2>

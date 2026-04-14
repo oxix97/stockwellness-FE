@@ -1,87 +1,34 @@
-export type AssetType = "STOCK" | "CASH" | "CRYPTO" | "ETF" | "BOND";
-export type Currency = "KRW" | "USD";
+import type {
+  AssetType,
+  CreatePortfolioItemRequest,
+  CreatePortfolioRequest,
+  PortfolioDiversificationResponse,
+  PortfolioResponse,
+  PortfolioRebalancingResponse,
+  PortfolioValuationResponse,
+  UpdatePortfolioRequest,
+} from "@/types/api";
 
-export interface PortfolioItem {
-  symbol: string;
-  name: string;
-  quantity: number;
-  purchasePrice: number;
-  currentPrice?: number;
-  currency: string;
-  assetType: AssetType;
-  purchaseAmount: number;
-  currentValue?: number;
-  returnRate?: number;
-  targetWeight: number;
-}
-
-export interface Portfolio {
-  id: number;
-  name: string;
-  description: string;
-  items: PortfolioItem[];
-  totalEvaluationAmount: number;
-  totalReturnRate: number;
-}
-
-export interface PortfolioValuation {
-  totalPurchaseAmount: number;
-  totalEvaluationAmount: number;
-  totalGainLoss: number;
-  totalReturnRate: number;
-  dailyGainLoss: number;
-  dailyReturnRate: number;
-}
-
-export interface Ratio {
-  category: string;
-  ratio: number;
-}
-
-export interface Diversification {
-  assetRatios: Ratio[];
-  sectorRatios: Ratio[];
-  countryRatios: Ratio[];
-}
-
-export interface RebalancingItem {
-  symbol: string;
-  name: string;
-  currentWeight: number;
-  targetWeight: number;
-  diffWeight: number;
-  recommendQuantity: number;
-}
-
-export interface RebalancingGuide {
-  lastUpdated: string;
-  items: RebalancingItem[];
-}
-
-export interface PortfolioSummary {
-  valuation: PortfolioValuation;
-  diversification: Diversification;
-  rebalancing: RebalancingGuide;
+/**
+ * @deprecated `@/types/api`를 사용하세요.
+ * 포트폴리오 타입 정의는 OpenAPI 기반 단일 타입 레이어로 통합했습니다.
+ */
+export type Portfolio = PortfolioResponse;
+export type PortfolioItem = PortfolioResponse["items"][number];
+export type PortfolioValuation = PortfolioValuationResponse;
+export type Ratio = PortfolioDiversificationResponse["assetRatios"][number];
+export type Diversification = PortfolioDiversificationResponse;
+export type RebalancingItem = PortfolioRebalancingResponse["items"][number];
+export type RebalancingGuide = PortfolioRebalancingResponse;
+export type PortfolioSummary = {
+  valuation: PortfolioValuationResponse;
+  diversification: PortfolioDiversificationResponse;
+  rebalancing: PortfolioRebalancingResponse;
   itemContributions: Record<string, number>;
-}
-
-export interface CreatePortfolioItemRequest {
-  symbol: string;
-  quantity: number;
-  purchasePrice: number;
-  currency: string;
-  assetType: AssetType;
-  targetWeight: number;
-}
-
-export interface CreatePortfolioRequest {
-  name: string;
-  description: string;
-  items: CreatePortfolioItemRequest[];
-}
-
-export interface UpdatePortfolioRequest {
-  name: string;
-  description: string;
-  items: CreatePortfolioItemRequest[];
-}
+};
+export type {
+  AssetType,
+  CreatePortfolioItemRequest,
+  CreatePortfolioRequest,
+  UpdatePortfolioRequest,
+};

@@ -13,30 +13,30 @@ export function MarketIndexSection() {
 
   if (isLoading) {
     return (
-      <>
+      <div className="responsive-scroll-row">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="min-w-[240px] h-[150px] rounded-2xl" />
+          <Skeleton key={i} className="h-[var(--mobile-scroll-card-height)] min-w-[var(--mobile-scroll-card-width)] rounded-[var(--mobile-card-radius)]" />
         ))}
-      </>
+      </div>
     );
   }
 
   if (!indexes || indexes.length === 0) return null;
 
   return (
-    <>
+    <div className="responsive-scroll-row">
       {indexes.map((index, idx) => (
         <motion.div
           key={index.name}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: idx * 0.08 }}
-          className="min-w-[240px]"
+          className="min-w-[var(--mobile-scroll-card-width)] lg:min-w-0"
         >
           <MarketIndexCard index={index} />
         </motion.div>
       ))}
-    </>
+    </div>
   );
 }
 
@@ -68,7 +68,7 @@ function MarketIndexCard({ index }: { index: MarketIndexResult }) {
   };
 
   return (
-    <div className={`bg-card rounded-2xl p-5 shadow-sm border border-border flex flex-col justify-between h-[150px] text-left relative overflow-hidden transition-all duration-300 ${tone.cardClassName}`}>
+    <div className={`bg-card relative flex h-[var(--mobile-scroll-card-height)] flex-col justify-between overflow-hidden rounded-[var(--mobile-card-radius)] border p-[var(--mobile-card-padding)] text-left shadow-sm transition-all duration-300 lg:rounded-2xl lg:p-5 ${tone.cardClassName}`}>
       {/* 배경 장식 (Surface Decoration) */}
       {tone.decoration}
 
@@ -78,7 +78,7 @@ function MarketIndexCard({ index }: { index: MarketIndexResult }) {
           {getIndexIcon(index.name)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-foreground font-bold text-base truncate">
+          <p className="text-foreground truncate text-[15px] font-bold min-[408px]:text-base">
             {index.name}
           </p>
         </div>
@@ -86,7 +86,7 @@ function MarketIndexCard({ index }: { index: MarketIndexResult }) {
 
       <div className="space-y-1 relative z-10">
         {/* 하단: 지수 및 등락 정보 */}
-        <p className="text-foreground font-bold text-2xl tabular-nums leading-none">
+        <p className="text-foreground font-bold text-[calc(var(--mobile-number-xl)-4px)] tabular-nums leading-none min-[408px]:text-2xl">
           {(index.currentPrice ?? 0).toLocaleString("ko-KR", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,

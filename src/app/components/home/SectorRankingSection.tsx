@@ -26,7 +26,7 @@ export function SectorRankingSection({ onSectorClick }: SectorRankingSectionProp
 
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+      <div className="responsive-scroll-row">
         {[1, 2, 3].map((i) => (
           <HomeCardSkeleton key={i} />
         ))}
@@ -41,7 +41,7 @@ export function SectorRankingSection({ onSectorClick }: SectorRankingSectionProp
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
+      className="responsive-scroll-row"
     >
       {data.map((sector) => (
         <RankingCard 

@@ -14,41 +14,44 @@ interface PageHeaderProps {
   logo?: boolean;
   /** 추가 스타일 클래스 */
   className?: string;
+  /** 헤더 보조 설명 */
+  description?: string;
+  /** 우측 영역 */
+  rightContent?: React.ReactNode;
 }
 
 /**
  * 페이지 상단 공통 헤더 컴포넌트
  */
-export function PageHeader({ title, showBack, showNotifications, logo, className }: PageHeaderProps) {
+export function PageHeader({ title, showBack, showNotifications, logo, className, description, rightContent }: PageHeaderProps) {
   const navigate = useNavigate();
 
   return (
-    <header className={cn("bg-background/85 backdrop-blur-md px-4 py-3 flex items-center border-b border-border min-h-[68px] sticky top-0 z-30", className)}>
-      {/* 뒤로 가기 버튼 */}
-      {showBack && (
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 mr-2 rounded-full hover:bg-secondary">
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-      )}
-      
-      {/* 앱 서비스 로고 */}
-      {logo && (
-        <AppBrandMark className="mr-auto" />
-      )}
+    <header className={cn("sticky top-0 z-30 border-b border-border/70 bg-background/88 backdrop-blur-xl", className)}>
+      <div className="page-shell page-content flex min-h-[var(--mobile-page-header-height)] items-center gap-3 py-2.5 md:min-h-[72px] md:py-3">
+        {showBack && (
+          <button onClick={() => navigate(-1)} className="rounded-full p-2 -ml-2 transition-colors hover:bg-secondary">
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+        )}
 
-      {/* 페이지 타이틀 */}
-      {title && (
-        <div className={`flex-1 ${showBack ? "text-center pr-10" : ""} text-foreground font-bold text-xl`}>
-          {title}
-        </div>
-      )}
+        {logo && <AppBrandMark className="mr-auto" />}
 
-      {/* 알림 버튼 */}
-      {showNotifications && (
-        <button className="p-2 -mr-2 ml-auto rounded-full hover:bg-secondary">
-          <Bell className="w-6 h-6 text-foreground" />
-        </button>
-      )}
+        {(title || description) && (
+          <div className="min-w-0 flex-1">
+            {title && <div className="truncate text-[14px] font-bold text-foreground md:text-lg">{title}</div>}
+            {description && <div className="truncate text-xs text-muted-foreground">{description}</div>}
+          </div>
+        )}
+
+        {rightContent}
+
+        {showNotifications && (
+          <button className="ml-auto rounded-full p-2 transition-colors hover:bg-secondary">
+            <Bell className="h-6 w-6 text-foreground" />
+          </button>
+        )}
+      </div>
     </header>
   );
 }

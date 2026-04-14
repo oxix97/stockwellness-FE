@@ -60,7 +60,7 @@ export function BacktestResult() {
   // 설정값이 없거나 유효하지 않은 경우
   if (!config) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+      <div className="page-shell page-content min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <div className="text-6xl mb-4">⚠️</div>
         <div className="text-xl font-bold mb-2">잘못된 접근입니다</div>
         <div className="text-muted-foreground mb-8">백테스트 설정 정보가 올바르지 않습니다.</div>
@@ -77,7 +77,7 @@ export function BacktestResult() {
   // 로딩 중이거나 아직 데이터가 없는 초기 상태 처리
   if (isLoading || (hasRun.current && !data && !isError)) {
     return (
-      <div className="p-6 space-y-8">
+      <div className="page-shell page-content py-6 space-y-8">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-64 w-full rounded-3xl" />
         <Skeleton className="h-80 w-full rounded-3xl" />
@@ -88,7 +88,7 @@ export function BacktestResult() {
   // 서버 에러 발생 시 처리
   if (isError || (hasRun.current && !data)) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+      <div className="page-shell page-content min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <div className="text-6xl mb-4">😵‍💫</div>
         <div className="text-xl font-bold mb-2">결과를 불러오지 못했어요</div>
         <div className="text-muted-foreground mb-8">서버와의 통신에 문제가 발생했습니다.</div>
@@ -105,7 +105,7 @@ export function BacktestResult() {
   // 데이터는 로드되었으나 지표(metrics)가 계산되지 않은 경우 (빈 데이터 등)
   if (!metrics) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+      <div className="page-shell page-content min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <div className="text-6xl mb-4">📊</div>
         <div className="text-xl font-bold mb-2">표시할 데이터가 부족해요</div>
         <div className="text-muted-foreground mb-8">
@@ -155,56 +155,43 @@ export function BacktestResult() {
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      <PageHeader title="시뮬레이션 결과" showBack />
+      <PageHeader title="시뮬레이션 결과" description="설정한 전략을 과거 데이터에 적용한 모바일 웹 리포트" showBack />
 
-      {/* 결과 요약 */}
-      <div className="px-6 py-10 bg-gradient-to-br from-primary/10 to-primary/5 border-b border-border text-center">
-        <div className="text-muted-foreground mb-2 font-medium">
-          {(config.amount || 0).toLocaleString()}원이
-        </div>
-        <div className="text-foreground mb-3 font-bold text-5xl">
-          ₩ {metrics.finalValue.toLocaleString()}
-        </div>
-        <div className="text-up mb-4 font-bold text-3xl">
-          {metrics.totalReturn >= 0 ? "+" : ""}{metrics.totalReturn}%
-        </div>
-        <div className="text-muted-foreground font-medium">되었을 거예요!</div>
+      <div className="page-shell page-content space-y-6 py-6">
+        <section className="rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] px-5 py-6 text-center shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
+          <div className="mb-2 font-medium text-muted-foreground">{(config.amount || 0).toLocaleString()}원이</div>
+          <div className="mb-3 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">₩ {metrics.finalValue.toLocaleString()}</div>
+          <div className="mb-4 text-[2rem] font-bold text-up md:text-3xl">{metrics.totalReturn >= 0 ? "+" : ""}{metrics.totalReturn}%</div>
+          <div className="font-medium text-muted-foreground">되었을 거예요!</div>
 
-        {/* 벤치마크 비교 */}
-        <div className="bg-card rounded-3xl p-6 mt-8 shadow-sm border border-border">
-          <div className="flex items-center justify-between">
-            <div className="text-left">
-              <div className="text-muted-foreground text-sm mb-1 font-medium">벤치마크 대비</div>
-              <div className="text-foreground font-bold text-xl">
-                {config.benchmarkTicker || "SPY"}보다
+          <div className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-left">
+                <div className="mb-1 text-sm font-medium text-muted-foreground">벤치마크 대비</div>
+                <div className="text-lg font-bold text-foreground md:text-xl">{config.benchmarkTicker || "SPY"}보다</div>
+              </div>
+              <div className="text-right">
+                {hasBenchmarkReturn ? (
+                  <>
+                    <div className="text-[1.75rem] font-bold text-up md:text-3xl">
+                      {metrics.outperformance >= 0 ? "+" : ""}{metrics.outperformance.toFixed(1)}%
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">더 높은 수익</div>
+                  </>
+                ) : (
+                  <div className="text-sm font-medium text-muted-foreground">벤치마크 데이터 없음</div>
+                )}
               </div>
             </div>
-            <div className="text-right">
-              {hasBenchmarkReturn ? (
-                <>
-                  <div className="text-up font-bold text-3xl">
-                    {metrics.outperformance >= 0 ? "+" : ""}{metrics.outperformance.toFixed(1)}%
-                  </div>
-                  <div className="text-muted-foreground text-sm font-medium">더 높은 수익</div>
-                </>
-              ) : (
-                <div className="text-muted-foreground text-sm font-medium">벤치마크 데이터 없음</div>
-              )}
-            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* 차트 섹션 */}
-      <ChartSection backtestData={backtestData} />
+        <ChartSection backtestData={backtestData} />
+        <AiCommentCard apiComment={aiComment} />
 
-      {/* AI 코멘트 카드 */}
-      <AiCommentCard apiComment={aiComment} />
-
-      {/* 성과 지표 */}
-      <div className="px-6 py-10">
-        <div className="text-foreground mb-6 font-bold text-2xl">상세 성과 지표</div>
-        <div className="grid grid-cols-2 gap-4">
+        <section className="rounded-[32px] border border-border bg-card px-5 py-6 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
+          <div className="text-foreground mb-6 font-bold text-xl md:text-2xl">상세 성과 지표</div>
+          <div className="grid grid-cols-2 gap-4">
           <MetricCard label="연평균 수익률" value={displayCagr != null ? `${displayCagr}%` : "-"} sub="CAGR" color="text-up" />
           <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-down" />
           <MetricCard label="위험 대비 수익" value={displaySharpe ?? "-"} sub="샤프 지수" />
@@ -226,6 +213,7 @@ export function BacktestResult() {
             />
           )}
         </div>
+        </section>
       </div>
     </div>
   );
@@ -259,10 +247,10 @@ function ChartSection({ backtestData }: { backtestData: BacktestDailyResult[] })
   }, [data]);
 
   return (
-    <div className="px-6 py-10 bg-card border-b border-border">
+    <section className="rounded-[32px] border border-border bg-card px-5 py-6 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
       <div className="flex items-center gap-2 mb-8">
         <Activity className="w-6 h-6 text-primary" />
-        <div className="text-foreground font-bold text-xl">자산 성장 추이</div>
+        <div className="text-foreground font-bold text-lg md:text-xl">자산 성장 추이</div>
       </div>
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
@@ -293,7 +281,7 @@ function ChartSection({ backtestData }: { backtestData: BacktestDailyResult[] })
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -304,15 +292,15 @@ function AiCommentCard({ apiComment }: { apiComment: string | null }) {
   }, [apiComment]);
 
   return (
-    <div className="px-6 py-6 border-b border-border">
-      <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-3xl p-5 border border-primary/20">
+    <section className="rounded-[32px] border border-border bg-card px-5 py-5 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
+      <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-5 h-5 text-primary" />
           <span className="text-foreground font-bold text-sm">AI 성과 코멘트</span>
         </div>
         <p className="text-foreground/80 text-sm leading-relaxed">{comment}</p>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -325,7 +313,7 @@ function MetricCard({ label, value, sub, color = "text-foreground" }: {
   return (
     <div className="bg-card rounded-3xl p-6 border border-border shadow-sm">
       <div className="text-muted-foreground text-sm mb-2 font-medium">{label}</div>
-      <div className={`${color} mb-1 font-bold text-3xl`}>{value}</div>
+      <div className={`${color} mb-1 font-bold text-[1.75rem] md:text-3xl`}>{value}</div>
       <div className="text-muted-foreground text-xs font-bold uppercase">{sub}</div>
     </div>
   );

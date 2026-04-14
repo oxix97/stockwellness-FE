@@ -47,13 +47,14 @@ export function More() {
 
   return (
     <div className="min-h-full pb-8">
-      <div className="px-4 pt-4">
+      <div className="page-shell page-content pt-4 md:pt-6">
         <ContextHeader
           variant="profile"
+          layout="split"
           eyebrow="My Garden"
           title={
             <div>
-              <p className="text-[28px] font-bold leading-tight tracking-tight text-foreground">
+              <p className="text-[length:var(--mobile-hero-title-size)] font-bold leading-tight tracking-tight text-foreground">
                 {nickname ?? "투자자"}님의
                 <br />
                 투자 정원
@@ -65,20 +66,20 @@ export function More() {
             <div className="flex flex-col items-end gap-2">
               <AppBrandMark compact />
               <div className="rounded-2xl border border-border/60 bg-card/72 px-3 py-2 text-right backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Identity</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Identity</p>
                 <p className={`mt-1 text-sm font-bold ${investorType.color}`}>{investorType.label}</p>
               </div>
             </div>
           }
           ornament={
             <div className="absolute bottom-4 right-4 flex gap-2">
-              <div className="rounded-full border border-border/50 bg-card/76 px-3 py-1.5 text-[10px] text-muted-foreground">
+              <div className="rounded-full border border-border/50 bg-card/76 px-3 py-1.5 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1"><Flower2 className="h-3 w-3 text-primary" /> profile</span>
               </div>
             </div>
           }
           footer={
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 min-[408px]:grid-cols-3 min-[408px]:[&>*:last-child]:col-span-1 [&>*:last-child]:col-span-2">
               <MetricTile
                 label="가입일"
                 value={
@@ -113,136 +114,142 @@ export function More() {
         />
       </div>
 
-      <Section
-        title="투자 페르소나"
-        subtitle="현재 포트폴리오 상태를 기반으로 내 투자 정체성을 정리합니다."
-        icon={Sparkles}
-        className="pt-6 pb-4"
-      >
-        <div className="rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <p className={`text-base font-bold ${investorType.color}`}>{investorType.label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                포트폴리오 건강 점수와 보유 구조를 기준으로 앱이 읽어낸 현재 투자 성향입니다.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="계정 설정" subtitle="프로필과 알림 관련 설정을 관리합니다." icon={User} className="pb-4">
-        <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-          <MenuItem icon={User} title="닉네임 변경" description="앱 전역에서 보이는 나의 표시 이름을 수정합니다." onClick={() => setShowNicknameModal(true)} />
-          <MenuItem icon={Bell} title="알림 설정" description="리밸런싱, 관심 종목, 이벤트 알림을 관리합니다." onClick={() => navigate("/more/notifications")} isLast />
-        </div>
-      </Section>
-
-      <Section title="환경 허브" subtitle="테마, 앱 환경, 지원 진입점을 같은 구조로 정리했습니다." icon={Palette} className="pb-4">
-        <div className="space-y-3">
-          <SettingsGroupCard
-            icon={Palette}
-            title="테마 설정"
-            description="라이트, 다크, 시스템 모드를 같은 규칙으로 전환합니다."
+      <div className="page-shell page-content grid gap-5 pt-5 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.1fr)]">
+        <div className="space-y-6">
+          <Section
+            title="투자 페르소나"
+            subtitle="현재 포트폴리오 상태를 기반으로 내 투자 정체성을 정리합니다."
+            icon={Sparkles}
+            className="px-0 pb-0"
           >
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="w-full">
-                  <MenuItem
-                    icon={Palette}
-                    title="현재 테마"
-                    description="앱 전체 색상 모드를 즉시 전환합니다."
-                    trailing={
-                      <span className="rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
-                        {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
-                      </span>
-                    }
-                    isLast
-                  />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36 rounded-xl">
-                <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 py-2.5 text-sm">
-                  <Sun className="h-4 w-4" /> 라이트
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 py-2.5 text-sm">
-                  <Moon className="h-4 w-4" /> 다크
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 py-2.5 text-sm">
-                  <Monitor className="h-4 w-4" /> 시스템
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SettingsGroupCard>
-
-          <SettingsGroupCard
-            icon={Settings}
-            title="앱 설정"
-            description="추가 환경 설정과 실험 기능 진입점을 같은 형식으로 유지합니다."
-          >
-            <MenuItem
-              icon={Settings}
-              title="일반 설정"
-              description="앱 사용 환경과 이후 확장될 기능 설정을 모아둡니다."
-              onClick={() => toast.info("준비 중입니다.")}
-              isLast
-            />
-          </SettingsGroupCard>
-
-          <SettingsGroupCard
-            icon={HelpCircle}
-            title="고객 지원"
-            description="도움말, 문의, 제품 가이드를 같은 구조로 진입할 수 있게 정리했습니다."
-          >
-            <MenuItem
-              icon={HelpCircle}
-              title="도움 및 문의"
-              description="문의, 도움말, 제품 가이드 진입점입니다."
-              onClick={() => toast.info("준비 중입니다.")}
-              isLast
-            />
-          </SettingsGroupCard>
-        </div>
-      </Section>
-
-      <Section title="계정" subtitle="로그아웃 및 탈퇴 관련 동작입니다." icon={LogOut}>
-        <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-          <MenuItem icon={LogOut} title="로그아웃" description="현재 계정 세션을 종료하고 로그인 화면으로 돌아갑니다." onClick={handleLogout} />
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="flex w-full items-center justify-between px-4 py-4 text-left">
-                <div className="flex items-start gap-3">
-                  <span className="mt-1 h-4 w-4 rounded-full bg-red-500/12" />
-                  <div>
-                    <span className="block text-sm font-medium text-red-500">회원 탈퇴</span>
-                    <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                      포트폴리오와 관심 종목 데이터를 포함한 계정 정보를 모두 삭제합니다.
-                    </span>
-                  </div>
+            <div className="rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+                  <ShieldCheck className="h-5 w-5" />
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="mx-4 rounded-2xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>정말 탈퇴하시겠습니까?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  탈퇴 시 모든 포트폴리오와 관심 종목 데이터가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="rounded-xl">취소</AlertDialogCancel>
-                <AlertDialogAction onClick={handleWithdraw} className="rounded-xl bg-red-500 hover:bg-red-600">
-                  탈퇴하기
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                <div>
+                  <p className={`text-base font-bold ${investorType.color}`}>{investorType.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    포트폴리오 건강 점수와 보유 구조를 기준으로 앱이 읽어낸 현재 투자 성향입니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Section>
         </div>
-      </Section>
+
+        <div className="space-y-6">
+          <Section title="계정 설정" subtitle="프로필과 알림 관련 설정을 관리합니다." icon={User} className="px-0 pb-0">
+            <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+              <MenuItem icon={User} title="닉네임 변경" description="앱 전역에서 보이는 나의 표시 이름을 수정합니다." onClick={() => setShowNicknameModal(true)} />
+              <MenuItem icon={Bell} title="알림 설정" description="리밸런싱, 관심 종목, 이벤트 알림을 관리합니다." onClick={() => navigate("/more/notifications")} isLast />
+            </div>
+          </Section>
+
+          <Section title="환경 허브" subtitle="테마, 앱 환경, 지원 진입점을 같은 구조로 정리했습니다." icon={Palette} className="px-0 pb-0">
+            <div className="space-y-3">
+              <SettingsGroupCard
+                icon={Palette}
+                title="테마 설정"
+                description="라이트, 다크, 시스템 모드를 같은 규칙으로 전환합니다."
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="w-full">
+                      <MenuItem
+                        icon={Palette}
+                        title="현재 테마"
+                        description="앱 전체 색상 모드를 즉시 전환합니다."
+                        trailing={
+                          <span className="rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                            {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
+                          </span>
+                        }
+                        isLast
+                      />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                    <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 py-2.5 text-sm">
+                      <Sun className="h-4 w-4" /> 라이트
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 py-2.5 text-sm">
+                      <Moon className="h-4 w-4" /> 다크
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 py-2.5 text-sm">
+                      <Monitor className="h-4 w-4" /> 시스템
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SettingsGroupCard>
+
+              <SettingsGroupCard
+                icon={Settings}
+                title="앱 설정"
+                description="추가 환경 설정과 실험 기능 진입점을 같은 형식으로 유지합니다."
+              >
+                <MenuItem
+                  icon={Settings}
+                  title="일반 설정"
+                  description="앱 사용 환경과 이후 확장될 기능 설정을 모아둡니다."
+                  onClick={() => toast.info("준비 중입니다.")}
+                  isLast
+                />
+              </SettingsGroupCard>
+
+              <SettingsGroupCard
+                icon={HelpCircle}
+                title="고객 지원"
+                description="도움말, 문의, 제품 가이드를 같은 구조로 진입할 수 있게 정리했습니다."
+              >
+                <MenuItem
+                  icon={HelpCircle}
+                  title="도움 및 문의"
+                  description="문의, 도움말, 제품 가이드 진입점입니다."
+                  onClick={() => toast.info("준비 중입니다.")}
+                  isLast
+                />
+              </SettingsGroupCard>
+            </div>
+          </Section>
+
+          <Section title="계정" subtitle="로그아웃 및 탈퇴 관련 동작입니다." icon={LogOut} className="px-0">
+            <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+              <MenuItem icon={LogOut} title="로그아웃" description="현재 계정 세션을 종료하고 로그인 화면으로 돌아갑니다." onClick={handleLogout} />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button className="flex w-full items-center justify-between px-4 py-4 text-left">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-1 h-4 w-4 rounded-full bg-red-500/12" />
+                      <div>
+                        <span className="block text-sm font-medium text-red-500">회원 탈퇴</span>
+                        <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                          포트폴리오와 관심 종목 데이터를 포함한 계정 정보를 모두 삭제합니다.
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="mx-4 rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>정말 탈퇴하시겠습니까?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      탈퇴 시 모든 포트폴리오와 관심 종목 데이터가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-xl">취소</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleWithdraw} className="rounded-xl bg-red-500 hover:bg-red-600">
+                      탈퇴하기
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </Section>
+        </div>
+      </div>
 
       <p className="mt-6 mb-4 text-center text-xs text-muted-foreground">
         Stockwellness v1.0.0 · © 2026 Stockwellness
@@ -387,10 +394,10 @@ function MetricTile({
   const toneClassName = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-foreground";
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/70 px-3 py-3 text-center">
+    <div className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/60 bg-card/70 px-3 py-3 text-center md:rounded-2xl">
       <div className="flex items-center justify-center gap-1">
         {icon}
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       </div>
       <p className={`mt-1 text-sm font-bold tabular-nums ${toneClassName}`}>{value}</p>
     </div>

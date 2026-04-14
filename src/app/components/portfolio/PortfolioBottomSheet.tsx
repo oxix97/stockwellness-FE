@@ -11,6 +11,7 @@ import { DiversificationWidget } from "./widgets/DiversificationWidget";
 import { RebalancingWidget } from "./widgets/RebalancingWidget";
 import { SimulationWidget } from "./widgets/SimulationWidget";
 import { CorrelationWidget } from "./widgets/CorrelationWidget";
+import { useViewportType } from "@/app/components/ui/use-mobile";
 
 export type AnalysisType =
   | "valuation"
@@ -30,6 +31,9 @@ export function PortfolioBottomSheet({
   onClose,
   type,
 }: PortfolioBottomSheetProps) {
+  const viewport = useViewportType();
+  const isDesktop = viewport === "desktop";
+
   const getTitle = () => {
     switch (type) {
       case "valuation":
@@ -48,8 +52,12 @@ export function PortfolioBottomSheet({
   };
 
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="max-h-[85vh]">
+    <Drawer
+      open={isOpen}
+      direction={isDesktop ? "right" : "bottom"}
+      onOpenChange={(open) => !open && onClose()}
+    >
+      <DrawerContent className={isDesktop ? "h-full w-full max-w-xl" : "max-h-[85vh]"}>
         <DrawerHeader className="relative border-b border-border pb-4">
           <DrawerTitle className="text-center text-base font-bold">
             {getTitle()}

@@ -57,7 +57,10 @@ export function SimulationWidget() {
     ...r.benchmarkReturnRates,
   }));
 
-  const benchmarks = data.comparisons.map((c) => c.indexName);
+  const benchmarks = data.comparisons.map((c) => ({
+    key: c.ticker,
+    label: c.indexName,
+  }));
 
   return (
     <div className="space-y-6">
@@ -166,12 +169,12 @@ export function SimulationWidget() {
               dot={false}
               activeDot={{ r: 4, fill: "#2EBE7A", stroke: "#fff", strokeWidth: 2 }}
             />
-            {benchmarks.map((name, i) => (
+            {benchmarks.map((benchmark, i) => (
               <Line
-                key={name}
-                name={name}
+                key={benchmark.key}
+                name={benchmark.label}
                 type="monotone"
-                dataKey={name}
+                dataKey={benchmark.key}
                 stroke={i === 0 ? "#94a3b8" : "#cbd5e1"}
                 strokeWidth={1.5}
                 strokeDasharray="4 4"

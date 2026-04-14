@@ -163,14 +163,14 @@ export function WatchlistItemCard({
             </div>
           </div>
 
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-secondary/65 px-3 py-2">
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-[calc(var(--mobile-card-radius)-4px)] bg-secondary/65 px-3 py-2 md:rounded-2xl">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">AI Signal</p>
-              <p className="mt-1 truncate text-[11px] text-foreground/80">
+              <p className="mt-1 line-clamp-2 text-xs leading-[1.35] text-foreground/80">
                 {stock.aiInsight || "아직 AI 요약이 없습니다. 메모와 함께 관찰하세요."}
               </p>
             </div>
-            <span className="rounded-full border border-border/60 bg-card px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+            <span className="rounded-full border border-border/60 bg-card px-2 py-1 text-[10px] font-semibold text-muted-foreground min-[408px]:text-[11px]">
               {isExpanded ? "열림" : "탭해 확장"}
             </span>
           </div>

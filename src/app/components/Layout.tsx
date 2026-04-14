@@ -1,10 +1,12 @@
 import { Suspense } from "react";
 import { Outlet, Link, useLocation } from "react-router";
-import { Home, Star, Wallet, User, Search } from "lucide-react";
+import { Home, Search, Star, Wallet, User, PanelLeft, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useMe } from "@/hooks/use-member";
 import { Skeleton } from "@/app/components/ui";
 import { AppBrandMark } from "@/app/components/shared";
+import { cn } from "@/app/components/ui/utils";
+import { useViewportType } from "@/app/components/ui/use-mobile";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "홈", size: 24 },
@@ -14,53 +16,165 @@ const NAV_ITEMS = [
   { path: "/more", icon: User, label: "마이", size: 24 },
 ];
 
+function isRouteActive(currentPath: string, itemPath: string) {
+  if (itemPath === "/") {
+    return currentPath === "/";
+  }
+
+  return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`);
+}
+
 export function Layout() {
   const location = useLocation();
-  useMe(); // 재진입 시 서버에서 최신 프로필 조회 → Zustand 갱신
+  const viewport = useViewportType();
+  const isMobile = viewport === "mobile";
+
+  useMe();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[radial-gradient(circle_at_top,color-mix(in_srgb,var(--color-primary)_8%,transparent),transparent_28%),var(--color-background)]">
-      {/* 메인 콘텐츠 — 하단 네비(pb-20) 여백 확보 */}
-      <main className="flex-1 overflow-y-auto pb-20">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <Suspense fallback={<div className="p-6 space-y-4"><Skeleton className="h-40 w-full rounded-3xl" /><Skeleton className="h-80 w-full rounded-3xl" /></div>}>
-              <Outlet />
-            </Suspense>
-          </motion.div>
-        </AnimatePresence>
-      </main>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,color-mix(in_srgb,var(--color-primary)_8%,transparent),transparent_28%),var(--color-background)]">
+      <div className="hidden border-b border-border/70 bg-background/80 backdrop-blur-xl md:block xl:hidden">
+        <div className="page-shell flex min-h-[72px] items-center justify-between">
+          <Link to="/" className="flex items-center gap-3">
+            <AppBrandMark />
+          </Link>
+          <div className="flex items-center gap-2">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = isRouteActive(location.pathname, item.path);
 
-      {/* 하단 네비게이션 — 5탭 */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/82 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.4)]">
-        <div className="mx-auto flex max-w-xl items-center justify-around gap-1 px-3 pt-2">
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition-colors",
+                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="page-shell flex min-h-screen gap-6 xl:items-start xl:py-6">
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-[272px] shrink-0 overflow-hidden rounded-[32px] border border-border/70 bg-card/88 p-5 shadow-[0_30px_70px_-46px_rgba(15,23,42,0.42)] backdrop-blur-xl xl:flex xl:flex-col">
+          <Link to="/" className="mb-6">
+            <AppBrandMark />
+          </Link>
+
+          <nav className="space-y-2">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = isRouteActive(location.pathname, item.path);
+
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-2xl px-4 py-3 transition-colors",
+                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                  )}
+                >
+                  <div className={cn("rounded-2xl p-2 transition-colors", isActive ? "bg-primary/12 text-primary" : "bg-secondary/70 text-muted-foreground group-hover:text-foreground")}>
+                    <Icon style={{ width: item.size, height: item.size }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">{item.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.path === "/" && "시장 흐름과 오늘의 컨텍스트"}
+                      {item.path === "/search" && "종목과 테마 탐색"}
+                      {item.path === "/watchlist" && "관심 종목 모니터링"}
+                      {item.path === "/portfolio" && "핵심 성과와 액션"}
+                      {item.path === "/more" && "프로필과 환경 설정"}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto space-y-3 rounded-[28px] border border-border/60 bg-background/75 p-4">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <PanelLeft className="h-3.5 w-3.5 text-primary" />
+              Desktop shell
+            </div>
+            <p className="text-sm font-semibold text-foreground">모바일 흐름을 유지하면서 더 넓게 탐색할 수 있는 레이아웃입니다.</p>
+            <Link
+              to="/more/notifications"
+              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
+            >
+              <Bell className="h-4 w-4 text-primary" />
+              알림 보기
+            </Link>
+          </div>
+        </aside>
+
+        <div className="min-w-0 flex-1">
+          <main
+            className={cn(
+              "min-h-screen flex-1",
+              isMobile
+                ? "overflow-y-auto [padding-bottom:calc(var(--mobile-bottom-nav-height)+env(safe-area-inset-bottom)+0.75rem)]"
+                : "pb-10 md:pt-6 xl:pt-0"
+            )}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: isMobile ? 10 : 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: isMobile ? -10 : -4 }}
+                transition={{ duration: isMobile ? 0.2 : 0.16, ease: "easeOut" }}
+              >
+                <Suspense
+                  fallback={
+                    <div className="page-shell page-content space-y-4 pt-6">
+                      <Skeleton className="h-40 w-full rounded-3xl" />
+                      <Skeleton className="h-80 w-full rounded-3xl" />
+                    </div>
+                  }
+                >
+                  <Outlet />
+                </Suspense>
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/82 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.4)] backdrop-blur-xl md:hidden">
+        <div className="mx-auto flex max-w-xl items-center justify-around gap-1 px-3 pt-1.5">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = isRouteActive(location.pathname, item.path);
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative flex h-14 flex-1 flex-col items-center justify-center rounded-2xl transition-all ${
+                className={cn(
+                  "relative flex flex-1 flex-col items-center justify-center rounded-2xl transition-all",
                   isActive ? "bg-primary/10" : "hover:bg-secondary/70"
-                }`}
+                )}
+                style={{ height: "calc(var(--mobile-bottom-nav-height) - 12px)" }}
               >
                 <Icon
                   style={{ width: item.size, height: item.size }}
-                  className={`mb-1 transition-colors duration-200 ${
+                  className={cn(
+                    "mb-1 transition-colors duration-200",
                     isActive ? "text-primary" : "text-muted-foreground"
-                  }`}
+                  )}
                 />
                 <span
-                  className={`text-[10px] transition-colors duration-200 ${
-                    isActive ? "text-primary font-bold" : "text-muted-foreground font-medium"
-                  }`}
+                  className={cn(
+                    "text-[11px] transition-colors duration-200",
+                    isActive ? "font-bold text-primary" : "font-medium text-muted-foreground"
+                  )}
                 >
                   {item.label}
                 </span>
@@ -74,9 +188,7 @@ export function Layout() {
             );
           })}
         </div>
-        <div className="pointer-events-none absolute left-4 top-2 hidden sm:block">
-          <AppBrandMark compact className="opacity-60" />
-        </div>
+        <div className="pb-[env(safe-area-inset-bottom)]" />
       </nav>
     </div>
   );

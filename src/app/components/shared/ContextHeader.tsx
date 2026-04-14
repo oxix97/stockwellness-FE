@@ -11,6 +11,7 @@ interface ContextHeaderProps {
   variant?: "default" | "market" | "search" | "watch" | "profile";
   ornament?: ReactNode;
   footerClassName?: string;
+  layout?: "adaptive" | "split";
 }
 
 export function ContextHeader({
@@ -23,11 +24,12 @@ export function ContextHeader({
   variant = "default",
   ornament,
   footerClassName,
+  layout = "adaptive",
 }: ContextHeaderProps) {
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-[28px] border px-5 py-5 shadow-[0_20px_40px_-28px_color-mix(in_srgb,var(--color-primary)_40%,transparent)]",
+        "relative overflow-hidden rounded-[var(--mobile-card-radius)] border px-[var(--mobile-header-padding-x)] py-[var(--mobile-header-padding-y)] shadow-[0_20px_40px_-28px_color-mix(in_srgb,var(--color-primary)_40%,transparent)] md:rounded-[28px] md:px-6 md:py-6 xl:px-7",
         variant === "default" &&
           "border-primary/15 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_16%,var(--color-card)),color-mix(in_srgb,var(--color-accent)_70%,var(--color-card))_60%,var(--color-card))] dark:border-primary/20",
         variant === "market" &&
@@ -44,53 +46,58 @@ export function ContextHeader({
       <div className="pointer-events-none absolute inset-0">
         {variant === "market" && (
           <>
-            <div className="absolute -right-10 -top-8 h-28 w-28 rounded-full bg-primary/12 blur-2xl" />
-            <div className="absolute right-10 top-8 h-24 w-24 rounded-full border border-primary/10" />
-            <div className="absolute left-6 top-6 h-px w-24 bg-gradient-to-r from-primary/45 to-transparent" />
-            <div className="absolute right-6 bottom-6 h-10 w-24 rounded-full bg-primary/6 blur-xl" />
+            <div className="absolute -right-10 -top-8 h-24 w-24 rounded-full bg-primary/12 blur-2xl min-[408px]:h-28 min-[408px]:w-28" />
+            <div className="absolute right-8 top-7 hidden h-20 w-20 rounded-full border border-primary/10 min-[408px]:block min-[408px]:h-24 min-[408px]:w-24" />
+            <div className="absolute left-5 top-5 h-px w-20 bg-gradient-to-r from-primary/45 to-transparent min-[408px]:left-6 min-[408px]:top-6 min-[408px]:w-24" />
+            <div className="absolute right-5 bottom-5 h-8 w-20 rounded-full bg-primary/6 blur-xl min-[408px]:right-6 min-[408px]:bottom-6 min-[408px]:h-10 min-[408px]:w-24" />
           </>
         )}
         {variant === "search" && (
           <>
-            <div className="absolute right-6 top-6 grid grid-cols-4 gap-2 opacity-40">
+            <div className="absolute right-5 top-5 hidden grid-cols-4 gap-1.5 opacity-35 min-[408px]:grid min-[408px]:gap-2 min-[408px]:opacity-40">
               {Array.from({ length: 8 }).map((_, index) => (
                 <span key={index} className="h-2 w-2 rounded-full bg-primary/30" />
               ))}
             </div>
-            <div className="absolute left-0 top-16 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+            <div className="absolute left-0 top-14 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent min-[408px]:top-16" />
           </>
         )}
         {variant === "watch" && (
           <>
-            <div className="absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
-            <div className="absolute right-4 top-5 h-16 w-16 rounded-2xl border border-primary/12 rotate-6" />
-            <div className="absolute left-6 top-6 h-px w-16 bg-gradient-to-r from-primary/35 to-transparent" />
+            <div className="absolute -left-10 bottom-0 h-20 w-20 rounded-full bg-primary/10 blur-2xl min-[408px]:h-24 min-[408px]:w-24" />
+            <div className="absolute right-4 top-5 h-14 w-14 rounded-2xl border border-primary/12 rotate-6 min-[408px]:h-16 min-[408px]:w-16" />
+            <div className="absolute left-5 top-5 h-px w-14 bg-gradient-to-r from-primary/35 to-transparent min-[408px]:left-6 min-[408px]:top-6 min-[408px]:w-16" />
           </>
         )}
         {variant === "profile" && (
           <>
-            <div className="absolute right-0 top-0 h-24 w-28 bg-gradient-to-bl from-primary/14 to-transparent" />
-            <div className="absolute right-8 top-6 h-14 w-14 rounded-full border border-primary/15" />
-            <div className="absolute left-6 bottom-8 h-8 w-24 rounded-full bg-primary/6 blur-xl" />
+            <div className="absolute right-0 top-0 h-20 w-24 bg-gradient-to-bl from-primary/14 to-transparent min-[408px]:h-24 min-[408px]:w-28" />
+            <div className="absolute right-6 top-5 h-12 w-12 rounded-full border border-primary/15 min-[408px]:right-8 min-[408px]:top-6 min-[408px]:h-14 min-[408px]:w-14" />
+            <div className="absolute left-5 bottom-6 h-7 w-20 rounded-full bg-primary/6 blur-xl min-[408px]:left-6 min-[408px]:bottom-8 min-[408px]:h-8 min-[408px]:w-24" />
           </>
         )}
         {ornament}
       </div>
-      <div className="flex items-start justify-between gap-4">
+      <div
+        className={cn(
+          "flex flex-col gap-[var(--mobile-header-gap)] md:gap-5",
+          layout === "split" ? "lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start" : "lg:flex-row lg:items-start lg:justify-between"
+        )}
+      >
         <div className="relative z-10 min-w-0">
           {eyebrow && (
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {eyebrow}
             </p>
           )}
           <div className="text-foreground">{title}</div>
           {description && (
-            <div className="mt-2 text-sm leading-6 text-muted-foreground">{description}</div>
+            <div className="mt-2 max-w-[34rem] text-[13px] leading-[1.55] text-muted-foreground md:text-[15px]">{description}</div>
           )}
         </div>
-        {actions && <div className="relative z-10 shrink-0">{actions}</div>}
+        {actions && <div className="relative z-10 shrink-0 self-start lg:justify-self-end">{actions}</div>}
       </div>
-      {footer && <div className={cn("relative z-10 mt-4", footerClassName)}>{footer}</div>}
+      {footer && <div className={cn("relative z-10 mt-[var(--mobile-footer-gap)] md:mt-5", footerClassName)}>{footer}</div>}
     </section>
   );
 }

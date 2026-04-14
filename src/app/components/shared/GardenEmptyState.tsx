@@ -18,16 +18,16 @@ export function GardenEmptyState({
   secondary,
 }: GardenEmptyStateProps) {
   return (
-    <div className="rounded-[28px] border border-border bg-card px-6 py-10 text-center shadow-[0_16px_40px_-34px_rgba(15,23,42,0.35)]">
-      <div className="mx-auto mb-5 flex w-fit justify-center">
+    <div className="rounded-[var(--mobile-card-radius)] border border-border bg-card px-[var(--mobile-header-padding-x)] py-[calc(var(--mobile-header-padding-y)*1.55)] text-center shadow-[0_16px_40px_-34px_rgba(15,23,42,0.35)] md:rounded-[28px] md:px-6 md:py-10">
+      <div className="mx-auto mb-4 flex w-fit justify-center md:mb-5">
         <AppBrandMark compact />
       </div>
       <div className="mx-auto max-w-[18rem]">
         <p className="text-lg font-bold leading-snug text-foreground">{title}</p>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+        <p className="mt-2 text-sm leading-[1.55] text-muted-foreground">{description}</p>
       </div>
       {actionLabel && onAction && (
-        <Button onClick={onAction} className="mt-6 rounded-2xl px-5">
+        <Button onClick={onAction} className="mt-5 rounded-2xl px-5 md:mt-6">
           {actionLabel}
         </Button>
       )}

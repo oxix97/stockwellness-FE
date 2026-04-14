@@ -28,12 +28,7 @@ export function RebalancingWidget() {
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-bold text-foreground">리밸런싱 가이드</h3>
-          <p className="text-muted-foreground text-[10px]">
-            기준:{" "}
-            {rebalancing?.lastUpdated
-              ? new Date(rebalancing.lastUpdated).toLocaleString()
-              : "정보 없음"}
-          </p>
+          <p className="text-muted-foreground text-[10px]">현재 목표 비중 대비 이탈 현황</p>
         </div>
 
         {items.length === 0 && (

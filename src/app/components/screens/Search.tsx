@@ -55,26 +55,27 @@ export function Search() {
   };
 
   return (
-    <div className="min-h-full pb-24">
-      <div className="px-4 pt-4">
+    <div className="min-h-full pb-6">
+      <div className="page-shell page-content pt-4 md:pt-6">
         <ContextHeader
           variant="search"
+          layout="split"
           eyebrow="Search Garden"
-          title={<p className="text-[28px] font-bold leading-tight tracking-tight">찾고 싶은 종목과 테마를 바로 탐색해보세요</p>}
+          title={<p className="max-w-[15rem] text-[length:var(--mobile-hero-title-size)] font-bold leading-[1.08] tracking-tight min-[408px]:max-w-[17rem]">찾고 싶은 종목과 테마를 바로 탐색해보세요</p>}
           description="검색은 이 앱의 작업 허브입니다. 종목명, 티커, 업종 흐름을 한 번에 좁혀나갈 수 있도록 구성했습니다."
           actions={
-            <div className="rounded-2xl border border-border/70 bg-card/75 px-3 py-2 text-right backdrop-blur-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Mode</p>
+            <div className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/70 bg-card/75 px-3 py-2 text-right backdrop-blur-sm md:rounded-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Mode</p>
               <p className="mt-1 text-sm font-bold text-foreground">탐색 허브</p>
             </div>
           }
           ornament={
-            <div className="absolute right-5 top-14 flex flex-col gap-2">
-              <div className="flex items-center gap-1 rounded-full border border-border/50 bg-card/70 px-2 py-1 text-[10px] text-muted-foreground">
+            <div className="absolute right-5 top-12 hidden flex-col gap-2 min-[408px]:flex min-[408px]:top-14">
+              <div className="flex items-center gap-1 rounded-full border border-border/50 bg-card/70 px-2 py-1 text-xs text-muted-foreground">
                 <Compass className="h-3 w-3 text-primary" />
                 종목
               </div>
-              <div className="ml-5 flex items-center gap-1 rounded-full border border-border/50 bg-card/70 px-2 py-1 text-[10px] text-muted-foreground">
+              <div className="ml-5 flex items-center gap-1 rounded-full border border-border/50 bg-card/70 px-2 py-1 text-xs text-muted-foreground">
                 <Hash className="h-3 w-3 text-primary" />
                 테마
               </div>
@@ -89,7 +90,7 @@ export function Search() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder={initialSectorName ? `${initialSectorName} 내 종목 검색` : "종목명 또는 종목코드 검색"}
-                  className="h-14 w-full rounded-2xl border border-border bg-card/90 pl-12 pr-10 text-[15px] font-semibold text-foreground outline-none transition-all focus:border-primary/35 focus:ring-2 focus:ring-primary/20"
+                  className="h-13 w-full rounded-[calc(var(--mobile-card-radius)-2px)] border border-border bg-card/90 pl-12 pr-10 text-[15px] font-semibold text-foreground outline-none transition-all focus:border-primary/35 focus:ring-2 focus:ring-primary/20 min-[408px]:h-14 md:rounded-2xl"
                 />
                 {keyword.length > 0 && (
                   <button
@@ -116,53 +117,97 @@ export function Search() {
         />
       </div>
 
-      <div className="px-4 py-6 space-y-6">
+      <div className="page-shell page-content py-6">
         {searchMode ? (
-          <SearchResultsList
-            results={results}
-            isLoading={isSearching}
-            loadMoreRef={ref}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-          />
-        ) : (
-          <>
-            {(history.data?.length ?? 0) > 0 && (
-              <RecentSearchesList
-                recents={history.data || []}
-                onSelect={handleSelectKeyword}
-                onRemove={(nextKeyword) => deleteHistory.mutate(nextKeyword)}
-                onClearAll={() => clearHistory.mutate()}
-              />
-            )}
-
-            <Section
-              title="추천 탐색 경로"
-              subtitle="지금 많이 찾는 종목을 바로 탐색해보세요."
-              icon={Sparkles}
-              className="px-0 pb-2"
-            >
-              <div className="flex flex-wrap gap-2">
-                {suggestedPaths.map((pathKeyword) => (
-                  <button
-                    key={pathKeyword}
-                    onClick={() => handleSelectKeyword(pathKeyword)}
-                    className="rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
-                  >
-                    {pathKeyword}
-                  </button>
-                ))}
+          <div className="grid gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)]">
+            <aside className="hidden self-start lg:sticky lg:top-24 lg:block">
+              <div className="space-y-4 rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+                <div>
+                  <p className="text-sm font-bold text-foreground">탐색 상태</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">검색어와 업종 필터를 조합해 큰 화면에서도 빠르게 탐색할 수 있도록 고정 패널로 유지합니다.</p>
+                </div>
+                <div className="rounded-2xl bg-secondary/70 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Keyword</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{keyword || "전체 종목"}</p>
+                </div>
+                {(sectorCode || sectorName) && (
+                  <div className="rounded-2xl bg-secondary/70 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Sector</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">{sectorName || sectorCode}</p>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">인기 탐색어</p>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedPaths.map((pathKeyword) => (
+                      <button
+                        key={pathKeyword}
+                        onClick={() => handleSelectKeyword(pathKeyword)}
+                        className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
+                      >
+                        {pathKeyword}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </Section>
+            </aside>
 
-            <Section title="인기 검색어" subtitle="다른 사용자가 주목하는 종목 흐름입니다." icon={TrendingUp} className="px-0">
-              <PopularKeywordList
-                keywords={popular.data}
-                isLoading={popular.isLoading}
-                onSelect={handleSelectKeyword}
-              />
-            </Section>
-          </>
+            <SearchResultsList
+              results={results}
+              isLoading={isSearching}
+              loadMoreRef={ref}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+            />
+          </div>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+            <div className="space-y-6">
+              {(history.data?.length ?? 0) > 0 ? (
+                <RecentSearchesList
+                  recents={history.data || []}
+                  onSelect={handleSelectKeyword}
+                  onRemove={(nextKeyword) => deleteHistory.mutate(nextKeyword)}
+                  onClearAll={() => clearHistory.mutate()}
+                />
+              ) : (
+                <GardenEmptyState
+                  title="탐색 기록이 아직 없어요"
+                  description="검색을 시작하면 최근 살펴본 종목을 이 영역에서 빠르게 다시 열 수 있습니다."
+                />
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <Section
+                title="추천 탐색 경로"
+                subtitle="지금 많이 찾는 종목을 바로 탐색해보세요."
+                icon={Sparkles}
+                className="px-0 pb-2"
+              >
+                <div className="flex flex-wrap gap-2">
+                  {suggestedPaths.map((pathKeyword) => (
+                    <button
+                      key={pathKeyword}
+                      onClick={() => handleSelectKeyword(pathKeyword)}
+                      className="rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
+                    >
+                      {pathKeyword}
+                    </button>
+                  ))}
+                </div>
+              </Section>
+
+              <Section title="인기 검색어" subtitle="다른 사용자가 주목하는 종목 흐름입니다." icon={TrendingUp} className="px-0">
+                <PopularKeywordList
+                  keywords={popular.data}
+                  isLoading={popular.isLoading}
+                  onSelect={handleSelectKeyword}
+                />
+              </Section>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -251,23 +296,23 @@ function SearchResultsList({
           <Link key={stock.ticker} to={`/stock/${stock.ticker}`}>
             <motion.div
               whileTap={{ backgroundColor: "var(--color-secondary)" }}
-              className={`flex items-center justify-between px-5 py-4 active:bg-accent transition-colors ${index !== results.length - 1 ? "border-b border-border" : ""}`}
+              className={`flex items-center justify-between gap-4 px-5 py-4 active:bg-accent transition-colors md:py-5 ${index !== results.length - 1 ? "border-b border-border" : ""}`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex min-w-0 items-center gap-4">
                 <StockLogo name={stock.name} />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="font-bold text-foreground">{stock.name}</div>
-                    <span className="rounded-full border border-border/60 bg-secondary/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="truncate font-bold text-foreground">{stock.name}</div>
+                    <span className="rounded-full border border-border/60 bg-secondary/70 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                       {stock.marketType}
                     </span>
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span>{stock.ticker}</span>
                     <span>•</span>
                     <span>watchable</span>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">가격, 수급 흐름, 상세 지표를 바로 확인할 수 있어요.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">가격, 수급 흐름, 상세 지표를 바로 확인할 수 있어요.</p>
                 </div>
               </div>
               <ArrowUpRight className="h-4 w-4 text-muted-foreground" />

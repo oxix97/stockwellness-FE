@@ -1,6 +1,9 @@
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;
+const DESKTOP_BREAKPOINT = 1024;
+
+export type ViewportType = "mobile" | "tablet" | "desktop";
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(
@@ -18,4 +21,38 @@ export function useIsMobile() {
   }, []);
 
   return !!isMobile;
+}
+
+export function useViewportType(): ViewportType {
+  const [viewport, setViewport] = React.useState<ViewportType>("mobile");
+
+  React.useEffect(() => {
+    const mobileQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const desktopQuery = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`);
+
+    const updateViewport = () => {
+      if (desktopQuery.matches) {
+        setViewport("desktop");
+        return;
+      }
+
+      if (mobileQuery.matches) {
+        setViewport("mobile");
+        return;
+      }
+
+      setViewport("tablet");
+    };
+
+    mobileQuery.addEventListener("change", updateViewport);
+    desktopQuery.addEventListener("change", updateViewport);
+    updateViewport();
+
+    return () => {
+      mobileQuery.removeEventListener("change", updateViewport);
+      desktopQuery.removeEventListener("change", updateViewport);
+    };
+  }, []);
+
+  return viewport;
 }
