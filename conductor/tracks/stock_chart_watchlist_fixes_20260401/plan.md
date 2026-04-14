@@ -11,7 +11,7 @@
     - [x] `src/app/components/screens/StockDetail.tsx` (또는 해당 차트 컴포넌트) 에서 데이터 누락 시 렌더링 예외 처리 추가
 - [x] Task: Conductor - User Manual Verification 'Phase 1: 주봉 차트 수정' (Protocol in workflow.md)
 
-## Phase 2: 관심 종목 기능 고도화
+## Phase 2: 관심 종목 기능 고도화 [checkpoint: fb97195]
 - [x] Task: 관심 종목 하트 아이콘 및 기능 테스트 작성 (Red Phase) 766a599
     - [x] `src/hooks/__tests__/use-watchlist.test.tsx` 에서 추가/제거 및 상태 반영 테스트 케이스 작성
     - [x] `src/app/components/screens/__tests__/StockDetail.watchlist.test.tsx` 생성하여 하트 아이콘 클릭 상호작용 테스트 작성
@@ -21,4 +21,4 @@
 - [x] Task: StockDetail 화면 UI 연동 및 피드백 추가 766a599
     - [x] `src/app/components/screens/StockDetail.tsx` 에서 하트 아이콘 상태 및 클릭 핸들러 연결
     - [x] 성공/실패 시 `sonner` 토스트 알림 추가
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: 관심 종목 기능 고도화' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: 관심 종목 기능 고도화' (Protocol in workflow.md) fb97195
