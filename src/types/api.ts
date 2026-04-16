@@ -160,7 +160,17 @@ export type CountryRatio = NonNullable<PortfolioDiversificationResponse["country
 export type PortfolioRebalancingResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-rebalancing1494527279"]["data"]>;
 
 /** 리밸런싱 아이템 정보 (추출) */
-export type RebalancingItem = NonNullable<PortfolioRebalancingResponse["items"]>[number];
+export type RebalancingItem = {
+  symbol: string;
+  name: string;
+  currentWeight: number;
+  targetWeight: number;
+  diffWeight: number;
+  recommendedQuantity: number;
+  currentPrice: number;
+  expectedTradeAmount: number;
+  currentQuantity: number;
+};
 
 export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
 

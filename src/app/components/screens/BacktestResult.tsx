@@ -32,7 +32,7 @@ export function BacktestResult() {
         weights: JSON.parse(weightsStr)
       };
     } catch (e) {
-      console.error("Failed to parse backtest config", e);
+      console.error("Failed to parse backtest job", e);
       return null;
     }
   }, [searchParams]);

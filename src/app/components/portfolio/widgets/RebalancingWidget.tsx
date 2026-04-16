@@ -51,14 +51,14 @@ export function RebalancingWidget() {
               </div>
               <div
                 className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                  item.recommendQuantity > 0
+                  item.recommendedQuantity > 0
                     ? "bg-up/10 text-up"
                     : "bg-down/10 text-down"
                 }`}
               >
-                {item.recommendQuantity > 0
-                  ? `+${item.recommendQuantity}주 매수`
-                  : `${Math.abs(item.recommendQuantity)}주 매도`}
+                {item.recommendedQuantity > 0
+                  ? `+${item.recommendedQuantity}주 매수`
+                  : `${Math.abs(item.recommendedQuantity)}주 매도`}
               </div>
             </div>
 
