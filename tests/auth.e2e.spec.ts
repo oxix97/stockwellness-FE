@@ -29,7 +29,7 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
     await page.route('**/api/v1/auth/login', route => {
       route.fulfill({
         status: 200,
-        contentType: 'application/json',
+        contentType: 'service/json',
         body: JSON.stringify({
           memberId: 1,
           email: 'test@example.com',
@@ -85,7 +85,7 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
     await page.route('**/api/v1/auth/login', route => {
       route.fulfill({
         status: 500,
-        contentType: 'application/json',
+        contentType: 'service/json',
         body: JSON.stringify({ message: 'Internal Server Error' })
       });
     });

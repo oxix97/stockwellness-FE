@@ -1,8 +1,0 @@
-{
-  "track_id": "stock_chart_watchlist_fixes_20260401",
-  "type": "bug",
-  "status": "new",
-  "created_at": "2026-04-01T12:00:00Z",
-  "updated_at": "2026-04-01T12:00:00Z",
-  "description": "주식 상세 화면의 주봉(1W) 차트 데이터 정합성 오류와 관심 종목(Watchlist) 기능의 비정상적인 동작 수정"
-}
