@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useNavigate } from "react-router";
 import { useStock } from "@/hooks/use-stock";
 import { NewListingStock } from "@/types/api";
 import { HomeCard, HomeCardSkeleton } from "./HomeCard";
@@ -66,10 +67,12 @@ export function NewListingsSection() {
 }
 
 function NewListingCard({ stock }: { stock: NewListingStock }) {
+  const navigate = useNavigate();
   const sectorIcon = stock.sectorName ? getSectorIcon(stock.sectorName) : "🏢";
   
   return (
     <HomeCard
+      onTap={() => navigate(`/stock/${stock.ticker}`)}
       title={stock.name}
       surfaceDecoration={newListingTone.decoration}
       icon={

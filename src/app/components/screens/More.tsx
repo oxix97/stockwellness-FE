@@ -7,11 +7,11 @@ import {
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
   Dialog, DialogContent, DialogHeader, DialogTitle,
+  Sheet, SheetContent, SheetTrigger,
 } from "@/app/components/ui";
 import { AppBrandMark, ContextHeader, Section } from "@/app/components/shared";
 import { usePortfolio } from "@/hooks/use-portfolio";
@@ -153,34 +153,47 @@ export function More() {
                 title="테마 설정"
                 description="라이트, 다크, 시스템 모드를 같은 규칙으로 전환합니다."
               >
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-full">
-                      <MenuItem
-                        icon={Palette}
-                        title="현재 테마"
-                        description="앱 전체 색상 모드를 즉시 전환합니다."
-                        trailing={
-                          <span className="rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                            {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
-                          </span>
-                        }
-                        isLast
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <MenuItem
+                      icon={Palette}
+                      title="현재 테마"
+                      description="앱 전체 색상 모드를 즉시 전환합니다."
+                      trailing={
+                        <span className="rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                          {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
+                        </span>
+                      }
+                      isLast
+                    />
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="rounded-t-[32px] px-0 pb-10">
+                    <div className="px-6 py-4">
+                      <h3 className="text-lg font-bold">테마 설정</h3>
+                      <p className="text-sm text-muted-foreground">앱 전체 색상 모드를 전환합니다.</p>
+                    </div>
+                    <div className="space-y-1">
+                      <ThemeOption 
+                        label="라이트" 
+                        icon={Sun} 
+                        active={theme === "light"} 
+                        onClick={() => setTheme("light")} 
                       />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-36 rounded-xl">
-                    <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2 py-2.5 text-sm">
-                      <Sun className="h-4 w-4" /> 라이트
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2 py-2.5 text-sm">
-                      <Moon className="h-4 w-4" /> 다크
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("system")} className="gap-2 py-2.5 text-sm">
-                      <Monitor className="h-4 w-4" /> 시스템
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <ThemeOption 
+                        label="다크" 
+                        icon={Moon} 
+                        active={theme === "dark"} 
+                        onClick={() => setTheme("dark")} 
+                      />
+                      <ThemeOption 
+                        label="시스템" 
+                        icon={Monitor} 
+                        active={theme === "system"} 
+                        onClick={() => setTheme("system")} 
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
               </SettingsGroupCard>
 
               <SettingsGroupCard
@@ -261,6 +274,27 @@ export function More() {
         onClose={() => setShowNicknameModal(false)}
       />
     </div>
+  );
+}
+
+function ThemeOption({ 
+  label, icon: Icon, active, onClick 
+}: { 
+  label: string; icon: React.ElementType; active: boolean; onClick: () => void 
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center justify-between px-6 py-4 transition-colors ${
+        active ? "bg-primary/5 text-primary" : "text-foreground hover:bg-secondary/50"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+        <span className="text-[15px] font-medium">{label}</span>
+      </div>
+      {active && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+    </button>
   );
 }
 

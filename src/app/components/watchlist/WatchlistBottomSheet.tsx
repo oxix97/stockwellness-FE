@@ -55,17 +55,17 @@ export function WatchlistBottomSheet({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
       />
       <motion.div
         initial={isDesktop ? { opacity: 0, scale: 0.96, y: 16 } : { y: "100%" }}
         animate={isDesktop ? { opacity: 1, scale: 1, y: 0 } : { y: 0 }}
         exit={isDesktop ? { opacity: 0, scale: 0.96, y: 16 } : { y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className={`fixed bg-background shadow-xl z-50 flex flex-col ${
+        className={`fixed bg-background shadow-xl z-[70] flex flex-col ${
           isDesktop
             ? "left-1/2 top-1/2 max-h-[78vh] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-[32px] border border-border"
-            : "bottom-0 left-0 right-0 max-h-[80vh] rounded-t-3xl"
+            : "bottom-0 left-0 right-0 max-h-[85vh] rounded-t-[32px] pb-[calc(env(safe-area-inset-bottom)+1rem)]"
         }`}
       >
         {!isDesktop && (
@@ -197,7 +197,7 @@ export function WatchlistBottomSheet({
         </div>
 
         {!isCreating && (
-          <div className="p-4 border-t border-border mt-auto">
+          <div className="p-4 pb-12 border-t border-border mt-auto sm:pb-4">
             <button
               onClick={() => setIsCreating(true)}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-transform active:scale-[0.98]"

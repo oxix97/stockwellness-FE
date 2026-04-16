@@ -29,8 +29,8 @@ export function useSearch(initialKeyword: string = "", initialSectorCode: string
   const popular = useQuery<string[]>({
     queryKey: POPULAR_KEY,
     queryFn: () => stockApi.getPopularSearch().catch(() => []),
-    staleTime: 1000 * 60 * 60,
-    retry: false,
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
   });
 
   // 최근 검색어 조회 쿼리

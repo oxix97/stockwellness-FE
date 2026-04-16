@@ -69,7 +69,7 @@ export function Home() {
           }
           description="오늘 시장의 공기와 자산 정원의 흐름을 한 번에 파악한 뒤, 다음 행동을 결정할 수 있도록 정리했습니다."
           actions={
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="relative z-20 flex flex-col items-end gap-1.5">
               <button
                 onClick={() => navigate("/more/notifications")}
                 className="rounded-full border border-border/70 bg-card/80 p-2 text-muted-foreground transition-colors hover:bg-card"

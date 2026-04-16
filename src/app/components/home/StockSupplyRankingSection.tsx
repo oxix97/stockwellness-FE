@@ -17,18 +17,25 @@ const containerVariants = {
   },
 };
 
-function formatShareQuantity(value: number) {
+function formatAmount(value: number) {
   if (!Number.isFinite(value)) {
     return "-";
   }
 
   if (value === 0) {
-    return "0주";
+    return "0원";
   }
 
-  const absValue = Math.abs(Math.round(value));
-  const sign = value > 0 ? "+ " : "- ";
-  return `${sign}${absValue.toLocaleString("ko-KR")}주`;
+  const absValue = Math.abs(value);
+  
+  // 백엔드 데이터(value)가 '백만원' 단위 (ex: 203727 = 2,037억)
+  // 100백만원(=1억원) 이상일 경우 억 단위로 표시
+  if (absValue >= 100) {
+    const inBillion = absValue / 100; 
+    return `${inBillion.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}억원`;
+  }
+  
+  return `${absValue.toLocaleString("ko-KR", { maximumFractionDigits: 0 })}백만원`;
 }
 
 function formatEffectiveDate(date: string) {
@@ -44,7 +51,7 @@ function formatFluctuationRate(value: number) {
     return "0.00%";
   }
 
-  const sign = value > 0 ? "+" : "-";
+  const sign = value > 0 ? "▲" : "▼";
   return `${sign}${Math.abs(value).toFixed(2)}%`;
 }
 
@@ -61,27 +68,27 @@ function getTrendClassName(value: number) {
 }
 
 function getSectionTitle(direction: TradeDirection) {
-  return direction === "BUY" ? "기관·외국인 순매수량 상위" : "기관·외국인 순매도량 상위";
+  return direction === "BUY" ? "기관·외국인 순매수금액 상위" : "기관·외국인 순매도금액 상위";
 }
 
 function getRankingTitle(direction: TradeDirection, channel: "institution" | "foreign") {
   if (direction === "BUY") {
-    return channel === "institution" ? "기관 순매수량 상위 TOP 10" : "외국인 순매수량 상위 TOP 10";
+    return channel === "institution" ? "기관 순매수금액 상위 TOP 10" : "외국인 순매수금액 상위 TOP 10";
   }
 
-  return channel === "institution" ? "기관 순매도량 상위 TOP 10" : "외국인 순매도량 상위 TOP 10";
+  return channel === "institution" ? "기관 순매도금액 상위 TOP 10" : "외국인 순매도금액 상위 TOP 10";
 }
 
 function getEmptyTitle(direction: TradeDirection, channel: "institution" | "foreign") {
   if (direction === "BUY") {
-    return channel === "institution" ? "기관 순매수량 데이터 없음" : "외국인 순매수량 데이터 없음";
+    return channel === "institution" ? "기관 순매수 데이터 없음" : "외국인 순매수 데이터 없음";
   }
 
-  return channel === "institution" ? "기관 순매도량 데이터 없음" : "외국인 순매도량 데이터 없음";
+  return channel === "institution" ? "기관 순매도 데이터 없음" : "외국인 순매도 데이터 없음";
 }
 
-function getNetQuantityLabel(direction: TradeDirection) {
-  return direction === "BUY" ? "순매수량" : "순매도량";
+function getNetAmountLabel(direction: TradeDirection) {
+  return direction === "BUY" ? "순매수금액" : "순매도금액";
 }
 
 function getTone(direction: TradeDirection) {
@@ -181,9 +188,10 @@ function RankingCard({
       }
       description={
         <div className="flex items-center gap-1 tabular-nums text-xs">
-          <span className="text-muted-foreground">{getNetQuantityLabel(direction)}</span>
-          <span className={getTrendClassName(item.netBuyingQuantity)}>
-            {formatShareQuantity(item.netBuyingQuantity)}
+          <span className="text-muted-foreground">{getNetAmountLabel(direction)}</span>
+          <span className={getTrendClassName(item.netBuyingAmount)}>
+            {direction === "BUY" ? "▲ " : "▼ "}
+            {formatAmount(item.netBuyingAmount)}
           </span>
         </div>
       }
