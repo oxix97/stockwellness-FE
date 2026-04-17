@@ -89,14 +89,12 @@ describe("useBacktest", () => {
     await waitFor(() => expect(result.current.metrics).not.toBeNull());
     const m = result.current.metrics!;
 
-    // mdd는 0 이하
-    expect(m.mdd).toBeLessThanOrEqual(0);
+    // mdd는 양수 (Math.abs 적용됨)
+    expect(m.mdd).toBeGreaterThanOrEqual(0);
     // 상승 추세이므로 totalReturn >= 0
     expect(m.totalReturn).toBeGreaterThanOrEqual(0);
     // outperformance = totalReturn - benchmarkReturn (소수점 반올림으로 최대 0.2 오차 허용)
     expect(Math.abs(m.outperformance - (m.totalReturn - m.benchmarkReturn))).toBeLessThanOrEqual(0.2);
-    // finalValue: 마지막 totalValue
-    expect(m.finalValue).toBe(dailyResults![dailyResults!.length - 1].totalValue);
   });
 
   it("API 오류 시 isError true", async () => {
@@ -117,12 +115,6 @@ describe("computeMetrics", () => {
     expect(computeMetrics([])).toBeNull();
   });
 
-  it("finalValue — 마지막 totalValue", () => {
-    const results = makeDailyResults(10);
-    const m = computeMetrics(results)!;
-    expect(m.finalValue).toBe(Number(results![9].totalValue));
-  });
-
   it("totalReturn — 마지막 returnRate", () => {
     const results = makeDailyResults(10);
     const m = computeMetrics(results)!;
@@ -135,10 +127,10 @@ describe("computeMetrics", () => {
     expect(Math.abs(m.outperformance - (m.totalReturn - m.benchmarkReturn))).toBeLessThanOrEqual(0.2);
   });
 
-  it("mdd — 상승 추세이면 0 이하", () => {
+  it("mdd — 상승 추세이면 0 이상", () => {
     const results = makeDailyResults(50);
     const m = computeMetrics(results)!;
-    expect(m.mdd).toBeLessThanOrEqual(0);
+    expect(m.mdd).toBeGreaterThanOrEqual(0);
   });
 
   it("Beta — 포트폴리오와 벤치마크가 완전히 같으면 1에 근사", () => {

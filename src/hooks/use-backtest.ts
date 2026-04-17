@@ -50,9 +50,6 @@ export function computeMetrics(results: any[] | undefined) {
   const totalReturn = last.returnRate ?? last.portfolioReturnRate ?? 0;
   const benchmarkReturn = last.benchmarkReturnRate ?? (last.benchmarkReturnRates ? Object.values(last.benchmarkReturnRates)[0] : 0) ?? 0;
   
-  const totalValue = last.totalValue ?? (1 + (totalReturn / 100)); // 기준값 1
-  const initialValue = first.totalValue ?? (1 + (first.returnRate ?? first.portfolioReturnRate ?? 0) / 100);
-
   // MDD: 구간 최고점 대비 최대 낙폭 (수익률 기반으로 계산)
   let peak = -Infinity;
   let mdd = 0;
@@ -64,23 +61,46 @@ export function computeMetrics(results: any[] | undefined) {
   }
 
   // CAGR: 연평균 성장률 (거래일 252일 기준)
-  // 수익률(%)을 배수로 변환하여 계산: (1 + r/100)
   const years = Math.max(0.1, results.length / 252);
   const finalMultiplier = 1 + (totalReturn / 100);
-  const initialMultiplier = 1 + (results[0].returnRate ?? results[0].portfolioReturnRate ?? 0) / 100;
+  const initialMultiplier = 1 + (first.returnRate ?? first.portfolioReturnRate ?? 0) / 100;
   const cagr = (Math.pow(Math.max(0.01, finalMultiplier / initialMultiplier), 1 / years) - 1) * 100;
 
+  // 수익률 변화량(Return Diff) 계산 헬퍼
+  const getDailyReturns = (items: any[], key: string, fallbackKey?: string, nestedMapKey?: string) => 
+    items.slice(1).map((r, i) => {
+      const getVal = (obj: any) => {
+        if (nestedMapKey && obj[nestedMapKey]) return Object.values(obj[nestedMapKey])[0] as number;
+        return (obj[key] ?? (fallbackKey ? obj[fallbackKey] : 0) ?? 0) as number;
+      };
+      return getVal(r) - getVal(items[i]);
+    });
+
+  const dailyReturns = getDailyReturns(results, 'returnRate', 'portfolioReturnRate');
+  const benchmarkReturns = getDailyReturns(results, 'benchmarkReturnRate', undefined, 'benchmarkReturnRates');
+
   // Sharpe Ratio: 일별 수익률의 평균 / 표준편차 * sqrt(252)
-  const dailyReturns = results.slice(1).map((r, i) => {
-    const prevRate = results[i].returnRate ?? results[i].portfolioReturnRate ?? 0;
-    return (r.returnRate ?? r.portfolioReturnRate ?? 0) - prevRate;
-  });
-  
   let sharpeRatio = 0;
   if (dailyReturns.length > 0) {
     const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
     const variance = dailyReturns.reduce((a, b) => a + Math.pow(b - meanReturn, 2), 0) / dailyReturns.length;
     sharpeRatio = variance > 0 ? (meanReturn / Math.sqrt(variance)) * Math.sqrt(252) : 0;
+  }
+
+  // Beta calculation
+  let beta = 1;
+  if (dailyReturns.length > 0 && benchmarkReturns.length > 0) {
+    const meanPortfolio = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+    const meanBenchmark = benchmarkReturns.reduce((a, b) => a + b, 0) / benchmarkReturns.length;
+    
+    let covariance = 0;
+    let benchmarkVariance = 0;
+    for (let i = 0; i < dailyReturns.length; i++) {
+      covariance += (dailyReturns[i] - meanPortfolio) * (benchmarkReturns[i] - meanBenchmark);
+      benchmarkVariance += Math.pow(benchmarkReturns[i] - meanBenchmark, 2);
+    }
+    
+    beta = benchmarkVariance > 0.000001 ? covariance / benchmarkVariance : 1;
   }
 
   return {
@@ -90,6 +110,7 @@ export function computeMetrics(results: any[] | undefined) {
     mdd: +Math.abs(mdd).toFixed(1),
     sharpeRatio: +sharpeRatio.toFixed(2),
     cagr: +cagr.toFixed(1),
+    beta: +beta.toFixed(2),
   };
 }
 
@@ -100,7 +121,7 @@ export function usePortfolioSimulation(period: ChartPeriod) {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   const query = useQuery<PortfolioInceptionChartResponse>({
-    queryKey: ["backtest", "simulation", portfolioId], // period를 queryKey에서 제거하여 한 번만 호출
+    queryKey: ["backtest", "simulation", portfolioId], 
     queryFn: () => portfolioApi.getInceptionChart(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 10,
@@ -123,7 +144,6 @@ export function useBacktest(period?: string) {
     mutationFn: (params: BacktestRequest) => portfolioApi.runBacktest(portfolioId, params),
   });
 
-  // 서버 응답 데이터를 우선 사용하되, 전달된 period가 있다면 한번 더 필터링 검증
   const data = mutation.data;
   const processedResults = (data && period) 
     ? sliceByPeriod(data.dailyResults, period) 
@@ -135,9 +155,7 @@ export function useBacktest(period?: string) {
     data,
     isLoading: mutation.isPending,
     isError: mutation.isError,
-    /** 기간 슬라이싱된 결과 기반 클라이언트 계산 지표 */
     metrics: processedResults ? computeMetrics(processedResults) : null,
-    /** BE 서버 계산 지표 — 전체 기간 기준 (슬라이싱 미적용) */
     serverMetrics: data
       ? {
           cagr: data.cagr,
@@ -148,11 +166,8 @@ export function useBacktest(period?: string) {
           worstYearRate: data.worstYearRate,
           alpha: data.alpha,
           totalReturnRate: data.totalReturnRate,
-          // 기간 필터링(period)이 있는 경우 클라이언트 재계산값을 우선시할지 여부는 UI 요구사항에 따라 다르나,
-          // 여기서는 '전체 기간' 기준 서버 데이터를 반환함을 명시
         }
       : null,
-    /** BE Spring AI 연동 완료 시 제공되는 AI 코멘트. null이면 클라이언트 룰 기반 사용 */
     aiComment: data?.aiComment ?? null,
   };
 }

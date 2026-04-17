@@ -36,7 +36,7 @@ describe("useSearch (Infinite Query 리팩토링 검증)", () => {
 
     // 디바운스 대기 및 API 호출 확인
     await waitFor(() => {
-      expect(stockApi.search).toHaveBeenCalledWith("Apple", 0);
+      expect(stockApi.search).toHaveBeenCalledWith("Apple", 0, expect.anything(), expect.anything());
     });
 
     // 데이터가 성공적으로 로드되었는지 확인
@@ -73,7 +73,7 @@ describe("useSearch (Infinite Query 리팩토링 검증)", () => {
 
     // 1페이지 호출 및 데이터 통합 확인
     await waitFor(() => {
-      expect(stockApi.search).toHaveBeenCalledWith("Tech", 1);
+      expect(stockApi.search).toHaveBeenCalledWith("Tech", 1, expect.anything(), expect.anything());
       const allStocks = result.current.autocomplete.data?.pages.flatMap(p => p.content);
       expect(allStocks).toHaveLength(2);
     });

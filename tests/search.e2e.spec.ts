@@ -28,7 +28,7 @@ test.describe('Stock Search E2E Tests', () => {
     await page.route('**/api/v1/stocks/popular', async (route) => {
       await route.fulfill({
         status: 200,
-        contentType: 'service/json',
+        contentType: 'application/json',
         body: JSON.stringify({
           success: true,
           data: ["삼성전자", "SK하이닉스", "에코프로", "현대차", "카카오"]
@@ -55,7 +55,7 @@ test.describe('Stock Search E2E Tests', () => {
     await page.route('**/api/v1/stocks/search?keyword=삼성*', async (route) => {
       await route.fulfill({
         status: 200,
-        contentType: 'service/json',
+        contentType: 'application/json',
         body: JSON.stringify({
           success: true,
           data: {
@@ -95,7 +95,7 @@ test.describe('Stock Search E2E Tests', () => {
     await page.route('**/api/v1/stocks/search?keyword=없는종목*', async (route) => {
       await route.fulfill({
         status: 200,
-        contentType: 'service/json',
+        contentType: 'application/json',
         body: JSON.stringify({
           success: true,
           data: {
@@ -125,7 +125,7 @@ test.describe('Stock Search E2E Tests', () => {
     await page.route('**/api/v1/stocks/search?keyword=에러*', async (route) => {
       await route.fulfill({
         status: 500,
-        contentType: 'service/json',
+        contentType: 'application/json',
         body: JSON.stringify({
           success: false,
           status: 500,

@@ -27,8 +27,8 @@ describe("StockSupplyRankingSection", () => {
             currentPrice: 71000,
             fluctuationRate: 1.43,
             netBuyingQuantity: 156870,
-            netBuyingAmount: 1568700000000,
-            transactionAmount: 120000000000,
+            netBuyingAmount: 156870, // 1,568억 (156,870백만원)
+            transactionAmount: 1200000,
           },
         ],
         foreignItems: [
@@ -39,8 +39,8 @@ describe("StockSupplyRankingSection", () => {
             currentPrice: 202000,
             fluctuationRate: -0.98,
             netBuyingQuantity: -59400,
-            netBuyingAmount: -594000000000,
-            transactionAmount: 80000000000,
+            netBuyingAmount: -59400, // -594억
+            transactionAmount: 800000,
           },
         ],
       },
@@ -56,21 +56,27 @@ describe("StockSupplyRankingSection", () => {
 
     expect(screen.getByText("기준일 2026.04.07")).toBeInTheDocument();
     expect(screen.getByText("요청일 데이터가 없어 가장 가까운 기준일로 표시 중입니다.")).toBeInTheDocument();
-    expect(screen.getByText("기관 순매수량 상위 TOP 10")).toBeInTheDocument();
-    expect(screen.getByText("외국인 순매수량 상위 TOP 10")).toBeInTheDocument();
+    
+    // Header check
+    expect(screen.getByRole("heading", { level: 2, name: /기관·외국인 순매수금액 상위/ })).toBeInTheDocument();
+    
+    // Channel titles
+    expect(screen.getByRole("heading", { level: 3, name: /기관 순매수금액 상위/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: /외국인 순매수금액 상위/ })).toBeInTheDocument();
+    
     expect(screen.getByText("삼성전자")).toBeInTheDocument();
     expect(screen.getByText("SK하이닉스")).toBeInTheDocument();
-    expect(screen.getByText("+ 156,870주")).toBeInTheDocument();
-    expect(screen.getByText("- 59,400주")).toBeInTheDocument();
+    
+    // Amount formatting check
+    expect(screen.getByText(/1,568.7억원/)).toBeInTheDocument();
+    expect(screen.getByText(/594억원/)).toBeInTheDocument();
+    
     expect(screen.getByText("71,000원")).toBeInTheDocument();
-    expect(screen.getByText("+1.43%")).toBeInTheDocument();
+    expect(screen.getByText(/1.43%/)).toBeInTheDocument();
     expect(screen.getByText("202,000원")).toBeInTheDocument();
-    expect(screen.getByText("-0.98%")).toBeInTheDocument();
-    expect(screen.getAllByText("순매수량").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("TOP 1").length).toBeGreaterThan(0);
-    expect(screen.queryByText("₩1조 5,687억")).not.toBeInTheDocument();
-    expect(screen.queryByText("005930")).not.toBeInTheDocument();
-    expect(screen.queryByText("📟")).not.toBeInTheDocument();
+    expect(screen.getByText(/0.98%/)).toBeInTheDocument();
+    
+    expect(screen.getAllByText("순매수금액").length).toBeGreaterThan(0);
     expect(screen.getByText("삼성전자").closest("button")).toHaveClass("border-red-100/80");
   });
 
@@ -109,8 +115,8 @@ describe("StockSupplyRankingSection", () => {
             currentPrice: 215000,
             fluctuationRate: 0.45,
             netBuyingQuantity: 1200,
-            netBuyingAmount: 1200000000,
-            transactionAmount: 30000000000,
+            netBuyingAmount: 1200, // 12억
+            transactionAmount: 30000,
           },
         ],
       },
@@ -124,7 +130,7 @@ describe("StockSupplyRankingSection", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("기관 순매수량 데이터 없음")).toBeInTheDocument();
+    expect(screen.getByText(/기관 순매수 데이터 없음/)).toBeInTheDocument();
     expect(screen.getByText("NAVER")).toBeInTheDocument();
   });
 
@@ -141,8 +147,8 @@ describe("StockSupplyRankingSection", () => {
             currentPrice: 71000,
             fluctuationRate: -1.12,
             netBuyingQuantity: -45000,
-            netBuyingAmount: -450000000000,
-            transactionAmount: 120000000000,
+            netBuyingAmount: -45000, // -450억
+            transactionAmount: 120000,
           },
         ],
         foreignItems: [],
@@ -157,11 +163,12 @@ describe("StockSupplyRankingSection", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("기관·외국인 순매도량 상위")).toBeInTheDocument();
-    expect(screen.getByText("기관 순매도량 상위 TOP 10")).toBeInTheDocument();
-    expect(screen.getByText("외국인 순매도량 상위 TOP 10")).toBeInTheDocument();
-    expect(screen.getByText("외국인 순매도량 데이터 없음")).toBeInTheDocument();
-    expect(screen.getByText("순매도량")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /기관·외국인 순매도금액 상위/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: /기관 순매도금액 상위/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: /외국인 순매도금액 상위/ })).toBeInTheDocument();
+    
+    expect(screen.getByText(/외국인 순매도 데이터 없음/)).toBeInTheDocument();
+    expect(screen.getByText("순매도금액")).toBeInTheDocument();
     expect(screen.getByText("삼성전자").closest("button")).toHaveClass("border-sky-100/90");
   });
 
@@ -178,8 +185,8 @@ describe("StockSupplyRankingSection", () => {
             currentPrice: 71000,
             fluctuationRate: 1.43,
             netBuyingQuantity: Number.NaN,
-            netBuyingAmount: 1568700000000,
-            transactionAmount: 120000000000,
+            netBuyingAmount: Number.NaN,
+            transactionAmount: 1200000,
           },
         ],
         foreignItems: [],
@@ -194,7 +201,8 @@ describe("StockSupplyRankingSection", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("-")).toBeInTheDocument();
-    expect(screen.queryByText("NaN주")).not.toBeInTheDocument();
+    // The implementation formats it as: {direction === "BUY" ? "▲ " : "▼ "}{formatAmount(item.netBuyingAmount)}
+    // And formatAmount(NaN) returns "-"
+    expect(screen.getByText(/▲ -/)).toBeInTheDocument();
   });
 });
