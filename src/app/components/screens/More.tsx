@@ -18,6 +18,7 @@ import { usePortfolio } from "@/hooks/use-portfolio";
 import { useWithdraw, useUpdateProfile } from "@/hooks/use-member";
 import { useAuthStore } from "@/store/auth";
 import { calculateInvestorType } from "@/utils/calculate";
+import { formatPercent } from "@/utils/format";
 
 export function More() {
   const navigate = useNavigate();
@@ -97,7 +98,7 @@ export function More() {
                 label="총 수익률"
                 value={
                   valuation?.totalReturnRate != null
-                    ? `${valuation.totalReturnRate >= 0 ? "▲ " : "▼ "}${Math.abs(valuation.totalReturnRate).toFixed(1)}%`
+                    ? formatPercent(valuation.totalReturnRate)
                     : "—"
                 }
                 tone={

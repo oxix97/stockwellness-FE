@@ -150,7 +150,7 @@ export function Portfolio() {
       title: "성과 비교",
       value:
         simulationMetrics && Number.isFinite(simulationMetrics.outperformance)
-          ? `${simulationMetrics.outperformance >= 0 ? "+" : ""}${simulationMetrics.outperformance}%p`
+          ? formatPercent(simulationMetrics.outperformance)
           : "데이터 준비 중",
       description:
         simulationMetrics
@@ -380,12 +380,12 @@ export function Portfolio() {
               label="벤치마크 대비"
               value={
                 simulationMetrics
-                  ? `${simulationMetrics.outperformance >= 0 ? "+" : ""}${simulationMetrics.outperformance}%p`
+                  ? formatPercent(simulationMetrics.outperformance)
                   : "-"
               }
               positive={(simulationMetrics?.outperformance ?? 0) >= 0}
             />
-            <PerformanceMetric label="CAGR" value={simulationMetrics ? `${simulationMetrics.cagr}%` : "-"} />
+            <PerformanceMetric label="CAGR" value={simulationMetrics ? formatPercent(simulationMetrics.cagr) : "-"} />
           </div>
           </section>
         </div>
