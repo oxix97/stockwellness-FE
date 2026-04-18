@@ -2,9 +2,9 @@ import { motion } from "motion/react";
 import { Progress } from "@/app/components/ui";
 import { useSupply } from "@/hooks/use-supply";
 import { SectorSupplyItem } from "@/types/api";
-import { HomeCard, HomeCardSkeleton, getSectorIcon } from "./HomeCard";
+import { HomeCard, HomeCardSkeleton } from "./HomeCard";
 import { HomeBadge } from "./HomeListItem";
-import { formatCurrency } from "@/utils/format";
+import { getSectorIcon } from "./sector-icon";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -16,10 +16,14 @@ const containerVariants = {
   },
 };
 
+interface SupplyDemandSectionProps {
+  onSectorClick: (sector: { sectorCode: string; sectorName: string; fluctuationRate: number }) => void;
+}
+
 /**
  * Task #75 — 수급 상위 섹터 가로 스크롤 카드 리팩터링
  */
-export function SupplyDemandSection() {
+export function SupplyDemandSection({ onSectorClick }: SupplyDemandSectionProps) {
   const { data, isLoading } = useSupply(5);
 
   if (isLoading) {
@@ -50,7 +54,16 @@ export function SupplyDemandSection() {
       className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
     >
       {data.map((sector) => (
-        <SupplyCard key={sector.sectorCode} sector={sector} maxAmount={maxAmount} />
+        <SupplyCard 
+          key={sector.sectorCode} 
+          sector={sector} 
+          maxAmount={maxAmount} 
+          onClick={() => onSectorClick({ 
+            sectorCode: sector.sectorCode, 
+            sectorName: sector.sectorName,
+            fluctuationRate: 0 // 수급 랭킹에는 등락률이 없으므로 0으로 시작 (BottomSheet에서 fetch됨)
+          })}
+        />
       ))}
     </motion.div>
   );
@@ -59,9 +72,11 @@ export function SupplyDemandSection() {
 function SupplyCard({
   sector,
   maxAmount,
+  onClick,
 }: {
   sector: SectorSupplyItem;
   maxAmount: number;
+  onClick: () => void;
 }) {
   const instAmt = Math.abs(sector.netInstBuyAmount);
   const foreignAmt = Math.abs(sector.netForeignBuyAmount);
@@ -84,6 +99,7 @@ function SupplyCard({
 
   return (
     <HomeCard
+      onTap={onClick}
       title={sector.sectorName}
       icon={
         <div className="relative inline-block">
@@ -100,7 +116,7 @@ function SupplyCard({
           </HomeBadge>
         </div>
       }
-      value={
+      displayValue={
         <span className="text-up">+{formattedAmt} 유입</span>
       }
       description={

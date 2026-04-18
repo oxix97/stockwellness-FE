@@ -1,172 +1,168 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { Flame, TrendingUp, BarChart2, Zap, Bell } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
+import { Bell, BarChart2, Sprout, TrendingUp, CloudSun, ArrowUpRight, Leaf, LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
+import { Button } from "@/app/components/ui";
+import { AppBrandMark, ContextHeader, GardenEmptyState, Section } from "@/app/components/shared";
 import { useAuthStore } from "@/store/auth";
-import { usePortfolioValuation } from "@/hooks/use-portfolio";
-import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
-import { Skeleton } from "@/app/components/ui";
-import { PortfolioValuationResponse, SectorRankingItem } from "@/types/api";
-import { Section } from "@/app/components/shared";
-import { formatCurrency, formatPercent } from "@/utils/format";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
-import { SectorBottomSheet } from "@/app/components/home/SectorBottomSheet";
-import { SupplyDemandSection } from "@/app/components/home/SupplyDemandSection";
+import { getMarketWeatherPresentation } from "@/app/components/home/market-weather-presentation";
+import { StockSupplyRankingSection } from "@/app/components/home/StockSupplyRankingSection";
+import { SectorRankingSection } from "@/app/components/home/SectorRankingSection";
 import { NewListingsSection } from "@/app/components/home/NewListingsSection";
-import { HomeCard, HomeCardSkeleton, getSectorIcon } from "@/app/components/home/HomeCard";
-import { HomeBadge } from "@/app/components/home/HomeListItem";
-
-function getMarketGreeting(kospiRate: number | null): { text: string; emoji: string } {
-  if (kospiRate == null) return { text: "오늘의 증시를 불러오는 중이에요", emoji: "📊" };
-  if (kospiRate >= 0.5) return { text: "오늘의 증시는 맑음이에요", emoji: "☀️" };
-  if (kospiRate <= -0.5) return { text: "오늘의 증시는 비가 내려요", emoji: "🌧️" };
-  return { text: "오늘의 증시는 흐림이에요", emoji: "⛅" };
-}
+import { SectorBottomSheet, SectorData } from "@/app/components/home/SectorBottomSheet";
 
 export function Home() {
   const navigate = useNavigate();
-  const { data: valuation, isLoading: isValuationLoading } = usePortfolioValuation();
-  const portfolioId = useAuthStore((state) => state.portfolioId);
   const nickname = useAuthStore((state) => state.nickname);
-  const { data: sectors, isLoading: isSectorsLoading } = useSector();
-  const { data: marketIndexes } = useMarketIndex();
+  const { data: marketDashboard, isLoading, isError } = useMarketIndex();
+  const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
+  const greeting = getMarketWeatherPresentation(marketDashboard?.weather, isLoading, isError);
 
-  // KOSPI 등락률 기반 인사말
-  const kospiRate = marketIndexes?.find((m) => m.name === "KOSPI")?.fluctuationRate ?? null;
-  const greeting = getMarketGreeting(kospiRate);
-
-  // 섹터 바텀시트 상태
-  const [selectedSector, setSelectedSector] = useState<(typeof sectors)[number] | null>(null);
+  const heroCards = useMemo(() => {
+    return [
+      {
+        kind: "mood" as const,
+        title: "오늘의 시장 기분",
+        value: greeting.text,
+        description: greeting.description,
+        icon: Leaf,
+        accentClassName: "bg-primary/10 text-primary",
+      },
+      {
+        kind: "signal" as const,
+        title: "오늘의 해석",
+        value: isError ? "시장 데이터 재확인 필요" : "섹터 흐름부터 확인",
+        description: isError
+          ? "일시적으로 시장 요약을 불러오지 못했습니다."
+          : "지수보다 업종 온도 차이를 먼저 읽으면 홈 구성이 더 선명하게 보입니다.",
+        icon: TrendingUp,
+        accentClassName: "bg-primary/12 text-primary",
+      },
+      {
+        kind: "signal" as const,
+        title: "다음 행동",
+        value: "신규 상장 확인",
+        description: "새로 유입된 종목과 업종 맥락을 같이 보면서 다음 탐색 흐름을 정하세요.",
+        icon: Sprout,
+        accentClassName: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
+      },
+    ];
+  }, [greeting.description, greeting.text, isError]);
 
   return (
     <div className="min-h-full pb-6">
-      {/* 헤더 — 알림 벨 + LIVE 배지 */}
-      <header className="px-4 py-3 flex items-center justify-between">
-        <motion.p
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="text-foreground font-bold text-2xl leading-snug"
-        >
-          {nickname ?? "투자자"}님,<br />{greeting.text} {greeting.emoji}
-        </motion.p>
-        <div className="flex items-center gap-3 shrink-0 self-start mt-1">
-          {/* LIVE 배지 */}
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FF4756]/10 border border-[#FF4756]/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4756] animate-pulse" />
-            <span className="text-[#FF4756] text-[11px] font-bold">LIVE</span>
-          </span>
-          {/* 알림 벨 */}
-          <button
-            onClick={() => navigate("/more/notifications")}
-            className="p-2 rounded-full bg-secondary text-muted-foreground"
-          >
-            <Bell className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
-
-      {/* 시장 인덱스 미니카드 */}
-      <Section title="시장 현황" icon={BarChart2}>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-          <MarketIndexSection />
-        </div>
-      </Section>
-
-      {/* 포트폴리오 수익률 요약 (포트폴리오 있을 때만) */}
-      {portfolioId && (
-        <div className="px-4 mb-2">
-          <AssetSummaryCard valuation={valuation} isLoading={isValuationLoading} />
-        </div>
-      )}
-
-      {/* 섹터 트렌드 캐러셀 */}
-      <Section title="AI가 주목하는 섹터" icon={Flame}>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-          {isSectorsLoading
-            ? [1, 2, 3].map((i) => (
-                <HomeCardSkeleton key={i} />
-              ))
-            : sectors?.map((sector, index) => (
-                <motion.div
-                  key={sector.sectorCode}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.08 }}
-                >
-                  <HomeCard
-                    title={sector.sectorName}
-                    icon={getSectorIcon(sector.sectorName)}
-                    badge={
-                      <HomeBadge className={sector.isOverheated ? "bg-red-100 text-red-600" : ""}>
-                        {sector.isOverheated ? "⚠️ 과열" : "AI 추천"}
-                      </HomeBadge>
-                    }
-                    value={
-                      <span className={sector.fluctuationRate >= 0 ? "text-up" : "text-down"}>
-                        {formatPercent(sector.fluctuationRate)}
-                      </span>
-                    }
-                    description="AI 알고리즘 분석 결과"
-                    onTap={() => setSelectedSector(sector)}
-                  />
-                </motion.div>
+      <div className="page-shell page-content pt-4 md:pt-6">
+        <ContextHeader
+          variant="market"
+          layout="split"
+          eyebrow="Daily Garden"
+          title={
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <p className="max-w-[15rem] text-[length:var(--mobile-hero-title-size)] font-bold leading-[1.08] tracking-tight min-[408px]:max-w-[17rem] md:max-w-[24rem] md:text-[32px]">
+                {nickname ?? "투자자"}님,
+                <br />
+                {greeting.text} {greeting.emoji}
+              </p>
+            </motion.div>
+          }
+          description="오늘 시장의 공기와 자산 정원의 흐름을 한 번에 파악한 뒤, 다음 행동을 결정할 수 있도록 정리했습니다."
+          actions={
+            <div className="relative z-20 flex flex-col items-end gap-1.5">
+              <button
+                onClick={() => navigate("/more/notifications")}
+                className="rounded-full border border-border/70 bg-card/80 p-2 text-muted-foreground transition-colors hover:bg-card"
+              >
+                <Bell className="h-5 w-5" />
+              </button>
+              <AppBrandMark compact className="hidden opacity-80 min-[408px]:flex" />
+            </div>
+          }
+          ornament={
+            <div className="absolute bottom-4 right-4 hidden rounded-2xl border border-border/50 bg-card/70 px-3 py-2 backdrop-blur-sm md:block">
+              <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                <CloudSun className="h-3.5 w-3.5 text-primary" />
+                오늘의 투자 컨텍스트
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">시장 온도와 섹터 흐름을 먼저 읽습니다.</p>
+            </div>
+          }
+          footer={
+            <div className="grid grid-cols-1 gap-2 min-[421px]:gap-2.5 md:grid-cols-3">
+              {heroCards.map((card) => (
+                <div key={card.title} className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/60 bg-card/72 px-3 py-2.5 backdrop-blur-sm md:rounded-2xl md:py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {card.title}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const Icon = card.icon as LucideIcon;
+                        return (
+                          <div className={`rounded-xl p-1.5 ${card.accentClassName}`}>
+                            <Icon className="h-3.5 w-3.5" />
+                          </div>
+                        );
+                      })()}
+                      <p className="text-[14px] font-bold text-foreground min-[408px]:text-[15px]">{card.value}</p>
+                    </div>
+                    <ArrowUpRight className="h-3.5 w-3.5 text-primary/70" />
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs leading-[1.45] text-muted-foreground">{card.description}</p>
+                </div>
               ))}
-        </div>
+            </div>
+          }
+        />
+      </div>
+
+      <Section
+        title="시장 현황"
+        subtitle="대표 지수 흐름을 먼저 확인하고 오늘의 투자 감도를 맞춥니다."
+        icon={BarChart2}
+        className="pt-6"
+        rightContent={
+          <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/search")}>
+            시장 탐색
+          </Button>
+        }
+      >
+        <MarketIndexSection />
       </Section>
 
-      {/* 수급 상위 섹터 */}
-      <Section title="기관·외국인 수급 상위" icon={Zap}>
-        <SupplyDemandSection />
+      <Section
+        title="오늘의 주목 섹터"
+        subtitle="강한 온도 변화가 생긴 업종을 먼저 골라볼 수 있게 구성했습니다."
+        icon={TrendingUp}
+      >
+        <SectorRankingSection onSectorClick={setSelectedSector} />
       </Section>
 
-      {/* 신규 상장 */}
-      <Section title="신규 상장" icon={TrendingUp}>
+      <StockSupplyRankingSection />
+
+      <StockSupplyRankingSection direction="SELL" />
+
+      <Section
+        title="신규 상장"
+        subtitle="정원에 새로 들어온 종목을 업종 맥락과 함께 확인합니다."
+        icon={Sprout}
+      >
         <NewListingsSection />
       </Section>
 
-      {/* 섹터 바텀시트 */}
-      <SectorBottomSheet
-        sector={selectedSector}
-        onClose={() => setSelectedSector(null)}
-      />
+      {!isLoading && !isError && !marketDashboard?.indexes?.length && (
+        <div className="page-shell page-content">
+          <GardenEmptyState
+            title="오늘의 시장 데이터를 준비하고 있어요"
+            description="잠시 후 다시 확인하면 시장 현황과 수급 흐름이 자산 정원 형태로 정리됩니다."
+            actionLabel="검색으로 이동"
+            onAction={() => navigate("/search")}
+          />
+        </div>
+      )}
+
+      <SectorBottomSheet sector={selectedSector} onClose={() => setSelectedSector(null)} />
     </div>
-  );
-}
-
-function AssetSummaryCard({ valuation, isLoading }: { valuation: PortfolioValuationResponse | undefined; isLoading: boolean }) {
-  const totalReturn = valuation?.totalReturnRate ?? 0;
-  const totalProfitLoss = valuation?.totalProfitLoss ?? 0;
-  const isUp = totalReturn >= 0;
-
-  return (
-    <Link to="/portfolio">
-      <motion.div
-        whileTap={{ scale: 0.98 }}
-        className="bg-card rounded-2xl p-4 shadow-sm border border-border"
-      >
-        <div className="text-muted-foreground text-xs mb-1 font-medium">내 포트폴리오 수익률</div>
-        {isLoading ? (
-          <div className="space-y-1.5">
-            <Skeleton className="h-8 w-36" />
-            <Skeleton className="h-5 w-24" />
-          </div>
-        ) : (
-          <>
-            <div
-              className={`font-bold text-3xl tabular-nums ${isUp ? "text-up" : "text-down"}`}
-            >
-              {isUp ? "+" : ""}
-              {totalReturn.toFixed(2)}%
-            </div>
-            <div
-              className={`text-sm font-medium tabular-nums ${isUp ? "text-up" : "text-down"}`}
-            >
-              {isUp ? "+" : "-"}₩{formatCurrency(Math.abs(totalProfitLoss))}
-            </div>
-          </>
-        )}
-      </motion.div>
-    </Link>
   );
 }

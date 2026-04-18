@@ -40,6 +40,38 @@ describe("stockApi", () => {
     expect(result).toEqual(mockData);
   });
 
+  it("getSupplyRanking — GET /v1/stocks/ranking/supply 호출", async () => {
+    const mockData = {
+      requestedDate: "2026-04-08",
+      effectiveDate: "2026-04-07",
+      institutionItems: [
+        {
+          ticker: "005930",
+          stockName: "삼성전자",
+          sectorName: "반도체",
+          currentPrice: 71000,
+          fluctuationRate: 1.43,
+          netBuyingQuantity: 12345,
+          netBuyingAmount: 1,
+          transactionAmount: 2,
+        },
+      ],
+      foreignItems: [],
+    };
+    mockClient.get.mockResolvedValue(mockData);
+
+    const result = await stockApi.getSupplyRanking({
+      direction: "BUY",
+      limit: 10,
+      date: "2026-04-08",
+    });
+
+    expect(mockClient.get).toHaveBeenCalledWith("/v1/stocks/ranking/supply", {
+      params: { direction: "BUY", limit: 10, date: "2026-04-08" },
+    });
+    expect(result).toEqual(mockData);
+  });
+
   it("search — GET /v1/stocks/search 호출", async () => {
     const mockData = { content: [], hasNext: false };
     mockClient.get.mockResolvedValue(mockData);

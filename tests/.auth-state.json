@@ -1,37 +1,9 @@
 {
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwibmlja25hbWUiOiLthYzsiqTthLAiLCJsb2dpblR5cGUiOiJLQUtBTyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzc0ODUwNzQxLCJleHAiOjE3Nzc0NDI3NDF9.heiviOYNO4v-3pgeuSmz4lKVS3Z6oRQqO11MSiO51gw",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzc0ODUwNzQxLCJleHAiOjE3ODI2MjY3NDF9.8ihX-Bwn2euOW95nHghaEcI4zhYTZr6sdNGeoEjC9OU",
-  "memberId": 1,
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwibmlja25hbWUiOiJUZXN0ZXIiLCJsb2dpblR5cGUiOiJHT09HTEUiLCJyb2xlIjoiVVNFUiIsImNyZWF0ZWRBdCI6IjIwMjYtMDQtMTRUMTY6Mjc6NDQuOTc5MTc2IiwiaWF0IjoxNzc2MTUxNzE3LCJleHAiOjE3Nzg3NDM3MTd9.XinbXqertD4oxRWJkBPbCVjA9qVczZ6xoWcMx5o-o3g",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwiaWF0IjoxNzc2MTUxNzE3LCJleHAiOjE3Nzg3NDM3MTd9.WYn8Ex8BsA-N0p1pvP91gNx6Vn_Wt5VIsmD2VpwZqlg",
+  "memberId": 3,
   "email": "test@example.com",
-  "nickname": "테스터",
-  "portfolioId": "1",
-  "backendUrl": "http://localhost:8080",
-  "originalPortfolioItems": [
-    {
-      "symbol": "005930",
-      "quantity": 10,
-      "purchasePrice": 70000,
-      "currentPrice": 175800,
-      "currency": "KRW",
-      "assetType": "STOCK",
-      "purchaseAmount": 700000,
-      "currentValue": 1758000,
-      "returnRate": 151.14,
-      "targetWeight": 60
-    },
-    {
-      "symbol": "000660",
-      "quantity": 5,
-      "purchasePrice": 130000,
-      "currentPrice": 874000,
-      "currency": "KRW",
-      "assetType": "STOCK",
-      "purchaseAmount": 650000,
-      "currentValue": 4370000,
-      "returnRate": 572.31,
-      "targetWeight": 40
-    }
-  ],
-  "portfolioName": "포트폴리오 테스트",
-  "portfolioDescription": ""
+  "nickname": "Tester",
+  "portfolioId": "16",
+  "backendUrl": "http://localhost:8080"
 }

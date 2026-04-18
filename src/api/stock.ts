@@ -1,5 +1,14 @@
 import { apiClient } from "./client";
-import { StockPriceHistoryResponse, StockSearchResponse, NewListingStock, ChartPeriod, ChartFrequency, StockDetailResult } from "@/types/api";
+import {
+  StockPriceHistoryResponse,
+  StockSearchResponse,
+  NewListingStock,
+  ChartPeriod,
+  ChartFrequency,
+  StockDetailResult,
+  StockSupplyRankingParams,
+  StockSupplyRankingResponse,
+} from "@/types/api";
 
 /** 종목 수익률 응답 타입 */
 export interface StockReturnsResponse {
@@ -40,11 +49,13 @@ export const stockApi = {
    * 검색어로 주식 종목을 검색합니다.
    * @param keyword 검색어 (종목명 또는 티커)
    * @param page 페이지 번호 (0부터 시작)
+   * @param sectorCode 업종 코드 (필요 시)
+   * @param sectorName 업종명 (필요 시, 코스피/코스닥 통합 검색용)
    * @returns 검색 결과 리스트 (Slice 형태)
    */
-  search: async (keyword: string, page = 0): Promise<StockSearchResponse> => {
+  search: async (keyword: string, page = 0, sectorCode?: string, sectorName?: string): Promise<StockSearchResponse> => {
     const data = await apiClient.get<StockSearchResponse>("/v1/stocks/search", {
-      params: { keyword, page, size: 20 },
+      params: { keyword, page, sectorCode, sectorName, size: 20 },
     });
     return data as unknown as StockSearchResponse;
   },
@@ -56,6 +67,18 @@ export const stockApi = {
   getNewListings: async (): Promise<NewListingStock[]> => {
     const data = await apiClient.get("/v1/stocks/new-listings");
     return data as unknown as NewListingStock[];
+  },
+
+  /**
+   * 종목 수급 랭킹을 조회합니다.
+   * @param params 조회 조건
+   * @returns 기관/외국인 수급 랭킹
+   */
+  getSupplyRanking: async (
+    params?: StockSupplyRankingParams
+  ): Promise<StockSupplyRankingResponse> => {
+    const data = await apiClient.get("/v1/stocks/ranking/supply", { params });
+    return data as unknown as StockSupplyRankingResponse;
   },
 
   /**

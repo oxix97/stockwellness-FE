@@ -1,78 +1,60 @@
-import { useState, useEffect, useMemo } from "react";
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X as CloseIcon } from "lucide-react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import { Plus, ChevronDown, Sparkles, FolderTree, Radar, TriangleAlert } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner";
 import { useWatchlist } from "@/hooks/use-watchlist";
-import { Skeleton, Popover, PopoverTrigger, PopoverContent } from "@/app/components/ui";
+import { Button, Skeleton } from "@/app/components/ui";
+import { ContextHeader, GardenEmptyState, Section } from "@/app/components/shared";
 import { WatchlistItemCard } from "@/app/components/watchlist/WatchlistItemCard";
 import { AddItemSheet } from "@/app/components/watchlist/AddItemSheet";
-import { toast } from "sonner";
+import { WatchlistBottomSheet } from "@/app/components/watchlist/WatchlistBottomSheet";
 
-/**
- * Task #71 ~ #74 — 관심 탭 고도화
- * - RSI 뱃지 + AI 진단 (WatchlistItemCard)
- * - 메모 아코디언, 스와이프 삭제
- * - 빈 상태 개선
- */
 export function Watchlist() {
   const { groups, useGroupItems, createGroup, updateGroupName, deleteGroup } = useWatchlist();
   const [activeGroup, setActiveGroup] = useState<number | null>(null);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newGroupName, setNewGroupName] = useState("");
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
-
-  // 그룹 편집 상태
-  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
-  const [editName, setEditName] = useState("");
+  const [isGroupSheetOpen, setIsGroupSheetOpen] = useState(false);
 
   useEffect(() => {
     if (groups.data && groups.data.length > 0 && activeGroup === null) {
+      setActiveGroup(groups.data[0].id);
+    } else if (groups.data && groups.data.length > 0 && !groups.data.find((g) => g.id === activeGroup)) {
       setActiveGroup(groups.data[0].id);
     }
   }, [groups.data, activeGroup]);
 
   const itemsQuery = useGroupItems(activeGroup);
   const stocks = itemsQuery.data?.items ?? [];
+  const activeGroupName = groups.data?.find((g) => g.id === activeGroup)?.name ?? "관심 그룹";
 
-  // 마지막 업데이트 시각
   const lastUpdatedAt = useMemo(() => {
     if (!itemsQuery.dataUpdatedAt) return null;
     return new Date(itemsQuery.dataUpdatedAt);
   }, [itemsQuery.dataUpdatedAt]);
 
-  const handleCreateGroup = () => {
-    const name = newGroupName.trim();
-    if (!name) return;
+  const aiInsightCount = stocks.filter((stock) => Boolean(stock.aiInsight)).length;
+  const cautionCount = stocks.filter((stock) => stock.rsiStatus === "OVERBOUGHT" || stock.rsiStatus === "OVERSOLD").length;
+
+  const handleCreateGroup = (name: string) => {
     createGroup.mutate(name, {
-      onSuccess: () => {
-        setNewGroupName("");
-        setIsCreating(false);
-        toast.success("그룹이 생성되었습니다.");
-      },
+      onSuccess: () => toast.success("그룹이 생성되었습니다."),
       onError: () => toast.error("그룹 생성에 실패했습니다."),
     });
   };
 
-  const handleUpdateGroupName = () => {
-    if (!editingGroupId || !editName.trim()) return;
+  const handleUpdateGroupName = (groupId: number, name: string) => {
     updateGroupName.mutate(
-      { groupId: editingGroupId, name: editName.trim() },
+      { groupId, name },
       {
-        onSuccess: () => {
-          setEditingGroupId(null);
-          toast.success("그룹 이름이 변경되었습니다.");
-        },
+        onSuccess: () => toast.success("그룹 이름이 변경되었습니다."),
       }
     );
   };
 
   const handleDeleteGroup = (groupId: number) => {
-    if (!window.confirm("그룹을 삭제하시겠습니까? 포함된 모든 종목이 목록에서 제거됩니다.")) return;
     deleteGroup.mutate(groupId, {
-      onSuccess: () => {
-        if (activeGroup === groupId) setActiveGroup(groups.data?.[0]?.id ?? null);
-        toast.success("그룹이 삭제되었습니다.");
-      },
+      onSuccess: () => toast.success("그룹이 삭제되었습니다."),
     });
   };
 
@@ -81,155 +63,159 @@ export function Watchlist() {
   };
 
   return (
-    <div className="min-h-full pb-6 relative">
-      {/* 그룹 칩 탭 */}
-      <div className="px-4 pt-4 pb-3">
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {groups.isLoading ? (
-            [1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-24 rounded-full shrink-0" />)
-          ) : (
-            <>
-              {groups.data?.map((group) => (
-                <div key={group.id} className="relative shrink-0 group">
-                  <button
-                    onClick={() => {
-                      setActiveGroup(group.id);
-                      setExpandedTicker(null);
-                    }}
-                    className={`px-4 py-2 pr-8 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                      activeGroup === group.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {group.name}
-                    <span className="ml-1.5 text-[11px] opacity-60">{group.itemCount}</span>
-                  </button>
-                  
-                  {/* 그룹 관리 팝오버 (BLOCKER) */}
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className={`p-1 rounded-full hover:bg-black/5 transition-colors ${activeGroup === group.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                          <MoreHorizontal className="w-3.5 h-3.5" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-40 p-1" align="start">
-                        <button 
-                          onClick={() => { setEditingGroupId(group.id); setEditName(group.name); }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary rounded-md"
-                        >
-                          <Pencil className="w-3.5 h-3.5" /> 이름 변경
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteGroup(group.id)}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> 그룹 삭제
-                        </button>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+    <div className="min-h-full pb-6">
+      <div className="page-shell page-content pt-4 md:pt-6">
+        <ContextHeader
+          variant="watch"
+          layout="split"
+          eyebrow="Watch Garden"
+          title={
+            <div>
+              <button
+                onClick={() => setIsGroupSheetOpen(true)}
+                className="flex items-center gap-2 rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/60 bg-card/70 px-3 py-2 text-left md:rounded-2xl"
+              >
+                <span className="text-[length:var(--mobile-hero-title-size)] font-bold leading-tight tracking-tight text-foreground">{activeGroupName}</span>
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+          }
+          description="지금 점검할 종목을 먼저 보여주고, 필요할 때 메모와 AI 인사이트를 열어 깊게 확인할 수 있게 구성했습니다."
+          actions={
+            activeGroup !== null ? (
+              <Button onClick={() => setIsAddSheetOpen(true)} className="rounded-2xl">
+                <Plus className="h-4 w-4" />
+                종목 추가
+              </Button>
+            ) : null
+          }
+          ornament={
+            <div className="absolute bottom-4 right-4 flex gap-2">
+              <div className="rounded-2xl border border-border/50 bg-card/72 px-3 py-2 backdrop-blur-sm">
+                <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  <Radar className="h-3 w-3 text-primary" />
+                  Monitor
                 </div>
+                <p className="mt-1 text-sm font-bold text-foreground">{aiInsightCount} signals</p>
+              </div>
+            </div>
+          }
+          footer={
+            <div className="grid grid-cols-2 gap-2 min-[408px]:grid-cols-3 min-[408px]:[&>*:last-child]:col-span-1 [&>*:last-child]:col-span-2">
+              <SummaryChip label="종목 수" value={`${stocks.length}개`} />
+              <SummaryChip label="AI 인사이트" value={`${aiInsightCount}개`} />
+              <SummaryChip label="주의 신호" value={`${cautionCount}개`} icon={<TriangleAlert className="h-3 w-3 text-amber-500" />} />
+            </div>
+          }
+        />
+      </div>
+
+      <div className="page-shell page-content grid gap-6 pt-6 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="hidden rounded-[28px] border border-border bg-card p-4 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)] lg:block">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-base font-bold text-foreground">그룹 빠른 전환</p>
+                <p className="text-xs text-muted-foreground">큰 화면에서는 그룹을 옆 패널에서 바로 전환합니다.</p>
+              </div>
+              <Button variant="ghost" size="sm" className="text-xs" onClick={() => setIsGroupSheetOpen(true)}>
+                편집
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {(groups.data ?? []).map((group) => (
+                <button
+                  key={group.id}
+                  onClick={() => {
+                    setActiveGroup(group.id);
+                    setExpandedTicker(null);
+                  }}
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
+                    activeGroup === group.id ? "border-primary/20 bg-primary/10" : "border-border bg-background hover:bg-secondary/70"
+                  }`}
+                >
+                  <p className={`text-sm font-semibold ${activeGroup === group.id ? "text-primary" : "text-foreground"}`}>{group.name}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{group.itemCount} 종목</p>
+                </button>
               ))}
+            </div>
+          </div>
 
-              {/* 이름 변경 모드 */}
-              <AnimatePresence>
-                {editingGroupId && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="flex items-center gap-2 shrink-0 bg-background border border-primary rounded-full px-2 py-1 shadow-sm"
-                  >
-                    <input
-                      autoFocus
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="bg-transparent text-sm outline-none px-2 w-24"
-                      onKeyDown={(e) => e.key === "Enter" && handleUpdateGroupName()}
+          {lastUpdatedAt && stocks.length > 0 && (
+            <div className="rounded-[var(--mobile-card-radius)] border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)] md:rounded-[28px] md:py-4">
+              마지막 업데이트:{" "}
+              {lastUpdatedAt.toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </div>
+          )}
+        </aside>
+
+        <div className="space-y-6">
+          <Section
+            title="오늘 체크할 종목"
+            subtitle="AI 코멘트와 RSI 신호를 함께 보면서 확장형 카드로 관리합니다."
+            icon={Sparkles}
+            className="px-0 pt-0"
+          >
+            <div className="px-0">
+              {itemsQuery.isLoading ? (
+                <div className="overflow-hidden rounded-[28px] border border-border bg-card">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border-b border-border px-4 py-4 last:border-0">
+                      <Skeleton className="h-14 w-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : stocks.length > 0 ? (
+                <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+                  {stocks.map((stock, index) => (
+                    <WatchlistItemCard
+                      key={stock.ticker}
+                      stock={stock}
+                      groupId={activeGroup!}
+                      isLast={index === stocks.length - 1}
+                      isExpanded={expandedTicker === stock.ticker}
+                      onToggleExpand={() => handleToggleExpand(stock.ticker)}
                     />
-                    <button onClick={handleUpdateGroupName} className="text-primary p-1"><Plus className="w-4 h-4 rotate-45" style={{ transform: 'rotate(0deg)' }} /></button>
-                    <button onClick={() => setEditingGroupId(null)} className="text-muted-foreground p-1"><CloseIcon className="w-4 h-4" /></button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {isCreating ? (
-                <div className="flex items-center gap-2 shrink-0">
-                  <input
-                    autoFocus
-                    value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleCreateGroup();
-                      if (e.key === "Escape") { setIsCreating(false); setNewGroupName(""); }
-                    }}
-                    placeholder="그룹 이름"
-                    className="px-3 py-2 rounded-full bg-secondary text-foreground outline-none text-sm w-28"
-                  />
-                  <button
-                    onClick={handleCreateGroup}
-                    disabled={createGroup.isPending}
-                    className="px-3 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
-                  >
-                    추가
-                  </button>
+                  ))}
                 </div>
               ) : (
-                <button
-                  onClick={() => setIsCreating(true)}
-                  className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-full bg-secondary text-secondary-foreground text-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  그룹
-                </button>
+                <GardenEmptyState
+                  title="아직 이 정원에 심은 종목이 없어요"
+                  description="관심 종목을 추가하면 RSI 신호와 AI 한줄 인사이트를 함께 쌓아가며 관리할 수 있습니다."
+                  actionLabel="첫 종목 추가하기"
+                  onAction={() => setIsAddSheetOpen(true)}
+                />
               )}
-            </>
+            </div>
+          </Section>
+
+          {lastUpdatedAt && stocks.length > 0 && (
+            <Section
+              title="그룹 관리"
+              subtitle="모바일에서는 시트, 큰 화면에서는 좌측 패널과 함께 관리합니다."
+              icon={FolderTree}
+              className="px-0 pb-4 lg:hidden"
+              rightContent={
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setIsGroupSheetOpen(true)}>
+                  그룹 편집
+                </Button>
+              }
+            >
+              <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+                마지막 업데이트:{" "}
+                {lastUpdatedAt.toLocaleTimeString("ko-KR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </Section>
           )}
         </div>
       </div>
 
-      {/* 종목 리스트 */}
-      <div className="px-4">
-        {itemsQuery.isLoading ? (
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="px-4 py-4 border-b border-border last:border-0">
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ))}
-          </div>
-        ) : stocks.length > 0 ? (
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
-            {stocks.map((stock, index) => (
-              <WatchlistItemCard
-                key={stock.ticker}
-                stock={stock}
-                groupId={activeGroup!}
-                isLast={index === stocks.length - 1}
-                isExpanded={expandedTicker === stock.ticker}
-                onToggleExpand={() => handleToggleExpand(stock.ticker)}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState onAdd={() => setIsAddSheetOpen(true)} hasGroup={!!activeGroup} />
-        )}
-      </div>
-
-      {/* 마지막 업데이트 타임스탬프 */}
-      {lastUpdatedAt && stocks.length > 0 && (
-        <p className="text-muted-foreground text-xs text-center mt-4 mb-2">
-          마지막 업데이트:{" "}
-          {lastUpdatedAt.toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
-      )}
-
-      {/* Floating Action Button (#71) */}
       <AnimatePresence>
         {activeGroup !== null && (
           <motion.button
@@ -237,15 +223,15 @@ export function Watchlist() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0, opacity: 0, y: 20 }}
             onClick={() => setIsAddSheetOpen(true)}
-            aria-label="종목 추가"
-            className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/20 flex items-center justify-center z-40"
+            aria-label="빠른 종목 추가"
+            className="fixed right-5 z-40 flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 lg:hidden"
+            style={{ bottom: "var(--mobile-fab-offset)", width: "var(--mobile-fab-size)", height: "var(--mobile-fab-size)" }}
           >
-            <Plus className="w-7 h-7" />
+            <Plus className="h-7 w-7" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* 종목 추가 바텀시트 */}
       {isAddSheetOpen && activeGroup !== null && (
         <AddItemSheet
           groupId={activeGroup}
@@ -253,38 +239,36 @@ export function Watchlist() {
           onClose={() => setIsAddSheetOpen(false)}
         />
       )}
+
+      <AnimatePresence>
+        {isGroupSheetOpen && (
+          <WatchlistBottomSheet
+            groups={groups.data ?? []}
+            activeGroupId={activeGroup}
+            onSelect={(id) => {
+              setActiveGroup(id);
+              setExpandedTicker(null);
+            }}
+            onClose={() => setIsGroupSheetOpen(false)}
+            onCreateGroup={handleCreateGroup}
+            onUpdateGroup={handleUpdateGroupName}
+            onDeleteGroup={handleDeleteGroup}
+            isLoading={groups.isLoading}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-/** Task #74 — 빈 상태 개선 */
-function EmptyState({ onAdd, hasGroup }: { onAdd: () => void; hasGroup: boolean }) {
+function SummaryChip({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center py-20 text-center"
-    >
-      <div className="text-5xl mb-5">📊</div>
-      <p className="text-foreground font-semibold text-base mb-2">
-        관심 종목을 추가해<br />AI 진단을 받아보세요
-      </p>
-      <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-        RSI 뱃지와 AI 한줄 분석이<br />매일 자동으로 업데이트됩니다
-      </p>
-      <button
-        onClick={() => {
-          if (hasGroup) {
-            onAdd();
-          } else {
-            document.querySelector<HTMLButtonElement>('[aria-label="검색"]')?.click();
-          }
-        }}
-        className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold text-sm"
-      >
-        <Search className="w-4 h-4" />
-        첫 종목 추가하기
-      </button>
-    </motion.div>
+    <div className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/60 bg-card/70 px-3 py-3 md:rounded-2xl">
+      <div className="flex items-center gap-1">
+        {icon}
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      </div>
+      <p className="mt-1 text-sm font-bold text-foreground">{value}</p>
+    </div>
   );
 }

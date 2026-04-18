@@ -11,12 +11,19 @@ export interface FieldError {
 
 /** 성공 응답 래퍼 — 백엔드 실제 구조 */
 export interface SuccessEnvelope<T> {
+  success: boolean;
+  status: number;
+  code: string;
+  message: string;
   data: T;
   timestamp: string;
+  traceId?: string | null;
+  errors?: FieldError[] | null;
 }
 
 /** 에러 응답 래퍼 */
 export interface ErrorEnvelope {
+  success: false;
   status: number;
   code: string;
   message: string;
@@ -36,22 +43,60 @@ export interface MarketIndexResult {
   fluctuationAmount: number;
 }
 
+export type MarketWeatherLevel =
+  | "CLEAR"
+  | "SUNNY"
+  | "PARTLY_CLOUDY"
+  | "CLOUDY"
+  | "FOGGY"
+  | "RAINY"
+  | "STORMY";
+
+export type MarketWeatherReason =
+  | "BROAD_RALLY"
+  | "STEADY_ADVANCE"
+  | "NARROW_ADVANCE"
+  | "SIDEWAYS"
+  | "HIDDEN_WEAKNESS"
+  | "BROAD_SELL_OFF"
+  | "VOLATILE_SELL_OFF"
+  | "INDEX_ONLY_RALLY"
+  | "INDEX_ONLY_ADVANCE"
+  | "INDEX_ONLY_MIXED"
+  | "INDEX_ONLY_WEAKNESS"
+  | "INDEX_ONLY_STORM"
+  | "INDEX_ONLY_SIDEWAYS";
+
+export interface MarketWeatherResult {
+  weatherLevel: MarketWeatherLevel;
+  weatherMessage: string;
+  weatherDescription: string;
+  reasonCode: MarketWeatherReason;
+  asOfDate: string;
+}
+
+export interface MarketDashboardResult {
+  indexes: MarketIndexResult[];
+  weather: MarketWeatherResult;
+}
+
 /**
  * 주식 상세 정보 타입 (수동 보강)
  */
-export type StockDetailResult = NonNullable<components["schemas"]["api-v1-stocks-ticker1095671400"]["data"]>;
+export type StockDetailResult = NonNullable<components["schemas"]["api-v1-stocks-ticker10744308"]["data"]>;
 
 /**
  * 포트폴리오 건강 진단 타입 (수동 보강)
  */
 export interface StockContribution {
-  ticker: string;
   name: string;
-  contributionScore: number;
+  mainContribution: string;
+  score: number;
   reason: string;
 }
 
-export type DiagnosisResponse = Omit<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-health-38320959"]["data"]>, "stockContributions" | "nextSteps"> & {
+export type DiagnosisResponse = Omit<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-health-864754955"]["data"]>, "categories" | "stockContributions" | "nextSteps"> & {
+  categories: Record<string, number>;
   stockContributions: StockContribution[];
   nextSteps: string[];
 };
@@ -62,7 +107,8 @@ export type DiagnosisResponse = Omit<NonNullable<components["schemas"]["api-v1-p
 export interface AnalysisSummaryResponse {
   valuation: PortfolioValuationResponse;
   diversification: PortfolioDiversificationResponse;
-  advice?: AdviceResponse | null;
+  rebalancing: PortfolioRebalancingResponse;
+  itemContributions: Record<string, number>;
 }
 
 /**
@@ -96,7 +142,7 @@ export type ReissueResponse = NonNullable<components["schemas"]["ReissueResponse
 /**
  * 포트폴리오 관련 타입
  */
-export type PortfolioValuationResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-valuation1418848225"]["data"]>;
+export type PortfolioValuationResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-valuation1906810676"]["data"]>;
 
 /** 다각화 분석 전체 데이터 */
 export type PortfolioDiversificationResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-diversification-1682980467"]["data"]>;
@@ -114,7 +160,17 @@ export type CountryRatio = NonNullable<PortfolioDiversificationResponse["country
 export type PortfolioRebalancingResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-rebalancing1494527279"]["data"]>;
 
 /** 리밸런싱 아이템 정보 (추출) */
-export type RebalancingItem = NonNullable<PortfolioRebalancingResponse["items"]>[number];
+export type RebalancingItem = {
+  symbol: string;
+  name: string;
+  currentWeight: number;
+  targetWeight: number;
+  diffWeight: number;
+  recommendedQuantity: number;
+  currentPrice: number;
+  expectedTradeAmount: number;
+  currentQuantity: number;
+};
 
 export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
 
@@ -123,12 +179,15 @@ export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
  */
 export interface PortfolioItemResponse {
   symbol: string;
-  name?: string;
+  name: string;
   quantity: number;
   purchasePrice: number;
+  currentPrice?: number;
   currency: string;
   assetType: AssetType;
   purchaseAmount: number;
+  currentValue?: number;
+  returnRate?: number;
   targetWeight: number;
 }
 
@@ -192,7 +251,7 @@ export interface BacktestRequest {
    * BE는 이 값을 무시하고 전체 이력 데이터를 반환한다.
    * 실제 기간 슬라이싱은 use-backtest.ts sliceByPeriod()에서 처리.
    */
-  period: ChartPeriod;
+  period?: ChartPeriod;
   /** 리밸런싱 주기 (NONE, MONTHLY, QUARTERLY, YEARLY) */
   rebalancingPeriod: RebalancingPeriod;
   /** 각 종목별 가상 비중 설정 (ticker -> percentage) */
@@ -200,9 +259,27 @@ export interface BacktestRequest {
 }
 
 /** 백테스트 일별 결과 */
-export type BacktestDailyResult = NonNullable<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest695967913"]["data"]>["dailyResults"]>[number];
+export type BacktestDailyResult = NonNullable<NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest-1617317571"]["data"]>["dailyResults"]>[number];
 
-export type BacktestResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest695967913"]["data"]>;
+export type BacktestResponse = NonNullable<components["schemas"]["api-v1-portfolios-portfolioId-analysis-backtest-1617317571"]["data"]>;
+
+export interface InceptionChartDailyResult {
+  date: string;
+  portfolioReturnRate: number;
+  benchmarkReturnRates: Record<string, number>;
+}
+
+export interface InceptionChartComparison {
+  indexName: string;
+  ticker: string;
+  totalReturn: number;
+}
+
+export interface PortfolioInceptionChartResponse {
+  portfolioInceptionDate: string;
+  dailyResults: InceptionChartDailyResult[];
+  comparisons: InceptionChartComparison[];
+}
 
 /**
  * 주가 데이터 관련 타입
@@ -245,12 +322,38 @@ export interface StockSearchResult {
 /**
  * 주식 검색 응답 타입 (Slice 구조 반영 - 무한 스크롤 적합)
  */
-export type StockSearchResponse = Omit<NonNullable<components["schemas"]["api-v1-stocks-search-1069080236"]["data"]>, "content"> & {
+export type StockSearchResponse = Omit<NonNullable<components["schemas"]["api-v1-stocks-search-252012140"]["data"]>, "content"> & {
   content: StockSearchResult[];
   /** BE SliceResponse hasNext 필드 */
   hasNext: boolean;
   // number, last 필드는 기반 스키마에 이미 포함됨
 };
+
+export type TradeDirection = "BUY" | "SELL";
+
+export interface StockSupplyRankingItem {
+  ticker: string;
+  stockName: string;
+  sectorName: string | null;
+  currentPrice: number;
+  fluctuationRate: number;
+  netBuyingQuantity: number;
+  netBuyingAmount: number;
+  transactionAmount: number;
+}
+
+export interface StockSupplyRankingResponse {
+  requestedDate: string | null;
+  effectiveDate: string | null;
+  institutionItems: StockSupplyRankingItem[];
+  foreignItems: StockSupplyRankingItem[];
+}
+
+export interface StockSupplyRankingParams {
+  date?: string;
+  direction?: TradeDirection;
+  limit?: number;
+}
 
 /**
  * 신규 상장 종목 타입
@@ -270,19 +373,26 @@ export type HoldingStock = PortfolioItemResponse & {
 /**
  * 관심 종목 관련 타입
  */
-export type WatchlistGroup = NonNullable<components["schemas"]["api-v1-watchlist-groups15903716"]["data"]>[number];
+export interface WatchlistGroup {
+  id: number;
+  name: string;
+  itemCount: number;
+}
 
-/** 관심 종목 상세 응답 전체 */
-export type WatchlistItemsResponse = NonNullable<components["schemas"]["api-v1-watchlist-groups-groupId-items104135515"]["data"]>;
-
-/** 개별 관심 종목 (추출) */
-export type WatchlistStock = NonNullable<WatchlistItemsResponse["items"]>[number];
+export interface WatchlistItemDetail {
+  ticker: string;
+  name: string;
+  currentPrice: number | null;
+  fluctuationRate: number | null;
+  note: string;
+  rsi: number | null;
+  rsiStatus: string;
+  aiInsight: string;
+}
 
 export interface WatchlistItemListResponse {
-  /** 그룹 이름 */
   groupName: string;
-  /** 종목 리스트 */
-  items: WatchlistStock[];
+  items: WatchlistItemDetail[];
 }
 
 /** 포트폴리오 종목 간 상관관계 행렬 (ticker → ticker → 상관계수) */

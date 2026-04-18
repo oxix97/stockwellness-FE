@@ -1,10 +1,16 @@
-export const formatCurrency = (value: number): string => {
+export const formatCurrency = (value: number | null | undefined): string => {
+  if (value === null || value === undefined || isNaN(Number(value))) return '0';
   return value.toLocaleString('ko-KR');
 };
 
-export const formatPercent = (value: number | string): string => {
+export const formatPercent = (value: number | string | null | undefined): string => {
+  if (value === null || value === undefined) return '0.00%';
   const num = typeof value === 'string' ? parseFloat(value) : value;
-  return `${num > 0 ? '+' : ''}${num.toFixed(2)}%`;
+  if (isNaN(num)) return '0.00%';
+  if (num === 0) return '0.00%';
+  
+  const sign = num > 0 ? '▲ ' : '▼ ';
+  return `${sign}${Math.abs(num).toFixed(2)}%`;
 };
 
 export const formatDate = (date: string | Date): string => {

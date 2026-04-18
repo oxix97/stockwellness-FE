@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { usePortfolio } from "@/hooks/use-portfolio";
+import { usePortfolioAdvice } from "@/hooks/use-portfolio";
 
 interface Props {
   portfolioId: string | null;
@@ -14,7 +14,7 @@ interface Props {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Phase4Result({ portfolioId: _portfolioId, onComplete }: Props) {
   const [showAdvice, setShowAdvice] = useState(false);
-  const { advice } = usePortfolio();
+  const advice = usePortfolioAdvice();
 
   useEffect(() => {
     // 폭죽 이후 0.8초 뒤 AI 진단 카드 노출
@@ -76,8 +76,8 @@ export function Phase4Result({ portfolioId: _portfolioId, onComplete }: Props) {
               <span className="text-lg">🤖</span>
               <p className="text-foreground font-semibold text-sm">AI 1차 진단</p>
             </div>
-            {advice ? (
-              <p className="text-foreground text-sm leading-relaxed">{advice.content}</p>
+            {advice.data ? (
+              <p className="text-foreground text-sm leading-relaxed">{advice.data.content}</p>
             ) : (
               <p className="text-muted-foreground text-sm">분석 데이터를 불러오는 중...</p>
             )}

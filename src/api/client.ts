@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
 import { SuccessEnvelope } from "@/types/api";
 
@@ -77,8 +78,12 @@ apiClient.interceptors.response.use(
           });
           const tokens = data.data;
 
-          // Zustand store 및 localStorage 업데이트
-          useAuthStore.getState().updateAccessToken(tokens.accessToken);
+          // Zustand store와 localStorage를 같은 토큰 세트로 유지
+          useAuthStore.getState().updateTokens({
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+          });
+          localStorage.setItem("accessToken", tokens.accessToken);
           localStorage.setItem("refreshToken", tokens.refreshToken);
 
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -103,7 +108,6 @@ apiClient.interceptors.response.use(
 
     // 403 에러 처리: 접근 권한 없음 (PortfolioAccessDeniedException)
     if (error.response?.status === 403) {
-      const { toast } = await import("sonner");
       toast.error("접근 권한이 없습니다.");
     }
 

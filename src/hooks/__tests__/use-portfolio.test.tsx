@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { waitFor, act } from "@testing-library/react";
 import { renderHookWithQuery, setAuthState, clearAuthState } from "@/test/test-utils";
-import { makeValuation, makeDiversification, makeAdvice, makePortfolio, makeRebalancing } from "@/test/fixtures";
+import { makeValuation, makeDiversification, makePortfolio, makeRebalancing } from "@/test/fixtures";
 import { usePortfolio, useCreatePortfolio, useUpdatePortfolio } from "../use-portfolio";
 
 vi.mock("@/api/portfolio", () => ({
@@ -9,6 +9,7 @@ vi.mock("@/api/portfolio", () => ({
     getValuation: vi.fn(),
     getDiversification: vi.fn(),
     getAdvice: vi.fn(),
+    createAdvice: vi.fn(),
     getHoldings: vi.fn(),
     getCorrelation: vi.fn(),
     getRebalancing: vi.fn(),
@@ -25,6 +26,7 @@ const mockPortfolioApi = portfolioApi as unknown as {
   getValuation: ReturnType<typeof vi.fn>;
   getDiversification: ReturnType<typeof vi.fn>;
   getAdvice: ReturnType<typeof vi.fn>;
+  createAdvice: ReturnType<typeof vi.fn>;
   getHoldings: ReturnType<typeof vi.fn>;
   getCorrelation: ReturnType<typeof vi.fn>;
   getRebalancing: ReturnType<typeof vi.fn>;
@@ -50,18 +52,19 @@ describe("usePortfolio", () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.valuation).toBeUndefined();
     expect(result.current.diversification).toBeUndefined();
-    expect(result.current.advice).toBeUndefined();
     expect(result.current.holdings).toBeUndefined();
     expect(mockPortfolioApi.getValuation).not.toHaveBeenCalled();
   });
 
   it("portfolioId 있으면 valuation 정상 응답", async () => {
     const valuation = makeValuation();
-    mockPortfolioApi.getAnalysisSummary.mockResolvedValue({ valuation });
+    mockPortfolioApi.getAnalysisSummary.mockResolvedValue({
+      valuation,
+      diversification: makeDiversification(),
+      rebalancing: makeRebalancing(),
+      itemContributions: {},
+    });
     mockPortfolioApi.getHoldings.mockResolvedValue(makePortfolio());
-    mockPortfolioApi.getAdvice.mockResolvedValue(makeAdvice());
-    mockPortfolioApi.getCorrelation.mockResolvedValue({});
-    mockPortfolioApi.getRebalancing.mockResolvedValue(makeRebalancing());
     mockPortfolioApi.getHealth.mockResolvedValue({ overallScore: 80, categories: {} });
 
     setAuthState({ portfolioId: "1" });
@@ -90,16 +93,15 @@ describe("usePortfolio", () => {
           { name: "STOCK", value: 85 },
           { name: "CASH", value: 15 },
         ],
-      })
+      }),
+      rebalancing: makeRebalancing(),
+      itemContributions: {}
     });
     mockPortfolioApi.getHealth.mockResolvedValue({
       overallScore: 85,
       categories: { "수익성": 90, "안정성": 80, "효율성": 85, "분산도": 70, "시장민감도": 95 }
     });
-    mockPortfolioApi.getAdvice.mockResolvedValue(null);
     mockPortfolioApi.getHoldings.mockResolvedValue(makePortfolio());
-    mockPortfolioApi.getCorrelation.mockResolvedValue({});
-    mockPortfolioApi.getRebalancing.mockResolvedValue(makeRebalancing());
 
     setAuthState({ portfolioId: "1" });
     const { result } = renderHookWithQuery(() => usePortfolio());
@@ -121,22 +123,40 @@ describe("usePortfolio", () => {
     expect(radarData).toEqual([]);
   });
 
-  it("advice null 반환 시 advice 필드 null", async () => {
+  it("usePortfolio는 advice를 반환하지 않고 holdings/valuation만 유지한다", async () => {
     mockPortfolioApi.getAnalysisSummary.mockResolvedValue({ 
       valuation: makeValuation(),
-      diversification: makeDiversification()
+      diversification: makeDiversification(),
+      rebalancing: makeRebalancing(),
+      itemContributions: {}
     });
-    mockPortfolioApi.getAdvice.mockResolvedValue(null);
     mockPortfolioApi.getHoldings.mockResolvedValue(makePortfolio());
-    mockPortfolioApi.getCorrelation.mockResolvedValue({});
-    mockPortfolioApi.getRebalancing.mockResolvedValue(makeRebalancing());
     mockPortfolioApi.getHealth.mockResolvedValue({ overallScore: 80, categories: {} });
 
     setAuthState({ portfolioId: "1" });
     const { result } = renderHookWithQuery(() => usePortfolio());
 
     await waitFor(() => expect(result.current.valuation).toBeDefined());
-    expect(result.current.advice).toBeNull();
+    expect("advice" in result.current).toBe(false);
+    expect(result.current.holdings?.items).toHaveLength(1);
+  });
+
+  it("usePortfolio는 AI 조언 조회 없이 기본 데이터만 로딩한다", async () => {
+    mockPortfolioApi.getAnalysisSummary.mockResolvedValue({
+      valuation: makeValuation(),
+      diversification: makeDiversification(),
+      rebalancing: makeRebalancing(),
+      itemContributions: {}
+    });
+    mockPortfolioApi.getHoldings.mockResolvedValue(makePortfolio());
+    mockPortfolioApi.getHealth.mockResolvedValue({ overallScore: 80, categories: {} });
+
+    setAuthState({ portfolioId: "1" });
+    const { result } = renderHookWithQuery(() => usePortfolio());
+
+    await waitFor(() => expect(result.current.holdings).toBeDefined());
+    expect(mockPortfolioApi.getAdvice).not.toHaveBeenCalled();
+    expect(mockPortfolioApi.createAdvice).not.toHaveBeenCalled();
   });
 });
 

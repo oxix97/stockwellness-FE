@@ -6,11 +6,11 @@ import { SectorComparisonResponse } from "@/types/api";
 /**
  * 섹터 데이터를 관리하는 커스텀 훅
  */
-export function useSector() {
-  // 섹터 등락률 랭킹 조회 (기본 상위 3개)
+export function useSector(limit = 10) {
+  // 섹터 등락률 랭킹 조회
   const ranking = useQuery({
-    queryKey: ["sectors", "ranking", "fluctuation"],
-    queryFn: () => sectorApi.getFluctuationRanking({ limit: 10 }),
+    queryKey: ["sectors", "ranking", "fluctuation", limit],
+    queryFn: () => sectorApi.getFluctuationRanking({ limit }),
     staleTime: 5 * 60 * 1000, // 5분 동안 신선한 데이터로 간주
   });
 
@@ -33,30 +33,37 @@ export function useSector() {
 
   const isLoading = ranking.isLoading || details.some((d) => d.isLoading);
 
-  // 랭킹 데이터에 상세 진단 메시지와 주도주 정보를 결합
-  // 개별 detail 쿼리 실패 시에도 랭킹 데이터는 유지하고 부분 데이터를 반환
-  const combinedData =
-    ranking.data?.map((item, index) => ({
+  // 랭킹 데이터가 배열인지 확인 (API 레이어에서 언래핑하나 타입 안전성 위해 체크)
+  const rankingList = Array.isArray(ranking.data) ? ranking.data : [];
+
+  // 1. 등락률 랭킹 아이템과 상세 정보를 매핑
+  const combinedData = rankingList.map((item, index) => {
+    const detail = details[index];
+    const isDetailError = detail?.isError ?? false;
+    const detailData = detail?.data;
+
+    return {
       ...item,
-      diagnosisMessage:
-        details[index]?.isError
-          ? "진단 정보를 불러오지 못했습니다."
-          : details[index]?.data?.diagnosisMessage ?? "",
-      leadingStocks:
-        details[index]?.isError
-          ? []
-          : details[index]?.data?.leadingStocks ?? [],
-      technicalIndicators:
-        details[index]?.isError
-          ? null
-          : details[index]?.data?.technicalIndicators ?? null,
-      detailLoading: details[index]?.isLoading ?? false,
-      detailError: details[index]?.isError ?? false,
-    })) ?? [];
+      fluctuationRate: item.fluctuationRate ?? 0,
+      diagnosisMessage: isDetailError
+        ? "진단 정보를 불러오지 못했습니다."
+        : detailData?.diagnosisMessage ?? "",
+      leadingStocks: isDetailError
+        ? []
+        : detailData?.leadingStocks ?? [],
+      technicalIndicators: isDetailError
+        ? null
+        : detailData?.technicalIndicators ?? null,
+      detailLoading: detail?.isLoading ?? false,
+      detailError: isDetailError,
+      // 바텀시트에서 개별 상세 조회가 필요한 경우를 대비해 원본 보관 (백엔드 통합 시 1개 요소만 가짐)
+      originGroup: [item]
+    };
+  });
 
   /**
    * 섹터 시장 비교 데이터 쿼리
-   * @param sectorCode 섹터 코드
+  ...
    * @param date 조회 기준 날짜
    */
   const useComparison = (sectorCode: string, date?: string) => useQuery<SectorComparisonResponse>({
@@ -73,4 +80,16 @@ export function useSector() {
     isPartialError: details.some((d) => d.isError),
     useComparison,
   };
+}
+
+/**
+ * 특정 섹터의 상세 정보만 조회하는 훅
+ */
+export function useSectorDetail(sectorCode: string | null, date?: string) {
+  return useQuery({
+    queryKey: ["sectors", "detail", sectorCode, date],
+    queryFn: () => sectorApi.getSectorDetail(sectorCode!, date),
+    enabled: !!sectorCode,
+    staleTime: 5 * 60 * 1000,
+  });
 }

@@ -1,19 +1,23 @@
+import { Fragment } from "react";
 import { useNavigate } from "react-router";
-import { FlaskConical, Activity } from "lucide-react";
+import { FlaskConical, Activity, ArrowRight, ShieldCheck } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
-import { usePortfolio } from "@/hooks/use-portfolio";
+import { usePortfolio, usePortfolioAdvice, usePortfolioCorrelation } from "@/hooks/use-portfolio";
 import { Skeleton } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
 import { CorrelationMatrix, AdviceResponse } from "@/types/api";
 
 export function HealthDiagnosis() {
   const navigate = useNavigate();
-  const { health, advice, correlation, isLoading } = usePortfolio();
+  const { health, isLoading: isPortfolioLoading } = usePortfolio();
+  const advice = usePortfolioAdvice();
+  const correlation = usePortfolioCorrelation();
+  const isLoading = isPortfolioLoading || advice.isLoading || correlation.isLoading;
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-8">
-        <Skeleton className="h-10 w-48" />
+      <div className="page-shell page-content space-y-6 py-6">
+        <Skeleton className="h-16 w-full rounded-3xl" />
         <Skeleton className="h-64 w-full rounded-3xl" />
         <Skeleton className="h-80 w-full rounded-3xl" />
       </div>
@@ -22,70 +26,74 @@ export function HealthDiagnosis() {
 
   return (
     <div className="min-h-screen bg-background pb-10">
-      <PageHeader title="포트폴리오 건강 검진" showBack />
+      <PageHeader title="포트폴리오 건강 검진" description="내 포트폴리오 상태를 짧고 명확하게 읽는 리포트" showBack />
 
-      <ScoreCard score={health.overallScore} adviceContent={advice?.content} />
-
-      <RadarSection data={health.radarData} />
-
-      {correlation && <CorrelationSection matrix={correlation} />}
-
-      <PrescriptionSection advice={advice} onBacktest={() => navigate("/backtest/setup")} />
+      <div className="page-shell page-content space-y-6 py-6">
+        <ScoreCard score={health.overallScore} adviceContent={advice.data?.content} />
+        <RadarSection data={health.radarData} />
+        {correlation.data && <CorrelationSection matrix={correlation.data} />}
+        <PrescriptionSection advice={advice.data} onBacktest={() => navigate("/backtest/setup")} />
+      </div>
     </div>
   );
 }
 
 function ScoreCard({ score, adviceContent }: { score: number; adviceContent?: string }) {
-  const getScoreColor = (s: number) => {
-    if (s >= 80) return "text-[#2EBE7A]"; // 건강 (초록)
-    if (s >= 50) return "text-[#F5A623]"; // 주의 (주황)
-    return "text-[#FF4756]"; // 위험 (빨강)
+  const getScoreTone = (value: number) => {
+    if (value >= 80) return "text-primary";
+    if (value >= 50) return "text-amber-500";
+    return "text-destructive";
   };
 
   return (
-    <div className="px-6 py-10 bg-card border-b border-border text-center">
-      <div className="text-6xl mb-4">🩺</div>
-      <div className="text-muted-foreground mb-2 font-medium">종합 건강 점수</div>
-      <div className={`mb-6 font-bold text-6xl ${getScoreColor(score)}`}>
-        {score}점
+    <section className="overflow-hidden rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
+      <div className="border-b border-border/70 px-5 py-5">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Health report
+        </div>
+        <p className="mt-4 text-sm font-semibold text-muted-foreground">종합 건강 점수</p>
+        <div className={`mt-1 text-[calc(var(--mobile-number-xl)+6px)] font-bold leading-none ${getScoreTone(score)}`}>{score}점</div>
+        <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+          현재 포트폴리오 구조와 리스크 균형을 기준으로 오늘 가장 먼저 봐야 할 포인트를 정리했습니다.
+        </p>
       </div>
-      <div className="bg-accent rounded-3xl p-5 max-w-md mx-auto border border-primary/10">
-        <div className="flex items-start gap-4 text-left">
-          <div className="text-3xl">💬</div>
-          <div className="text-foreground leading-relaxed font-medium">
-            {adviceContent || "데이터를 분석 중입니다..."}
+      <div className="px-5 py-5">
+        <div className="rounded-[24px] border border-border/60 bg-background/75 p-4">
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-primary/10 p-2 text-primary">
+              <ArrowRight className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">오늘의 해석</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {adviceContent || "데이터를 분석 중입니다..."}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 function RadarSection({ data }: { data: { metric: string; value: number }[] }) {
   return (
-    <div className="px-6 py-10 bg-card border-b border-border">
-      <div className="text-foreground mb-8 text-center font-bold text-xl">
-        건강 레이더 차트
+    <section className="rounded-[32px] border border-border bg-card px-5 py-5 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
+      <div className="mb-5">
+        <p className="text-lg font-bold text-foreground">건강 레이더 차트</p>
+        <p className="mt-1 text-sm text-muted-foreground">어떤 항목이 강하고, 어떤 항목을 보완해야 하는지 한 번에 봅니다.</p>
       </div>
-      <div className="h-80">
+      <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={data}>
             <PolarGrid stroke="#E5E7EB" />
-            <PolarAngleAxis
-              dataKey="metric"
-              tick={{ fill: "#6B7280", fontSize: 12, fontWeight: 600 }}
-            />
-            <Radar
-              dataKey="value"
-              stroke="#2EBE7A"
-              fill="#2EBE7A"
-              fillOpacity={0.3}
-              strokeWidth={3}
-            />
+            <PolarAngleAxis dataKey="metric" tick={{ fill: "#6B7280", fontSize: 12, fontWeight: 600 }} />
+            <Radar dataKey="value" stroke="#2EBE7A" fill="#2EBE7A" fillOpacity={0.25} strokeWidth={3} />
           </RadarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -101,62 +109,50 @@ function CorrelationSection({ matrix }: { matrix: CorrelationMatrix }) {
   };
 
   return (
-    <div className="px-6 py-10 bg-card border-b border-border">
-      <div className="text-foreground mb-2 font-bold text-xl">종목 간 상관관계</div>
-      <div className="text-muted-foreground text-sm mb-6">
-        빨간색일수록 양의 상관, 파란색일수록 음의 상관을 나타냅니다.
+    <section className="rounded-[32px] border border-border bg-card px-5 py-5 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
+      <div className="mb-4">
+        <p className="text-lg font-bold text-foreground">종목 간 상관관계</p>
+        <p className="mt-1 text-sm text-muted-foreground">붉을수록 함께 움직이고, 푸를수록 분산 효과가 큽니다.</p>
       </div>
-      {/* 스크롤 힌트: 우측 페이드 */}
       <div className="relative">
         <div className="overflow-x-auto">
           <div className="inline-grid gap-1" style={{ gridTemplateColumns: `64px repeat(${tickers.length}, 56px)` }}>
-            {/* 헤더 행 */}
             <div />
             {tickers.map((ticker) => (
-              <div key={ticker} className="text-center text-xs font-bold text-muted-foreground truncate px-1">
+              <div key={ticker} className="truncate px-1 text-center text-xs font-bold text-muted-foreground">
                 {ticker}
               </div>
             ))}
-            {/* 데이터 행 — 하삼각형만 표시 (대각선 포함) */}
             {tickers.map((rowTicker, rowIdx) => (
-              <>
-                <div key={rowTicker} className="text-xs font-bold text-muted-foreground flex items-center truncate">
+              <Fragment key={rowTicker}>
+                <div key={rowTicker} className="flex items-center truncate text-xs font-bold text-muted-foreground">
                   {rowTicker}
                 </div>
                 {tickers.map((colTicker, colIdx) => {
-                  // 대각선: 항상 1.0 — 별도 스타일
                   if (rowIdx === colIdx) {
                     return (
-                      <div
-                        key={colTicker}
-                        className="h-14 rounded-lg flex items-center justify-center text-xs font-bold bg-primary/10 text-primary"
-                      >
+                      <div key={colTicker} className="flex h-14 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
                         1.00
                       </div>
                     );
                   }
-                  // 상삼각형: 빈 셀로 처리 (대칭이므로 생략)
                   if (colIdx > rowIdx) {
                     return <div key={colTicker} className="h-14" />;
                   }
                   const value = matrix[rowTicker]?.[colTicker] ?? 0;
                   return (
-                    <div
-                      key={colTicker}
-                      className={`h-14 rounded-lg flex items-center justify-center text-xs font-bold ${getColor(value)}`}
-                    >
+                    <div key={colTicker} className={`flex h-14 items-center justify-center rounded-lg text-xs font-bold ${getColor(value)}`}>
                       {value.toFixed(2)}
                     </div>
                   );
                 })}
-              </>
+              </Fragment>
             ))}
           </div>
         </div>
-        {/* 우측 페이드 스크롤 힌트 */}
-        <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-card to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-card to-transparent" />
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -172,7 +168,7 @@ function ActionBadge({ action }: { action?: string }) {
   const label = ACTION_LABEL[action] ?? action;
 
   return (
-    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold border bg-primary/10 text-primary border-primary/20">
+    <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
       {label}
     </span>
   );
@@ -180,36 +176,35 @@ function ActionBadge({ action }: { action?: string }) {
 
 function PrescriptionSection({ advice, onBacktest }: { advice: AdviceResponse | undefined; onBacktest: () => void }) {
   return (
-    <div className="px-6 py-10">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="text-4xl">💊</div>
-        <div className="text-foreground font-bold text-2xl">AI의 처방전</div>
+    <section className="rounded-[32px] border border-border bg-card px-5 py-5 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+          <Activity className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-lg font-bold text-foreground">AI의 처방전</p>
+          <p className="text-sm text-muted-foreground">지금 바로 실행할 수 있는 다음 행동을 정리합니다.</p>
+        </div>
       </div>
 
-      <div className="bg-card rounded-3xl p-6 shadow-sm border border-border mb-8 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            <div className="text-foreground font-bold text-base">권장 조치</div>
-          </div>
+      <div className="rounded-[24px] border border-border/70 bg-background/75 p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-foreground">권장 조치</p>
           <ActionBadge action={advice?.action} />
         </div>
-        <div className="text-foreground leading-relaxed mb-6 font-medium">
-          {advice?.content}
-        </div>
-        <div className="text-xs text-muted-foreground bg-secondary/50 inline-block px-3 py-1 rounded-full">
+        <p className="text-sm leading-6 text-foreground">{advice?.content}</p>
+        <p className="mt-4 text-xs text-muted-foreground">
           생성일: {advice?.createdAt ? new Date(advice.createdAt).toLocaleString() : "-"}
-        </div>
+        </p>
       </div>
 
       <button
         onClick={onBacktest}
-        className="w-full bg-primary text-primary-foreground rounded-2xl py-5 text-xl font-bold shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-3"
+        className="mt-5 flex w-full items-center justify-center gap-3 rounded-2xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-lg transition-transform active:scale-[0.98]"
       >
-        <FlaskConical className="w-6 h-6" />
+        <FlaskConical className="h-5 w-5" />
         이대로 과거 1년 백테스트 돌려보기
       </button>
-    </div>
+    </section>
   );
 }

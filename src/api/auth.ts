@@ -6,8 +6,9 @@ import { LoginRequest, LoginResponse, ReissueRequest, ReissueResponse } from "@/
  */
 export const authApi = {
   /**
-   * 사용자 로그인을 수행합니다. (OAuth2)
-   * @param params 로그인 정보 (인가 코드, 상태 값, 제공자)
+   * 지원용 로그인 API를 호출합니다.
+   * 브라우저 기본 OAuth 완료 경로는 백엔드 redirect -> /auth/callback 소비 플로우를 사용합니다.
+   * @param params 로그인 식별 정보 (email, nickname, loginType)
    * @returns 로그인 성공 시 사용자 정보 및 토큰 세트
    */
   login: async (params: LoginRequest): Promise<LoginResponse> => {

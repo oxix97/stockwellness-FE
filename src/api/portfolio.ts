@@ -12,6 +12,7 @@ import {
   AdviceResponse,
   DiagnosisResponse,
   AnalysisSummaryResponse,
+  PortfolioInceptionChartResponse,
 } from "@/types/api";
 
 /**
@@ -105,6 +106,11 @@ export const portfolioApi = {
     return data as unknown as AdviceResponse;
   },
 
+  createAdvice: async (portfolioId: string): Promise<AdviceResponse> => {
+    const data = await apiClient.post(`/v1/portfolios/${portfolioId}/advice`);
+    return data as unknown as AdviceResponse;
+  },
+
   /**
    * 전략 백테스트를 실행합니다.
    * @param portfolioId 포트폴리오 ID
@@ -124,6 +130,11 @@ export const portfolioApi = {
   getCorrelation: async (portfolioId: string): Promise<CorrelationMatrix> => {
     const data = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/correlation`);
     return data as unknown as CorrelationMatrix;
+  },
+
+  getInceptionChart: async (portfolioId: string): Promise<PortfolioInceptionChartResponse> => {
+    const data = await apiClient.get(`/v1/portfolios/${portfolioId}/analysis/performance/inception/chart`);
+    return data as unknown as PortfolioInceptionChartResponse;
   },
 
   /**

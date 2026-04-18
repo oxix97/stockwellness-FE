@@ -10,10 +10,12 @@ const POPULAR_KEY = ["stocks", "popular"];
  * 종목 검색 기능을 위한 통합 커스텀 훅
  * - 인기 검색어 / 최근 검색어 / 실시간 자동완성 (debounced)
  */
-export function useSearch(initialKeyword: string = "") {
+export function useSearch(initialKeyword: string = "", initialSectorCode: string = "", initialSectorName: string = "") {
   const queryClient = useQueryClient();
   const [keyword, setKeyword] = useState(initialKeyword);
   const [debouncedKeyword, setDebouncedKeyword] = useState(initialKeyword);
+  const [sectorCode, setSectorCode] = useState(initialSectorCode);
+  const [sectorName, setSectorName] = useState(initialSectorName);
 
   // 300ms 디바운스 적용
   useEffect(() => {
@@ -27,8 +29,8 @@ export function useSearch(initialKeyword: string = "") {
   const popular = useQuery<string[]>({
     queryKey: POPULAR_KEY,
     queryFn: () => stockApi.getPopularSearch().catch(() => []),
-    staleTime: 1000 * 60 * 60,
-    retry: false,
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
   });
 
   // 최근 검색어 조회 쿼리
@@ -40,11 +42,11 @@ export function useSearch(initialKeyword: string = "") {
 
   // 실시간 검색 (무한 스크롤 지원)
   const autocomplete = useInfiniteQuery<StockSearchResponse>({
-    queryKey: ["stocks", "search", debouncedKeyword],
-    queryFn: ({ pageParam = 0 }) => stockApi.search(debouncedKeyword, pageParam as number),
+    queryKey: ["stocks", "search", debouncedKeyword, sectorCode, sectorName],
+    queryFn: ({ pageParam = 0 }) => stockApi.search(debouncedKeyword, pageParam as number, sectorCode, sectorName),
     initialPageParam: 0,
     getNextPageParam: (lastPage: StockSearchResponse) => (lastPage.hasNext ? lastPage.number + 1 : undefined),
-    enabled: debouncedKeyword.length >= 2,
+    enabled: debouncedKeyword.length >= 2 || sectorCode.length > 0 || sectorName.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -68,6 +70,10 @@ export function useSearch(initialKeyword: string = "") {
     keyword,
     setKeyword,
     debouncedKeyword,
+    sectorCode,
+    setSectorCode,
+    sectorName,
+    setSectorName,
     popular,
     history,
     autocomplete,

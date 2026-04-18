@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
+// Vite Hot Reload Trigger
 import { useParams, useNavigate } from "react-router";
-import { Heart } from "lucide-react";
+import { Heart, Plus, Sparkles } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Customized } from "recharts";
 import { useStock } from "@/hooks/use-stock";
 import { usePortfolio, useUpdatePortfolio } from "@/hooks/use-portfolio";
@@ -303,19 +304,23 @@ export function StockDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card px-6 py-4 flex items-center justify-between border-b border-border">
-        <PageHeader showBack />
-        <button 
-          onClick={handleFavoriteToggle} 
-          className="p-2 -mr-2"
-          aria-label="관심 종목"
-          disabled={isWatchlistLoading}
-        >
-          <Heart
-            className={`w-6 h-6 transition-colors ${isInWatchlist ? "fill-red-500 stroke-red-500" : "text-muted-foreground"}`}
-          />
-        </button>
-      </header>
+      <PageHeader
+        showBack
+        title="종목 상세"
+        description={stockName ? `${stockName} · ${ticker}` : `${ticker} 상세 흐름과 핵심 시그널`}
+        rightContent={
+          <button
+            onClick={handleFavoriteToggle}
+            className="rounded-full p-2 transition-colors hover:bg-secondary"
+            aria-label="관심 종목"
+            disabled={isWatchlistLoading}
+          >
+            <Heart
+              className={`h-6 w-6 transition-colors ${isInWatchlist ? "fill-red-500 stroke-red-500" : "text-muted-foreground"}`}
+            />
+          </button>
+        }
+      />
 
       <PriceSection
         ticker={ticker}
@@ -355,7 +360,7 @@ export function StockDetail() {
         <button
           onClick={handleAddClick}
           disabled={updatePortfolio.isPending}
-          className="w-full bg-primary text-primary-foreground rounded-2xl py-5 text-xl font-bold shadow-lg active:scale-95 transition-transform disabled:opacity-50"
+          className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-lg transition-transform active:scale-95 disabled:opacity-50 min-[408px]:py-5"
         >
           {updatePortfolio.isPending ? "추가 중..." : "내 포트폴리오에 담기"}
         </button>
@@ -404,18 +409,33 @@ export function StockDetail() {
 function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectionProps) {
   const isUp = dailyRate != null && dailyRate >= 0;
   return (
-    <div className="bg-card px-6 py-10 border-b border-border">
-      <div className="text-muted-foreground mb-1 font-medium text-sm">{ticker}</div>
-      {stockName && <div className="text-foreground mb-2 font-bold text-lg">{stockName}</div>}
-      <div className="text-foreground mb-2 font-bold text-5xl">
-        ₩{formatCurrency(latestPrice)}
-      </div>
-      {dailyRate != null && (
-        <div className={`font-bold text-lg ${isUp ? "text-up" : "text-down"}`}>
-          어제보다 {isUp ? "+" : ""}{dailyRate.toFixed(2)}%
+    <section className="page-shell page-content py-6">
+      <div className="overflow-hidden rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] px-5 py-6 shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+          <Sparkles className="h-3.5 w-3.5" />
+          Stock overview
         </div>
-      )}
-    </div>
+        <div className="mt-4 mb-1 text-sm font-medium text-muted-foreground">{ticker}</div>
+        {stockName && <div className="mb-2 text-lg font-bold text-foreground">{stockName}</div>}
+        <div className="mb-2 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">₩{formatCurrency(latestPrice)}</div>
+        {dailyRate != null && (
+          <div className={`text-lg font-bold ${isUp ? "text-up" : "text-down"}`}>
+            어제보다 {isUp ? "▲ " : "▼ "}{Math.abs(dailyRate).toFixed(2)}%
+          </div>
+        )}
+        <div className="mt-5 rounded-[24px] border border-border/70 bg-card/80 px-4 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">바로 할 수 있는 행동</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">가격과 흐름을 확인한 뒤 포트폴리오 담기 또는 관심종목 저장으로 이어집니다.</p>
+            </div>
+            <div className="rounded-full bg-primary/10 p-2 text-primary">
+              <Plus className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -473,7 +493,7 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
         <span className="text-muted-foreground text-sm font-bold">{labelMap[periodLabel]}</span>
       </div>
       {/* 범례 */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-[10px] font-bold">
+      <div className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold">
         <span className="flex items-center gap-1">
           <span className="w-4 h-0.5 inline-block rounded" style={{ backgroundColor: CHART_COLORS.ma5 }} />
           <span className="text-muted-foreground">MA5</span>
@@ -573,7 +593,7 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <div className="text-[9px] text-muted-foreground mt-0.5 font-medium">거래량</div>
+      <div className="mt-0.5 text-[11px] text-muted-foreground font-medium">거래량</div>
     </div>
   );
 }
@@ -583,7 +603,7 @@ function CandleTooltip({ active, payload }: CandleTooltipProps) {
   const d = payload[0].payload;
   return (
     <div className="bg-card/95 backdrop-blur-md border border-border p-4 rounded-2xl shadow-2xl min-w-[160px]">
-      <div className="text-muted-foreground text-[10px] font-bold uppercase mb-2">{d.date}</div>
+      <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">{d.date}</div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-bold">
         <span className="text-muted-foreground">시가</span>
         <span className="text-foreground text-right">₩{d.open?.toLocaleString()}</span>
@@ -649,7 +669,7 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
   return (
     <div className="px-6 py-10">
       <div className="bg-card rounded-3xl p-8 shadow-sm border border-border">
-        <div className="text-foreground mb-6 font-bold text-2xl">수익률 비교</div>
+        <div className="text-foreground mb-6 font-bold text-xl md:text-2xl">수익률 비교</div>
         {/* 헤더 */}
         <div className="grid grid-cols-3 text-xs font-bold text-muted-foreground mb-3">
           <span>기간</span>
@@ -672,11 +692,11 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
                 ) : (
                   <>
                     <span className={`text-center font-bold text-sm ${isUp ? "text-up" : "text-down"}`}>
-                      {stockRate != null ? `${stockRate > 0 ? "+" : ""}${stockRate}%` : "-"}
+                      {stockRate != null ? `${stockRate > 0 ? "▲ " : "▼ "}${Math.abs(stockRate)}%` : "-"}
                     </span>
                     <span className="text-right font-bold text-sm text-foreground">
                       {benchRate != null
-                        ? `${benchRate > 0 ? "+" : ""}${benchRate}%`
+                        ? `${benchRate > 0 ? "▲ " : "▼ "}${Math.abs(benchRate)}%`
                         : <span className="text-muted-foreground font-medium">데이터 없음</span>}
                     </span>
                   </>

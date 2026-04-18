@@ -4,18 +4,22 @@ import { renderHookWithQuery } from "@/test/test-utils";
 import { makeWatchlistGroup, makeWatchlistItems } from "@/test/fixtures";
 import { useWatchlist } from "../use-watchlist";
 
-vi.mock("@/api/watchlist", () => ({
-  watchlistApi: {
-    getGroups: vi.fn(),
-    getItems: vi.fn(),
-    createGroup: vi.fn(),
-    addItem: vi.fn(),
-    removeItem: vi.fn(),
-    updateItemNote: vi.fn(),
-    updateGroupName: vi.fn(),
-    deleteGroup: vi.fn(),
-  },
-}));
+vi.mock("@/api/watchlist", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api/watchlist")>();
+  return {
+    ...actual,
+    watchlistApi: {
+      getGroups: vi.fn(),
+      getItems: vi.fn(),
+      createGroup: vi.fn(),
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      updateItemNote: vi.fn(),
+      updateGroupName: vi.fn(),
+      deleteGroup: vi.fn(),
+    },
+  };
+});
 
 import { watchlistApi } from "@/api/watchlist";
 
@@ -162,6 +166,33 @@ describe("useWatchlist", () => {
 
     await waitFor(() => expect(result.current.groups.data).toHaveLength(1));
     expect(mockApi.deleteGroup).toHaveBeenCalledWith(1);
+  });
+
+  it("removeItem 성공 시 해당 그룹 items 쿼리 무효화", async () => {
+    const groupId = 1;
+    const ticker = "005930";
+    mockApi.getGroups.mockResolvedValue([makeWatchlistGroup({ id: groupId })]);
+    const before = makeWatchlistItems({ items: [{ ticker, name: "삼성전자" }] });
+    const after = makeWatchlistItems({ items: [] });
+    mockApi.getItems.mockResolvedValueOnce(before).mockResolvedValueOnce(after);
+    mockApi.removeItem.mockResolvedValue(undefined);
+
+    const { result } = renderHookWithQuery(
+      ({ groupId }: { groupId: number | null }) => ({
+        wl: useWatchlist(),
+        items: useWatchlist().useGroupItems(groupId),
+      }),
+      { initialProps: { groupId } }
+    );
+
+    await waitFor(() => expect(result.current.items.data?.items).toHaveLength(1));
+
+    act(() => {
+      result.current.wl.removeItem.mutate({ groupId, ticker });
+    });
+
+    await waitFor(() => expect(result.current.items.data?.items).toHaveLength(0));
+    expect(mockApi.removeItem).toHaveBeenCalledWith(groupId, ticker);
   });
 
   it("useIsTickerInWatchlist — 특정 티커가 포함된 그룹을 정확히 식별", async () => {

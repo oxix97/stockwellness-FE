@@ -139,7 +139,7 @@ export function PortfolioWizard({ onClose }: { onClose: () => void }) {
   }, [state, setPortfolioId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className="fixed inset-0 z-[60] bg-background flex flex-col">
       {/* 헤더 */}
       <div className="flex items-center gap-3 px-4 h-14 border-b border-border shrink-0">
         <button

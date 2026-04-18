@@ -8,13 +8,21 @@ import { jwtDecode } from "jwt-decode";
 interface JwtPayload {
   sub: string;       // memberId
   email?: string;
-  nickname?: string; // JWT에 포함되지 않을 수 있음
-  joinedDate?: string;
+  nickname?: string;
+  createdAt?: string;
 }
+
+const CALLBACK_ERROR_MESSAGES: Record<string, string> = {
+  A003: "로그인 정보가 만료되었습니다. 다시 시도해주세요.",
+  A004: "유효하지 않은 로그인 정보입니다. 다시 시도해주세요.",
+  A005: "세션이 유효하지 않습니다. 다시 로그인해주세요.",
+  A006: "세션 정보를 찾을 수 없습니다. 다시 로그인해주세요.",
+  A007: "소셜 로그인에 실패했습니다. 다시 시도해주세요.",
+};
 
 /**
  * 백엔드 소셜 로그인 성공 후 리다이렉트 되는 핸들러 컴포넌트.
- * URL 파라미터에서 토큰(accessToken 또는 token)을 추출하여 스토어에 저장합니다.
+ * URL 파라미터에서 인증 결과를 추출하여 스토어와 초기 화면 상태를 설정합니다.
  */
 export function AuthCallbackHandler() {
   const [searchParams] = useSearchParams();
@@ -24,52 +32,48 @@ export function AuthCallbackHandler() {
 
   useEffect(() => {
     const processAuth = async () => {
-      // 1. URL 파라미터 추출 (accessToken 또는 token 둘 다 지원)
-      const accessToken = searchParams.get("accessToken") || searchParams.get("token");
+      const accessToken = searchParams.get("accessToken");
       const refreshToken = searchParams.get("refreshToken");
-      const error = searchParams.get("error");
+      const errorCode = searchParams.get("errorCode");
 
-      if (error) {
-        toast.error(`로그인 중 오류가 발생했습니다: ${error}`);
-        navigate("/login");
+      if (errorCode) {
+        toast.error(CALLBACK_ERROR_MESSAGES[errorCode] ?? "로그인 처리에 실패했습니다. 다시 시도해주세요.");
+        navigate("/login", { replace: true });
         return;
       }
 
-      // 액세스 토큰이 없는 경우 처리
-      if (!accessToken) {
+      if (!accessToken || !refreshToken) {
         toast.error("인증 정보가 누락되었습니다. 다시 시도해주세요.");
-        navigate("/login");
+        navigate("/login", { replace: true });
         return;
       }
 
       try {
-        // 2. 토큰에서 유저 정보 파싱
         const decoded: JwtPayload = jwtDecode(accessToken);
+        if (!decoded.sub) {
+          throw new Error("missing-sub");
+        }
 
-        // 3. 인증 스토어 업데이트
         setAuth({
           memberId: Number(decoded.sub),
           email: decoded.email || "",
           nickname: decoded.nickname || "사용자",
           accessToken,
-          // 리프레시 토큰이 없더라도 로그인은 가능하게 처리 (선택적)
-          refreshToken: refreshToken || "",
-          joinedDate: decoded.joinedDate || "",
+          refreshToken,
+          joinedDate: decoded.createdAt || null,
         });
 
-        // 4. 포트폴리오 정보 동적 동기화
-        await syncPortfolio();
+        const portfolioId = await syncPortfolio();
 
         toast.success(`${decoded.nickname || "사용자"}님, 환영합니다!`);
 
-        // 5. 로그인 전 가려던 페이지로 복귀 (Login.tsx에서 저장함)
         const redirectPath = sessionStorage.getItem("redirect_after_login") || "/";
         sessionStorage.removeItem("redirect_after_login");
-        
-        navigate(redirectPath, { replace: true });
+
+        navigate(portfolioId ? redirectPath : "/portfolio", { replace: true });
       } catch {
         toast.error("인증 처리 중 오류가 발생했습니다.");
-        navigate("/login");
+        navigate("/login", { replace: true });
       }
     };
 

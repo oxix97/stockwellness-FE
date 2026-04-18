@@ -65,6 +65,16 @@ describe("portfolioApi", () => {
     expect(result).toEqual(advice);
   });
 
+  it("createAdvice — POST /v1/portfolios/:id/advice 호출", async () => {
+    const advice = makeAdvice();
+    mockClient.post.mockResolvedValue(advice);
+
+    const result = await portfolioApi.createAdvice("1");
+
+    expect(mockClient.post).toHaveBeenCalledWith("/v1/portfolios/1/advice");
+    expect(result).toEqual(advice);
+  });
+
   it("getAdvice — 서버가 null 반환 시 null 반환", async () => {
     mockClient.get.mockResolvedValue(null);
 
@@ -107,6 +117,16 @@ describe("portfolioApi", () => {
     expect(result).toEqual(backtest);
   });
 
+  it("getInceptionChart — GET /v1/portfolios/:id/analysis/performance/inception/chart 호출", async () => {
+    const chart = { portfolioInceptionDate: "2025-01-01", dailyResults: [], comparisons: [] };
+    mockClient.get.mockResolvedValue(chart);
+
+    const result = await portfolioApi.getInceptionChart("1");
+
+    expect(mockClient.get).toHaveBeenCalledWith("/v1/portfolios/1/analysis/performance/inception/chart");
+    expect(result).toEqual(chart);
+  });
+
   it("updatePortfolio — PUT /v1/portfolios/:id 호출", async () => {
     mockClient.put.mockResolvedValue(undefined);
 
@@ -142,7 +162,7 @@ describe("portfolioApi", () => {
   });
 
   it("getAnalysisSummary — GET /v1/portfolios/:id/analysis/summary 호출", async () => {
-    const summary = { valuation: {}, diversification: {} };
+    const summary = { valuation: {}, diversification: {}, rebalancing: {}, itemContributions: {} };
     mockClient.get.mockResolvedValue(summary);
 
     const result = await portfolioApi.getAnalysisSummary("1");

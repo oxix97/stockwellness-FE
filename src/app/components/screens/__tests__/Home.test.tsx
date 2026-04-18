@@ -1,62 +1,59 @@
 import { screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Home } from "../Home";
-import { usePortfolioSummary, usePortfolioValuation } from "@/hooks/use-portfolio";
-import { useStock } from "@/hooks/use-stock";
-import { useSector } from "@/hooks/use-sector";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { MemoryRouter } from "react-router";
 import { renderWithQuery } from "@/test/test-utils";
 
 // 훅 모킹
-vi.mock("@/hooks/use-portfolio");
-vi.mock("@/hooks/use-stock");
-vi.mock("@/hooks/use-sector");
 vi.mock("@/hooks/use-market-index");
+vi.mock("@/app/components/home/StockSupplyRankingSection", () => ({
+  StockSupplyRankingSection: () => <div>종목 수급 랭킹 섹션</div>,
+}));
+vi.mock("@/app/components/home/SectorRankingSection", () => ({
+  SectorRankingSection: () => <div>섹터 랭킹 섹션</div>,
+}));
+vi.mock("@/app/components/home/NewListingsSection", () => ({
+  NewListingsSection: () => <div>신규 상장 섹션</div>,
+}));
+vi.mock("@/app/components/home/MarketIndexCard", () => ({
+  MarketIndexSection: () => <div>시장 현황 섹션</div>,
+}));
+vi.mock("@/app/components/home/SectorBottomSheet", () => ({
+  SectorBottomSheet: () => null,
+}));
 
 describe("Home Screen", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock return values
-    (usePortfolioSummary as any).mockReturnValue({ valuation: null, isLoading: true });
-    (usePortfolioValuation as any).mockReturnValue({ data: null, isLoading: true });
-    (useStock as any).mockReturnValue({ popular: { data: [], isLoading: true }, newListings: { data: [], isLoading: true } });
-    (useSector as any).mockReturnValue({ data: [], isLoading: true });
-    (useMarketIndex as any).mockReturnValue({ data: [{ name: "KOSPI", fluctuationRate: 0.8, history: [] }] });
+    (useMarketIndex as any).mockReturnValue({
+      data: {
+        indexes: [{ ticker: "0001", name: "코스피 종합", fluctuationRate: 0.8, fluctuationAmount: 10, currentPrice: 2600 }],
+        weather: {
+          weatherLevel: "SUNNY",
+          weatherMessage: "오늘의 증시는 맑음이에요",
+          weatherDescription: "주요 지수가 고르게 오르며 투자심리가 비교적 안정적인 편이에요",
+          reasonCode: "STEADY_ADVANCE",
+          asOfDate: "2026-04-08",
+        },
+      },
+      isLoading: false,
+      isError: false,
+    });
   });
 
-  it("로딩 중일 때 스켈레톤을 표시한다", () => {
+  it("홈 탭에 시장 현황, 수급, 섹터, 신규 상장 섹션을 표시한다", () => {
     renderWithQuery(
       <MemoryRouter>
         <Home />
       </MemoryRouter>
     );
 
-    const skeletons = document.querySelectorAll(".animate-pulse");
-    expect(skeletons.length).toBeGreaterThanOrEqual(3);
-  });
-
-  it("섹터 데이터를 성공적으로 렌더링한다", () => {
-    const mockSectors = [
-      { sectorCode: "001", sectorName: "바이오", fluctuationRate: 5.5, isOverheated: false, diagnosisMessage: "진단 메시지 1" },
-      { sectorCode: "002", sectorName: "반도체", fluctuationRate: -1.2, isOverheated: true, diagnosisMessage: "진단 메시지 2" },
-    ];
-
-    (usePortfolioSummary as any).mockReturnValue({ valuation: { currentTotalValue: 1000000 }, isLoading: false });
-    (usePortfolioValuation as any).mockReturnValue({ data: { currentTotalValue: 1000000 }, isLoading: false });
-    (useSector as any).mockReturnValue({ data: mockSectors, isLoading: false });
-
-    renderWithQuery(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText("바이오")).toBeInTheDocument();
-    expect(screen.getByText("반도체")).toBeInTheDocument();
-    // 5.50% 등으로 표시됨
-    expect(screen.getByText(/5\.5/)).toBeInTheDocument();
-    expect(screen.getByText(/1\.2/)).toBeInTheDocument();
-    expect(screen.getByText("⚠️ 과열")).toBeInTheDocument();
+    expect(screen.getByText("시장 현황 섹션")).toBeInTheDocument();
+    expect(screen.getAllByText("종목 수급 랭킹 섹션")).toHaveLength(2);
+    expect(screen.getByText("섹터 랭킹 섹션")).toBeInTheDocument();
+    expect(screen.getByText("신규 상장 섹션")).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes("오늘의 증시는 맑음이에요") && content.includes("🌤️"))).toBeInTheDocument();
+    expect(screen.getByText("주요 지수가 고르게 오르며 투자심리가 비교적 안정적인 편이에요")).toBeInTheDocument();
   });
 });

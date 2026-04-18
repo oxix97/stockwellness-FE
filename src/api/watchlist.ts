@@ -6,6 +6,13 @@ import {
   UpdateWatchlistItemNoteRequest,
 } from "@/types/api";
 
+export const watchlistKeys = {
+  all: ['watchlist'] as const,
+  groups: () => [...watchlistKeys.all, 'groups'] as const,
+  items: (groupId: number) =>
+    [...watchlistKeys.all, 'items', groupId] as const,
+};
+
 export const watchlistApi = {
   /**
    * 사용자의 관심 종목 그룹 목록을 가져옵니다.

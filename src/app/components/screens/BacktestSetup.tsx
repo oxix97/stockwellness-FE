@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { useNavigate, Navigate } from "react-router";
-import { ChevronLeft, FlaskConical } from "lucide-react";
+import { FlaskConical, Sparkles } from "lucide-react";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useAuthStore } from "@/store/auth";
 import { Skeleton, Slider } from "@/app/components/ui";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
+import { PageHeader } from "@/app/components/shared";
 
 const periods = [
   { id: "1m", label: "최근 1개월" },
@@ -73,7 +74,7 @@ export function BacktestSetup() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-6 space-y-6">
+      <div className="page-shell page-content min-h-screen py-6 space-y-6">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-40 w-full rounded-3xl" />
         <Skeleton className="h-32 w-full rounded-3xl" />
@@ -99,205 +100,170 @@ export function BacktestSetup() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* 헤더 */}
-      <header className="bg-card px-6 py-4 flex items-center border-b border-border sticky top-0 z-10">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <div className="flex-1 text-center text-foreground font-bold text-lg">
-          포트폴리오 시뮬레이션
-        </div>
-        <div className="w-10" />
-      </header>
+      <PageHeader title="포트폴리오 시뮬레이션" description="현재 전략을 과거 데이터에 바로 적용해보는 모바일 웹 설정 화면" showBack />
 
-      {/* 히어로 */}
-      <div className="px-6 py-10 bg-card border-b border-border">
-        <div className="text-foreground mb-3 font-bold text-3xl leading-tight">
-          이대로 과거로<br />돌아간다면? 🔮
-        </div>
-        <div className="text-muted-foreground font-medium">
-          내 포트폴리오가 과거에 어떤 성과를 냈을지 미리 확인해보세요.
-        </div>
-      </div>
+      <div className="page-shell page-content space-y-6 py-6">
+        <section className="rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] px-5 py-6 shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            Backtest setup
+          </div>
+          <div className="mt-4 text-foreground text-[length:var(--mobile-hero-title-size)] font-bold leading-[1.12] tracking-tight min-[421px]:text-[1.875rem]">
+            이 전략이 과거에도
+            <br />
+            통했는지 바로 확인하세요
+          </div>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            투자 전략, 금액, 기간, 리밸런싱 주기를 고르고 지금 포트폴리오를 과거 데이터에 적용해봅니다.
+          </p>
+        </section>
 
-      {/* 투자 전략 */}
-      <div className="px-6 py-8 border-b border-border">
-        <div className="text-foreground mb-4 font-bold text-xl">투자 전략</div>
-        <div className="grid grid-cols-2 gap-4">
-          {strategies.map((strategy) => (
-            <button
-              key={strategy.id}
-              onClick={() => setSelectedStrategy(strategy.id as "DCA" | "LUMP_SUM")}
-              className={`p-5 rounded-3xl text-left transition-all border-2 ${
-                selectedStrategy === strategy.id
-                  ? "border-primary bg-primary/5 shadow-md"
-                  : "border-border bg-card"
-              }`}
-            >
-              <div
-                className={`font-bold mb-1 ${
-                  selectedStrategy === strategy.id ? "text-primary" : "text-foreground"
-                }`}
-              >
-                {strategy.label}
-              </div>
-              <div className="text-muted-foreground text-xs leading-tight">
-                {strategy.description}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 초기 투자금액 */}
-      <div className="px-6 py-8 border-b border-border">
-        <div className="text-foreground mb-4 font-bold text-xl">
-          {selectedStrategy === "DCA" ? "월 투자금액" : "초기 투자금액"}
-        </div>
-        <div className="bg-secondary/50 rounded-3xl p-8 text-right">
-          <input
-            type="number"
-            min="1"
-            value={initialAmount}
-            onChange={(e) => setInitialAmount(Math.max(1, Number(e.target.value)))}
-            className="w-full bg-transparent text-foreground text-right outline-none font-bold text-4xl"
-          />
-          <div className="text-muted-foreground mt-2 font-bold">원</div>
-        </div>
-      </div>
-
-      {/* 시뮬레이션 기간 */}
-      <div className="px-6 py-6 border-b border-border">
-        <div className="text-foreground mb-4 font-bold text-[18px]">시뮬레이션 기간</div>
-        <div className="grid grid-cols-2 gap-3">
-          {periods.map((period) => (
-            <button
-              key={period.id}
-              onClick={() => setSelectedPeriod(period.id)}
-              className={`py-4 rounded-2xl transition-all font-semibold text-base ${
-                selectedPeriod === period.id
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "bg-card text-foreground border border-border"
-              }`}
-            >
-              {period.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 자산 구성 및 비중 — 원형 차트 및 슬라이더 */}
-      <div className="px-6 py-8 border-b border-border">
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-foreground font-bold text-xl">자산 구성 및 비중</div>
-          <span className={`text-sm font-bold tabular-nums ${Math.abs(totalWeight - 100) < 0.5 ? "text-primary" : "text-destructive"}`}>
-            합계 {totalWeight}%
-          </span>
-        </div>
-
-        {/* 원형(Donut) 차트 시각화 */}
-        <div className="h-64 w-full mb-8">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
-                animationDuration={500}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                ))}
-              </Pie>
-              <RechartsTooltip 
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="absolute left-1/2 -translate-x-1/2 -translate-y-[140px] text-center pointer-events-none">
-            <div className="text-muted-foreground text-xs font-medium">총 비중</div>
-            <div className={`text-xl font-bold ${Math.abs(totalWeight - 100) < 0.5 ? "text-foreground" : "text-destructive"}`}>
-              {totalWeight}%
+        <section className="rounded-[32px] border border-border bg-card shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
+          <div className="border-b border-border px-5 py-5">
+            <div className="text-foreground mb-4 font-bold text-xl">투자 전략</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {strategies.map((strategy) => (
+                <button
+                  key={strategy.id}
+                  onClick={() => setSelectedStrategy(strategy.id as "DCA" | "LUMP_SUM")}
+                  className={`rounded-3xl border-2 p-5 text-left transition-all ${
+                    selectedStrategy === strategy.id ? "border-primary bg-primary/5 shadow-md" : "border-border bg-background"
+                  }`}
+                >
+                  <div className={`mb-1 font-bold ${selectedStrategy === strategy.id ? "text-primary" : "text-foreground"}`}>
+                    {strategy.label}
+                  </div>
+                  <div className="text-xs leading-tight text-muted-foreground">{strategy.description}</div>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
-        {portfolioItems.length === 0 ? (
-          <div className="text-muted-foreground text-sm text-center py-6">
-            포트폴리오에 종목이 없습니다.
+          <div className="border-b border-border px-5 py-5">
+            <div className="text-foreground mb-4 font-bold text-xl">
+              {selectedStrategy === "DCA" ? "월 투자금액" : "초기 투자금액"}
+            </div>
+            <div className="rounded-3xl bg-secondary/50 p-8 text-right">
+              <input
+                type="number"
+                min="1"
+                value={initialAmount}
+                onChange={(e) => setInitialAmount(Math.max(1, Number(e.target.value)))}
+                className="w-full bg-transparent text-right text-[length:var(--mobile-number-xl)] font-bold text-foreground outline-none md:text-4xl"
+              />
+              <div className="mt-2 font-bold text-muted-foreground">원</div>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {portfolioItems.map((item, idx) => {
-              const w = activeWeights[item.symbol] ?? 0;
-              const color = COLORS[idx % COLORS.length];
-              const displayName = item.name || item.symbol;
-              const hasName = !!item.name;
-              
-              return (
-                <div key={item.symbol} className="bg-card rounded-2xl px-4 py-4 border border-border">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-                      <div>
-                        <p className="text-foreground font-bold text-sm">{displayName}</p>
-                        {hasName && <p className="text-muted-foreground text-[10px] uppercase font-medium">{item.symbol}</p>}
-                      </div>
-                    </div>
-                    <span className="text-primary font-bold text-sm tabular-nums w-12 text-right">{w}%</span>
-                  </div>
-                  <Slider
-                    value={[w]}
-                    onValueChange={([v]) => handleWeightChange(item.symbol, v)}
-                    min={0}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                  />
+
+          <div className="border-b border-border px-5 py-5">
+            <div className="text-foreground mb-4 font-bold text-[18px]">시뮬레이션 기간</div>
+            <div className="grid grid-cols-2 gap-3">
+              {periods.map((period) => (
+                <button
+                  key={period.id}
+                  onClick={() => setSelectedPeriod(period.id)}
+                  className={`rounded-2xl py-4 text-base font-semibold transition-all ${
+                    selectedPeriod === period.id ? "bg-primary text-primary-foreground shadow-lg" : "border border-border bg-background text-foreground"
+                  }`}
+                >
+                  {period.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-b border-border px-5 py-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-foreground font-bold text-xl">자산 구성 및 비중</div>
+              <span className={`text-sm font-bold tabular-nums ${Math.abs(totalWeight - 100) < 0.5 ? "text-primary" : "text-destructive"}`}>
+                합계 {totalWeight}%
+              </span>
+            </div>
+
+            <div className="relative mb-8 h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={chartData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" animationDuration={500}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                <div className="text-xs font-medium text-muted-foreground">총 비중</div>
+                <div className={`text-xl font-bold ${Math.abs(totalWeight - 100) < 0.5 ? "text-foreground" : "text-destructive"}`}>
+                  {totalWeight}%
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              </div>
+            </div>
 
-      {/* 리밸런싱 주기 */}
-      <div className="px-6 py-6 border-b border-border">
-        <div className="text-foreground mb-4 font-bold text-[18px]">리밸런싱 주기</div>
-        <div className="grid grid-cols-2 gap-3">
-          {rebalancing.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => setSelectedRebalancing(option.id)}
-              className={`py-3 rounded-2xl transition-all font-semibold ${
-                selectedRebalancing === option.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-foreground border border-border"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+            {portfolioItems.length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">포트폴리오에 종목이 없습니다.</div>
+            ) : (
+              <div className="space-y-4">
+                {portfolioItems.map((item, idx) => {
+                  const w = activeWeights[item.symbol] ?? 0;
+                  const color = COLORS[idx % COLORS.length];
+                  const displayName = item.name || item.symbol;
+                  const hasName = !!item.name;
+
+                  return (
+                    <div key={item.symbol} className="rounded-2xl border border-border bg-background px-4 py-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+                          <div>
+                            <p className="text-sm font-bold text-foreground">{displayName}</p>
+                            {hasName && <p className="text-xs font-medium uppercase text-muted-foreground">{item.symbol}</p>}
+                          </div>
+                        </div>
+                        <span className="w-12 text-right text-sm font-bold tabular-nums text-primary">{w}%</span>
+                      </div>
+                      <Slider value={[w]} onValueChange={([v]) => handleWeightChange(item.symbol, v)} min={0} max={100} step={5} className="w-full" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="px-5 py-5">
+            <div className="text-foreground mb-4 font-bold text-[18px]">리밸런싱 주기</div>
+            <div className="grid grid-cols-2 gap-3">
+              {rebalancing.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setSelectedRebalancing(option.id)}
+                  className={`rounded-2xl py-3 font-semibold transition-all ${
+                    selectedRebalancing === option.id ? "bg-primary text-primary-foreground" : "border border-border bg-background text-foreground"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="rounded-[28px] border border-border bg-card px-5 py-5 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
+          <button
+            onClick={handleStartBacktest}
+            disabled={!canStart}
+            className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-base font-bold transition-transform ${
+              canStart ? "bg-primary text-primary-foreground shadow-lg active:scale-[0.98]" : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            <FlaskConical className="h-5 w-5" />
+            시뮬레이션 시작하기
+          </button>
+          {!canStart && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">비중 합계를 100%에 맞춰야 백테스트를 시작할 수 있습니다.</p>
+          )}
         </div>
       </div>
 
-      {/* 하단 고정 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 px-6 py-4 bg-background border-t border-border">
-        <button
-          onClick={handleStartBacktest}
-          disabled={!canStart}
-          className={`w-full rounded-2xl py-4 flex items-center justify-center gap-2 shadow-lg ${
-            canStart
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground cursor-not-allowed"
-          }`}
-        >
-          <FlaskConical className="w-5 h-5" />
-          <span className="text-lg font-bold">시뮬레이션 시작하기</span>
-        </button>
-      </div>
     </div>
   );
 }
