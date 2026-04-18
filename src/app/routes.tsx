@@ -15,6 +15,7 @@ const BacktestSetup = lazy(() => import("@/app/components/screens/BacktestSetup"
 const BacktestResult = lazy(() => import("@/app/components/screens/BacktestResult").then(m => ({ default: m.BacktestResult })));
 const Login = lazy(() => import("@/app/components/screens/Login").then(m => ({ default: m.Login })));
 const AuthCallbackHandler = lazy(() => import("@/app/components/screens/AuthCallbackHandler").then(m => ({ default: m.AuthCallbackHandler })));
+const NotFoundPage = lazy(() => import("@/app/components/screens/error/NotFoundPage").then(m => ({ default: m.NotFoundPage })));
 
 export const router = createBrowserRouter([
   {
@@ -72,5 +73,9 @@ export const router = createBrowserRouter([
         <BacktestResult />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "*",
+    Component: NotFoundPage,
   },
 ]);

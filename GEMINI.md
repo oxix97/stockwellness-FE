@@ -84,7 +84,7 @@ VITE_APP_NAME=Stockwellness
 - 레이아웃: Flex/Grid 사용 — `absolute` 포지셔닝 지양
 - 기본 폰트: `14px` · 주요 액센트 컬러: `#2EBE7A`
 - 날짜 형식: `Jun 10`
-- 하단 툴바: 최대 4개 · Chips: 3개 이상 · Dropdown: 3개 이상 옵션일 때만
+- 하단 툴바: 최대 5개 · Chips: 3개 이상 · Dropdown: 3개 이상 옵션일 때만
 
 ### 에러 처리
 
