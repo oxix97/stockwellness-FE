@@ -140,23 +140,9 @@ export function Portfolio() {
       value: `${rebalancingItems.length}개 종목`,
       description:
         rebalancingItems.length > 0
-          ? `${rebalancingItems[0].name} ${rebalancingItems[0].recommendQuantity > 0 ? "비중 확대" : "비중 축소"} 권장`
+          ? `${rebalancingItems[0].name} ${rebalancingItems[0].recommendedQuantity > 0 ? "비중 확대" : "비중 축소"} 권장`
           : "현재 목표 비중과 큰 차이가 없습니다",
       tone: "bg-card border-border md:bg-amber-50/70 md:border-amber-200/70 dark:bg-card dark:border-border",
-    },
-    {
-      key: "backtest" as const,
-      icon: TrendingUp,
-      title: "성과 비교",
-      value:
-        simulationMetrics && Number.isFinite(simulationMetrics.outperformance)
-          ? formatPercent(simulationMetrics.outperformance)
-          : "데이터 준비 중",
-      description:
-        simulationMetrics
-          ? `${leadingBenchmarkLabel} 대비 ${simulationMetrics.outperformance >= 0 ? "초과 성과" : "열세"}`
-          : "성과 비교 데이터를 불러오는 중입니다",
-      tone: "bg-card border-border md:bg-primary/8 md:border-primary/20 dark:bg-card dark:border-border",
     },
     {
       key: "rebalancing" as const,
@@ -248,7 +234,7 @@ export function Portfolio() {
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
+          <div className="grid gap-3 lg:grid-cols-2">
             {insightCards.map((card) => {
               const Icon = card.icon;
               return (
@@ -283,109 +269,6 @@ export function Portfolio() {
                 </motion.button>
               );
             })}
-          </div>
-          </section>
-
-          <section className="rounded-3xl border border-border bg-card p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-foreground font-bold text-base">성과 비교</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                포트폴리오 생성일 이후 누적 수익률을 비교합니다.
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setAnalysisType("backtest")} className="text-xs">
-              상세 보기
-            </Button>
-          </div>
-
-          <div className="mt-4 flex gap-1 rounded-2xl bg-secondary p-1">
-            {PERFORMANCE_OPTIONS.map((option) => (
-              <button
-                key={option}
-                onClick={() => setPeriod(option)}
-                className={`flex-1 rounded-xl py-1.5 text-xs font-semibold transition-colors ${
-                  period === option ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4 rounded-[24px] bg-background/70 p-3">
-            {simulation.isLoading ? (
-              <Skeleton className="h-[220px] rounded-2xl" />
-            ) : chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={chartData}>
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }}
-                    tickLine={false}
-                    axisLine={false}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }}
-                    tickFormatter={(value) => `${value}%`}
-                    tickLine={false}
-                    axisLine={false}
-                    width={34}
-                  />
-                  <Tooltip
-                    formatter={(value: number, name: string) => [
-                      `${value.toFixed(2)}%`,
-                      name === "portfolio" ? "내 포트폴리오" : BENCHMARK_LABELS[name] || name,
-                    ]}
-                    labelStyle={{ fontSize: 11 }}
-                    contentStyle={{
-                      fontSize: 12,
-                      borderRadius: 12,
-                      borderColor: "var(--color-border)",
-                      backgroundColor: "var(--color-card)",
-                      color: "var(--color-card-foreground)",
-                    }}
-                  />
-                  <Line type="monotone" dataKey="portfolio" stroke="var(--color-primary)" strokeWidth={2.5} dot={false} />
-                  {simulation.data?.comparisons.map((comparison, index) => (
-                    <Line
-                      key={comparison.ticker}
-                      type="monotone"
-                      dataKey={comparison.ticker}
-                      stroke={[
-                        "var(--color-chart-2)",
-                        "var(--color-chart-4)",
-                        "var(--color-chart-3)",
-                        "var(--color-muted-foreground)",
-                      ][index % 4]}
-                      strokeWidth={1.5}
-                      strokeDasharray="4 4"
-                      dot={false}
-                      connectNulls
-                    />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">
-                생성 시점 성과 데이터가 없습니다.
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-2 min-[408px]:grid-cols-3 min-[408px]:[&>*:last-child]:col-span-1 [&>*:last-child]:col-span-2">
-            <PerformanceMetric label="누적 수익률" value={simulationMetrics ? formatPercent(simulationMetrics.totalReturn) : "-"} />
-            <PerformanceMetric
-              label="벤치마크 대비"
-              value={
-                simulationMetrics
-                  ? formatPercent(simulationMetrics.outperformance)
-                  : "-"
-              }
-              positive={(simulationMetrics?.outperformance ?? 0) >= 0}
-            />
-            <PerformanceMetric label="CAGR" value={simulationMetrics ? formatPercent(simulationMetrics.cagr) : "-"} />
           </div>
           </section>
         </div>
@@ -585,5 +468,5 @@ function getAdviceSummary(content: string | undefined) {
 function getRebalancingNote(symbol: string, rebalancingItems: RebalancingItem[] | undefined) {
   const target = rebalancingItems?.find((item) => item.symbol === symbol);
   if (!target) return "비중 유지";
-  return target.recommendQuantity > 0 ? "비중 확대" : "비중 축소";
+  return target.recommendedQuantity > 0 ? "비중 확대" : "비중 축소";
 }
