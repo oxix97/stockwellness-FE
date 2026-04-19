@@ -180,25 +180,6 @@ export function Search() {
             </div>
 
             <div className="space-y-6">
-              <Section
-                title="추천 탐색 경로"
-                subtitle="지금 많이 찾는 종목을 바로 탐색해보세요."
-                icon={Sparkles}
-                className="px-0 pb-2"
-              >
-                <div className="flex flex-wrap gap-2">
-                  {suggestedPaths.map((pathKeyword) => (
-                    <button
-                      key={pathKeyword}
-                      onClick={() => handleSelectKeyword(pathKeyword)}
-                      className="rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
-                    >
-                      {pathKeyword}
-                    </button>
-                  ))}
-                </div>
-              </Section>
-
               <Section title="인기 검색어" subtitle="다른 사용자가 주목하는 종목 흐름입니다." icon={TrendingUp} className="px-0">
                 <PopularKeywordList
                   keywords={popular.data}

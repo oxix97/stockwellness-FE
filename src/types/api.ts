@@ -116,8 +116,10 @@ export interface AnalysisSummaryResponse {
  */
 export interface SectorComparisonPoint {
   date: string;
-  sectorReturn: number;
-  benchmarkReturn: number;
+  indexValue: number;
+  sectorRate: number; // sectorReturn -> sectorRate
+  marketRate: number; // benchmarkReturn -> marketRate
+  relativeStrength: number; // 추가
 }
 
 /**
@@ -126,8 +128,12 @@ export interface SectorComparisonPoint {
 export interface SectorComparisonResponse {
   sectorCode: string;
   sectorName: string;
-  benchmarkName: string;
-  comparisonData: SectorComparisonPoint[];
+  baseDate: string; // 추가
+  sectorChangeRate: number; // 추가
+  marketChangeRate: number; // 추가
+  relativeStrength: number; // 추가
+  performanceStatus: "OUTPERFORM" | "UNDERPERFORM" | "NEUTRAL"; // 추가
+  historicalComparison: SectorComparisonPoint[]; // comparisonData -> historicalComparison
 }
 
 /**
@@ -204,7 +210,16 @@ export type PortfolioResponse = Omit<NonNullable<components["schemas"]["api-v1-p
 export type SectorRankingItem = NonNullable<components["schemas"]["SectorRankingResponse"]["data"]>[number];
 export type SectorRankingResponse = NonNullable<components["schemas"]["SectorRankingResponse"]["data"]>;
 
-/** 섹터 수급 랭킹 아이템 */
+/** 주도주 정보 */
+export interface LeadingStock {
+  name: string;
+  ticker: string;
+  currentPrice: number;
+  changePrice: number;
+  fluctuationRate: number;
+  tradeVolume: number;
+  transactionAmt: number;
+}
 export interface SectorSupplyItem {
   /** 섹터 코드 */
   sectorCode: string;
@@ -223,9 +238,11 @@ export interface SectorSupplyItem {
 export type SectorSupplyResponse = SectorSupplyItem[];
 
 /** 섹터 상세 정보 및 기술 지표 (추출) */
-export type SectorDetailResponse = NonNullable<components["schemas"]["SectorDetailResponse"]["data"]>;
+export type SectorDetailResponse = Omit<NonNullable<components["schemas"]["SectorDetailResponse"]["data"]>, "leadingStocks"> & {
+  leadingStocks: LeadingStock[];
+};
 export type TechnicalIndicators = NonNullable<SectorDetailResponse["technicalIndicators"]>;
-export type LeadingStock = NonNullable<SectorDetailResponse["leadingStocks"]>[number];
+// 중복된 LeadingStock 선언 제거
 
 /** 주가 차트 조회 기간 */
 export type ChartPeriod = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "ALL";
