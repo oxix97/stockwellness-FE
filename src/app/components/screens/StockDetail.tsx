@@ -9,7 +9,7 @@ import { useWatchlist } from "@/hooks/use-watchlist";
 import { useAuthStore } from "@/store/auth";
 import { Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, formatPercent } from "@/utils/format";
 import { StockReturnsResponse } from "@/api/stock";
 import { ChartPeriod, ChartFrequency } from "@/types/api";
 import { toast } from "sonner";
@@ -420,7 +420,7 @@ function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectio
         <div className="mb-2 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">₩{formatCurrency(latestPrice)}</div>
         {dailyRate != null && (
           <div className={`text-lg font-bold ${isUp ? "text-up" : "text-down"}`}>
-            어제보다 {isUp ? "▲ " : "▼ "}{Math.abs(dailyRate).toFixed(2)}%
+            어제보다 {formatPercent(dailyRate)}
           </div>
         )}
         <div className="mt-5 rounded-[24px] border border-border/70 bg-card/80 px-4 py-4">
@@ -692,11 +692,11 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
                 ) : (
                   <>
                     <span className={`text-center font-bold text-sm ${isUp ? "text-up" : "text-down"}`}>
-                      {stockRate != null ? `${stockRate > 0 ? "▲ " : "▼ "}${Math.abs(stockRate)}%` : "-"}
+                      {stockRate != null ? formatPercent(stockRate) : "-"}
                     </span>
                     <span className="text-right font-bold text-sm text-foreground">
                       {benchRate != null
-                        ? `${benchRate > 0 ? "▲ " : "▼ "}${Math.abs(benchRate)}%`
+                        ? formatPercent(benchRate)
                         : <span className="text-muted-foreground font-medium">데이터 없음</span>}
                     </span>
                   </>
