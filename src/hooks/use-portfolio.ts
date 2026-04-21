@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
+import { toast } from "sonner";
 import { portfolioApi } from "@/api/portfolio";
 import { useAuthStore } from "@/store/auth";
 import {
@@ -32,7 +33,37 @@ export function useUpdatePortfolio() {
   return useMutation({
     mutationFn: (body: UpdatePortfolioRequest) =>
       portfolioApi.updatePortfolio(portfolioId!, body),
-    onSuccess: () => {
+
+    onMutate: async (newPortfolio) => {
+      await queryClient.cancelQueries({ queryKey: ["portfolio", portfolioId] });
+      const previousDetail = queryClient.getQueryData(["portfolio", portfolioId, "detail"]);
+
+      queryClient.setQueryData(["portfolio", portfolioId, "detail"], (old: any) => {
+        if (!old) return old;
+        const updatedItems = newPortfolio.items.map((newItem: any) => {
+          const existingItem = old.items?.find((i: any) => i.symbol === newItem.symbol);
+          return existingItem ? { ...existingItem, ...newItem } : newItem;
+        });
+
+        return {
+          ...old,
+          name: newPortfolio.name,
+          description: newPortfolio.description,
+          items: updatedItems,
+        };
+      });
+
+      return { previousDetail };
+    },
+
+    onError: (err, newPortfolio, context) => {
+      if (context?.previousDetail) {
+        queryClient.setQueryData(["portfolio", portfolioId, "detail"], context.previousDetail);
+      }
+      toast.error("변경사항 저장에 실패했습니다. 복구합니다.");
+    },
+
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["portfolio", portfolioId] });
     },
   });
