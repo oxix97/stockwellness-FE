@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { portfolioApi } from "@/api/portfolio";
-import { BacktestRequest, BacktestResponse, ChartPeriod, PortfolioInceptionChartResponse } from "@/types/api";
+import { BacktestRequest, ChartPeriod, PortfolioInceptionChartResponse } from "@/types/api";
 import { useAuthStore } from "@/store/auth";
 
 export type Period = ChartPeriod;
@@ -107,6 +107,7 @@ export function computeMetrics(results: any[] | undefined) {
     totalReturn: +totalReturn.toFixed(1),
     benchmarkReturn: +benchmarkReturn.toFixed(1),
     outperformance: +(totalReturn - benchmarkReturn).toFixed(1),
+    finalValue: last.totalValue ?? 0,
     mdd: +Math.abs(mdd).toFixed(1),
     sharpeRatio: +sharpeRatio.toFixed(2),
     cagr: +cagr.toFixed(1),

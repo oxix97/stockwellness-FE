@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from "react-router";
 import { FlaskConical, Sparkles } from "lucide-react";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useAuthStore } from "@/store/auth";
-import { Skeleton, Slider } from "@/app/components/ui";
+import { Skeleton, Slider, Switch, Label } from "@/app/components/ui";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { PageHeader } from "@/app/components/shared";
 
@@ -39,6 +39,7 @@ export function BacktestSetup() {
   const [selectedStrategy, setSelectedStrategy] = useState<"DCA" | "LUMP_SUM">("LUMP_SUM");
   const [selectedPeriod, setSelectedPeriod] = useState("1y");
   const [selectedRebalancing, setSelectedRebalancing] = useState("NONE");
+  const [dividendReinvested, setDividendReinvested] = useState(true);
   const [weights, setWeights] = useState<Record<string, number>>({});
 
   // 포트폴리오 로드 완료 후 초기 비중 설정
@@ -92,6 +93,7 @@ export function BacktestSetup() {
       benchmarkTicker: "SPY",
       period: selectedPeriod,
       rebalancingPeriod: selectedRebalancing,
+      dividendReinvested: dividendReinvested.toString(),
       weights: JSON.stringify(activeWeights)
     });
 
@@ -227,6 +229,20 @@ export function BacktestSetup() {
                 })}
               </div>
             )}
+          </div>
+
+          <div className="border-b border-border px-5 py-5 flex items-center justify-between">
+            <div className="flex-1 pr-4">
+              <Label htmlFor="dividend-reinvest" className="text-foreground font-bold text-[18px] cursor-pointer block">
+                배당금 재투자
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">배당금을 해당 종목에 즉시 재투자합니다.</p>
+            </div>
+            <Switch 
+              id="dividend-reinvest"
+              checked={dividendReinvested} 
+              onCheckedChange={setDividendReinvested} 
+            />
           </div>
 
           <div className="px-5 py-5">

@@ -105,9 +105,11 @@ describe("Portfolio widgets", () => {
       totalReturn: 1.2,
       benchmarkReturn: 0.9,
       outperformance: 0.3,
+      finalValue: 11200000,
       mdd: 0.5,
       sharpeRatio: 1.1,
       cagr: 1.2,
+      beta: 1.0,
     });
 
     renderWithQuery(<SimulationWidget />);

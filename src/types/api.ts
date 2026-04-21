@@ -271,6 +271,8 @@ export interface BacktestRequest {
   period?: ChartPeriod;
   /** 리밸런싱 주기 (NONE, MONTHLY, QUARTERLY, YEARLY) */
   rebalancingPeriod: RebalancingPeriod;
+  /** 배당금 재투자 여부 */
+  dividendReinvested?: boolean;
   /** 각 종목별 가상 비중 설정 (ticker -> percentage) */
   weights?: Record<string, number>;
 }

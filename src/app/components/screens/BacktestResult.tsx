@@ -4,7 +4,7 @@ import { Activity, Sparkles } from "lucide-react";
 import { XAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
 import { useBacktest } from "@/hooks/use-backtest";
 import { BacktestDailyResult } from "@/types/api";
-import { Skeleton } from "@/app/components/ui";
+import { Skeleton, Badge } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
 
 export function BacktestResult() {
@@ -17,6 +17,7 @@ export function BacktestResult() {
       const amount = Number(searchParams.get("amount") || 0);
       const period = searchParams.get("period") as any; // ChartPeriod
       const rebalancingPeriod = searchParams.get("rebalancingPeriod") as any;
+      const dividendReinvested = searchParams.get("dividendReinvested") === "true";
       const weightsStr = searchParams.get("weights");
       
       if (!strategy || !weightsStr) {
@@ -29,6 +30,7 @@ export function BacktestResult() {
         benchmarkTicker: searchParams.get("benchmarkTicker") || "SPY",
         period: period || "1y",
         rebalancingPeriod: rebalancingPeriod || "NONE",
+        dividendReinvested,
         weights: JSON.parse(weightsStr)
       };
     } catch (e) {
@@ -52,6 +54,7 @@ export function BacktestResult() {
         period: config.period,
         weights: config.weights,
         rebalancingPeriod: config.rebalancingPeriod,
+        dividendReinvested: config.dividendReinvested,
       });
       hasRun.current = true;
     }
@@ -159,6 +162,16 @@ export function BacktestResult() {
 
       <div className="page-shell page-content space-y-6 py-6">
         <section className="rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] px-5 py-6 text-center shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Badge variant="outline" className="bg-background/50 border-primary/20 text-primary">
+              {config.strategy === "DCA" ? "적립식 투자" : "거치식 투자"}
+            </Badge>
+            {config.dividendReinvested && (
+              <Badge variant="outline" className="bg-background/50 border-primary/20 text-primary">
+                배당금 재투자
+              </Badge>
+            )}
+          </div>
           <div className="mb-2 font-medium text-muted-foreground">{(config.amount || 0).toLocaleString()}원이</div>
           <div className="mb-3 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">₩ {metrics.finalValue.toLocaleString()}</div>
           <div className="mb-4 text-[2rem] font-bold text-up md:text-3xl">{metrics.totalReturn >= 0 ? "+" : ""}{metrics.totalReturn}%</div>

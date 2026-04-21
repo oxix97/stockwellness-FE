@@ -23,7 +23,8 @@ function makeDailyResults(n: number): BacktestResponse["dailyResults"] {
     totalInvested: 10_000_000,
     returnRate: i * 0.1,
     benchmarkReturnRate: i * 0.05,
-  }));
+    benchmarkReturnRates: { SPY: i * 0.05 },
+  })) as any;
 }
 
 describe("useBacktest", () => {
@@ -51,7 +52,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000, benchmarkTicker: "SPY" });
+      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -69,7 +70,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "DCA", amount: 1_000_000, benchmarkTicker: "SPY" });
+      result.current.run({ strategy: "DCA", amount: 1_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
     });
 
     await waitFor(() => expect(result.current.data).toBeDefined());
@@ -83,7 +84,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000, benchmarkTicker: "SPY" });
+      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
     });
 
     await waitFor(() => expect(result.current.metrics).not.toBeNull());
@@ -103,7 +104,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "DCA", amount: 1_000_000, benchmarkTicker: "SPY" });
+      result.current.run({ strategy: "DCA", amount: 1_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -160,8 +161,9 @@ describe("sliceByPeriod", () => {
         totalInvested: 10_000_000,
         returnRate: 0,
         benchmarkReturnRate: 0,
+        benchmarkReturnRates: { SPY: 0 },
       };
-    });
+    }) as any;
   }
 
   it("빈 배열이면 빈 배열 반환", () => {
