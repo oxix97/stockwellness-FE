@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -51,7 +51,7 @@ export function SimulationWidget() {
     );
   }
 
-  const chartData = data.dailyResults.map((r) => ({
+  const chartData = data.dailyResults.map((r: any) => ({
     date: r.date,
     portfolio: r.portfolioReturnRate,
     ...r.benchmarkReturnRates,
@@ -85,7 +85,7 @@ export function SimulationWidget() {
       </div>
 
       {metrics && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3">
           <MetricCard
             label="누적 수익률"
             value={`${metrics.totalReturn}%`}
@@ -102,6 +102,14 @@ export function SimulationWidget() {
             isNegative={true}
           />
           <MetricCard label="샤프 지수" value={metrics.sharpeRatio.toString()} />
+          <MetricCard
+            label="시장 민감도 (Beta)"
+            value={metrics.beta.toString()}
+          />
+          <MetricCard
+            label="최장 회복 기간"
+            value={`${metrics.recoveryPeriod}일`}
+          />
         </div>
       )}
 
@@ -141,7 +149,7 @@ export function SimulationWidget() {
                             />
                             <span className="text-muted-foreground">{entry.name}</span>
                           </div>
-                          <span className={entry.value! >= 0 ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
+                          <span className={Number(entry.value) >= 0 ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
                             {entry.value}%
                           </span>
                         </div>

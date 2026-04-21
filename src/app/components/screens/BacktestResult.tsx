@@ -209,6 +209,7 @@ export function BacktestResult() {
           <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-down" />
           <MetricCard label="위험 대비 수익" value={displaySharpe ?? "-"} sub="샤프 지수" />
           <MetricCard label="시장 민감도" value={displayBeta ?? "-"} sub="Beta" />
+          <MetricCard label="최장 회복 기간" value={`${metrics.recoveryPeriod}일`} sub="Recovery" />
           {displayBestYear != null && (
             <MetricCard
               label={yearlyStats.best?.year ? `최고 연도 (${yearlyStats.best.year})` : "최고 연도"}

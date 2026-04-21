@@ -53,11 +53,23 @@ export function computeMetrics(results: any[] | undefined) {
   // MDD: 구간 최고점 대비 최대 낙폭 (수익률 기반으로 계산)
   let peak = -Infinity;
   let mdd = 0;
+  let peakDate = results[0].date;
+  let recoveryPeriod = 0; // in days
+
   for (const r of results) {
     const val = r.returnRate ?? r.portfolioReturnRate ?? 0;
-    if (val > peak) peak = val;
+    if (val > peak) {
+      peak = val;
+      peakDate = r.date;
+    }
     const drawdown = (val - peak);
     if (drawdown < mdd) mdd = drawdown;
+
+    // Recovery period calculation (최고점 경신 전까지의 최장 기간)
+    if (val < peak) {
+      const daysSincePeak = (new Date(r.date).getTime() - new Date(peakDate).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSincePeak > recoveryPeriod) recoveryPeriod = Math.round(daysSincePeak);
+    }
   }
 
   // CAGR: 연평균 성장률 (거래일 252일 기준)
@@ -112,6 +124,7 @@ export function computeMetrics(results: any[] | undefined) {
     sharpeRatio: +sharpeRatio.toFixed(2),
     cagr: +cagr.toFixed(1),
     beta: +beta.toFixed(2),
+    recoveryPeriod: recoveryPeriod,
   };
 }
 
