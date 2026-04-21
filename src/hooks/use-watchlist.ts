@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { watchlistApi, watchlistKeys } from "@/api/watchlist";
 import { AddWatchlistItemRequest, WatchlistGroup, WatchlistItemListResponse, WatchlistItemDetail } from "@/types/api";
+import {
+  applyOptimisticQueryUpdate,
+  rollbackOptimisticQueryUpdate,
+} from "@/hooks/query-cache";
 
 export function useWatchlist() {
   const queryClient = useQueryClient();
@@ -50,20 +54,14 @@ export function useWatchlist() {
     mutationFn: ({ groupId, name }: { groupId: number; name: string }) =>
       watchlistApi.updateGroupName(groupId, name),
     onMutate: async ({ groupId, name }) => {
-      await queryClient.cancelQueries({ queryKey: watchlistKeys.groups() });
-      const previousGroups = queryClient.getQueryData<WatchlistGroup[]>(watchlistKeys.groups());
-      
-      if (previousGroups) {
-        queryClient.setQueryData<WatchlistGroup[]>(watchlistKeys.groups(), old => 
-          old?.map(g => g.id === groupId ? { ...g, name } : g)
-        );
-      }
-      return { previousGroups };
+      return applyOptimisticQueryUpdate<WatchlistGroup[]>(
+        queryClient,
+        watchlistKeys.groups(),
+        (old) => old?.map((g) => (g.id === groupId ? { ...g, name } : g)),
+      );
     },
     onError: (_err, _newGroup, context) => {
-      if (context?.previousGroups) {
-        queryClient.setQueryData(watchlistKeys.groups(), context.previousGroups);
-      }
+      rollbackOptimisticQueryUpdate(queryClient, context);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: watchlistKeys.groups() });
@@ -73,20 +71,14 @@ export function useWatchlist() {
   const deleteGroup = useMutation({
     mutationFn: (groupId: number) => watchlistApi.deleteGroup(groupId),
     onMutate: async (groupId) => {
-      await queryClient.cancelQueries({ queryKey: watchlistKeys.groups() });
-      const previousGroups = queryClient.getQueryData<WatchlistGroup[]>(watchlistKeys.groups());
-      
-      if (previousGroups) {
-        queryClient.setQueryData<WatchlistGroup[]>(watchlistKeys.groups(), old => 
-          old?.filter(g => g.id !== groupId)
-        );
-      }
-      return { previousGroups };
+      return applyOptimisticQueryUpdate<WatchlistGroup[]>(
+        queryClient,
+        watchlistKeys.groups(),
+        (old) => old?.filter((g) => g.id !== groupId),
+      );
     },
     onError: (_err, _newGroup, context) => {
-      if (context?.previousGroups) {
-        queryClient.setQueryData(watchlistKeys.groups(), context.previousGroups);
-      }
+      rollbackOptimisticQueryUpdate(queryClient, context);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: watchlistKeys.groups() });
@@ -97,34 +89,33 @@ export function useWatchlist() {
     mutationFn: ({ groupId, body }: { groupId: number; body: AddWatchlistItemRequest & { name?: string } }) =>
       watchlistApi.addItem(groupId, body),
     onMutate: async ({ groupId, body }) => {
-      await queryClient.cancelQueries({ queryKey: watchlistKeys.items(groupId) });
-      const previousItems = queryClient.getQueryData<WatchlistItemListResponse>(watchlistKeys.items(groupId));
-
-      if (previousItems) {
-        const newItem: WatchlistItemDetail = {
-          ticker: body.ticker,
-          name: body.name || body.ticker, // temporary fallback
-          currentPrice: null,
-          fluctuationRate: null,
-          note: body.note || "",
-          rsi: null,
-          rsiStatus: "",
-          aiInsight: "",
-        };
-        queryClient.setQueryData<WatchlistItemListResponse>(watchlistKeys.items(groupId), old => {
+      const context = await applyOptimisticQueryUpdate<WatchlistItemListResponse>(
+        queryClient,
+        watchlistKeys.items(groupId),
+        (old) => {
           if (!old) return old;
+
+          const newItem: WatchlistItemDetail = {
+            ticker: body.ticker,
+            name: body.name || body.ticker,
+            currentPrice: null,
+            fluctuationRate: null,
+            note: body.note || "",
+            rsi: null,
+            rsiStatus: "",
+            aiInsight: "",
+          };
+
           return {
             ...old,
-            items: [...old.items, newItem]
+            items: [...old.items, newItem],
           };
-        });
-      }
-      return { previousItems, groupId };
+        },
+      );
+      return { ...context, groupId };
     },
     onError: (_err, _variables, context) => {
-      if (context?.previousItems) {
-        queryClient.setQueryData(watchlistKeys.items(context.groupId), context.previousItems);
-      }
+      rollbackOptimisticQueryUpdate(queryClient, context);
     },
     onSettled: (_data, _err, { groupId }) => {
       queryClient.invalidateQueries({ queryKey: watchlistKeys.items(groupId) });
@@ -136,24 +127,21 @@ export function useWatchlist() {
     mutationFn: ({ groupId, ticker }: { groupId: number; ticker: string }) =>
       watchlistApi.removeItem(groupId, ticker),
     onMutate: async ({ groupId, ticker }) => {
-      await queryClient.cancelQueries({ queryKey: watchlistKeys.items(groupId) });
-      const previousItems = queryClient.getQueryData<WatchlistItemListResponse>(watchlistKeys.items(groupId));
-
-      if (previousItems) {
-        queryClient.setQueryData<WatchlistItemListResponse>(watchlistKeys.items(groupId), old => {
+      const context = await applyOptimisticQueryUpdate<WatchlistItemListResponse>(
+        queryClient,
+        watchlistKeys.items(groupId),
+        (old) => {
           if (!old) return old;
           return {
             ...old,
-            items: old.items.filter(item => item.ticker !== ticker)
+            items: old.items.filter((item) => item.ticker !== ticker),
           };
-        });
-      }
-      return { previousItems, groupId };
+        },
+      );
+      return { ...context, groupId };
     },
     onError: (_err, _variables, context) => {
-      if (context?.previousItems) {
-        queryClient.setQueryData(watchlistKeys.items(context.groupId), context.previousItems);
-      }
+      rollbackOptimisticQueryUpdate(queryClient, context);
     },
     onSettled: (_data, _err, { groupId }) => {
       queryClient.invalidateQueries({ queryKey: watchlistKeys.items(groupId) });
@@ -165,24 +153,21 @@ export function useWatchlist() {
     mutationFn: ({ groupId, ticker, note }: { groupId: number; ticker: string; note: string }) =>
       watchlistApi.updateItemNote(groupId, ticker, note),
     onMutate: async ({ groupId, ticker, note }) => {
-      await queryClient.cancelQueries({ queryKey: watchlistKeys.items(groupId) });
-      const previousItems = queryClient.getQueryData<WatchlistItemListResponse>(watchlistKeys.items(groupId));
-
-      if (previousItems) {
-        queryClient.setQueryData<WatchlistItemListResponse>(watchlistKeys.items(groupId), old => {
+      const context = await applyOptimisticQueryUpdate<WatchlistItemListResponse>(
+        queryClient,
+        watchlistKeys.items(groupId),
+        (old) => {
           if (!old) return old;
           return {
             ...old,
-            items: old.items.map(item => item.ticker === ticker ? { ...item, note } : item)
+            items: old.items.map((item) => (item.ticker === ticker ? { ...item, note } : item)),
           };
-        });
-      }
-      return { previousItems, groupId };
+        },
+      );
+      return { ...context, groupId };
     },
     onError: (_err, _variables, context) => {
-      if (context?.previousItems) {
-        queryClient.setQueryData(watchlistKeys.items(context.groupId), context.previousItems);
-      }
+      rollbackOptimisticQueryUpdate(queryClient, context);
     },
     onSettled: (_data, _err, { groupId }) => {
       queryClient.invalidateQueries({ queryKey: watchlistKeys.items(groupId) });

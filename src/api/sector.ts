@@ -1,6 +1,18 @@
 import { apiClient } from "./client";
 import { SectorRankingResponse, SectorDetailResponse, SectorSupplyResponse, SectorComparisonResponse } from "@/types/api";
 
+export const sectorKeys = {
+  all: ["sectors"] as const,
+  ranking: {
+    fluctuation: (limit: number) => [...sectorKeys.all, "ranking", "fluctuation", limit] as const,
+    supply: (limit: number) => [...sectorKeys.all, "ranking", "supply", limit] as const,
+  },
+  detail: (sectorCode: string | null | undefined, date?: string) =>
+    [...sectorKeys.all, "detail", sectorCode, date] as const,
+  comparison: (sectorCode: string, date?: string) =>
+    [...sectorKeys.all, sectorCode, "comparison", date] as const,
+};
+
 /**
  * 섹터 관련 API 호출 객체
  */

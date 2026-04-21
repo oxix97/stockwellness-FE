@@ -15,6 +15,12 @@ export const formatPercent = (value: number | string | null | undefined): string
   return `${sign}${Math.abs(num).toFixed(2)}%`;
 };
 
+export const formatSignedCurrency = (value: number | null | undefined): string => {
+  const amount = value ?? 0;
+  const prefix = amount > 0 ? "+" : amount < 0 ? "-" : "";
+  return `${prefix}₩${formatCurrency(Math.abs(amount))}`;
+};
+
 export const formatDate = (date: string | Date): string => {
   const d = new Date(date);
   // 'Jun 10' 형식으로 포맷팅 (월은 영문 약어, 일은 숫자)

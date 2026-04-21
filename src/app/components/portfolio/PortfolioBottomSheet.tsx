@@ -1,17 +1,13 @@
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
 } from "@/app/components/ui/drawer";
-import { Button } from "@/app/components/ui/button";
-import { X } from "lucide-react";
 import { DiversificationWidget } from "./widgets/DiversificationWidget";
 import { RebalancingWidget } from "./widgets/RebalancingWidget";
 import { SimulationWidget } from "./widgets/SimulationWidget";
 import { CorrelationWidget } from "./widgets/CorrelationWidget";
 import { useViewportType } from "@/app/components/ui/use-mobile";
+import { DrawerSheetHeader } from "@/app/components/shared/DrawerSheetHeader";
 
 export type AnalysisType =
   | "valuation"
@@ -58,20 +54,7 @@ export function PortfolioBottomSheet({
       onOpenChange={(open) => !open && onClose()}
     >
       <DrawerContent className={isDesktop ? "h-full w-full max-w-xl" : "max-h-[85vh]"}>
-        <DrawerHeader className="relative border-b border-border pb-4">
-          <DrawerTitle className="text-center text-base font-bold">
-            {getTitle()}
-          </DrawerTitle>
-          <DrawerClose asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DrawerClose>
-        </DrawerHeader>
+        <DrawerSheetHeader title={getTitle()} />
 
         <div className="overflow-y-auto p-4 scrollbar-hide">
           {type === "diversification" && <DiversificationWidget />}

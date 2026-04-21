@@ -5,3 +5,4 @@ export * from "./Section";
 export * from "./StockLogo";
 export * from "./ErrorBoundary";
 export * from "./GardenEmptyState";
+export * from "./DrawerSheetHeader";

@@ -1,8 +1,8 @@
 import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router";
 import {
-  User, Settings, HelpCircle, Bell, Palette, LogOut,
-  Sun, Moon, Monitor, ChevronRight, Sparkles, ShieldCheck, Flower2, BadgePercent,
+  User, Bell, Palette, LogOut,
+  Sun, Moon, Monitor, ChevronRight, BadgePercent,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -13,12 +13,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   Sheet, SheetContent, SheetTrigger,
 } from "@/app/components/ui";
-import { AppBrandMark, ContextHeader, Section } from "@/app/components/shared";
+import { ContextHeader, Section } from "@/app/components/shared";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useWithdraw, useUpdateProfile } from "@/hooks/use-member";
 import { useAuthStore } from "@/store/auth";
 import { calculateInvestorType } from "@/utils/calculate";
 import { formatPercent } from "@/utils/format";
+import { getTrendClassName } from "@/utils/trend";
 
 export function More() {
   const navigate = useNavigate();
@@ -52,31 +53,20 @@ export function More() {
         <ContextHeader
           variant="profile"
           layout="split"
-          eyebrow="My Garden"
           title={
             <div>
               <p className="text-[length:var(--mobile-hero-title-size)] font-bold leading-tight tracking-tight text-foreground">
                 {nickname ?? "투자자"}님의
                 <br />
-                투자 정원
+                계정 설정
               </p>
             </div>
           }
-          description="프로필, 투자 성향, 앱 환경 설정을 한 화면에서 정리하고 관리할 수 있는 허브입니다."
+          description="프로필과 앱 환경 설정을 한 화면에서 정리하고 관리할 수 있습니다."
           actions={
-            <div className="flex flex-col items-end gap-2">
-              <AppBrandMark compact />
-              <div className="rounded-2xl border border-border/60 bg-card/72 px-3 py-2 text-right backdrop-blur-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Identity</p>
-                <p className={`mt-1 text-sm font-bold ${investorType.color}`}>{investorType.label}</p>
-              </div>
-            </div>
-          }
-          ornament={
-            <div className="absolute bottom-4 right-4 flex gap-2">
-              <div className="rounded-full border border-border/50 bg-card/76 px-3 py-1.5 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><Flower2 className="h-3 w-3 text-primary" /> profile</span>
-              </div>
+            <div className="rounded-2xl border border-border/60 bg-card/72 px-3 py-2 text-right backdrop-blur-sm">
+              <p className="text-xs font-semibold text-muted-foreground">투자 성향</p>
+              <p className={`mt-1 text-sm font-bold ${investorType.color}`}>{investorType.label}</p>
             </div>
           }
           footer={
@@ -115,31 +105,7 @@ export function More() {
         />
       </div>
 
-      <div className="page-shell page-content grid gap-5 pt-5 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.1fr)]">
-        <div className="space-y-6">
-          <Section
-            title="투자 페르소나"
-            subtitle="현재 포트폴리오 상태를 기반으로 내 투자 정체성을 정리합니다."
-            icon={Sparkles}
-            className="px-0 pb-0"
-          >
-            <div className="rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className={`text-base font-bold ${investorType.color}`}>{investorType.label}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    포트폴리오 건강 점수와 보유 구조를 기준으로 앱이 읽어낸 현재 투자 성향입니다.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Section>
-        </div>
-
-        <div className="space-y-6">
+      <div className="page-shell page-content space-y-6 pt-5">
           <Section title="계정 설정" subtitle="프로필과 알림 관련 설정을 관리합니다." icon={User} className="px-0 pb-0">
             <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
               <MenuItem icon={User} title="닉네임 변경" description="앱 전역에서 보이는 나의 표시 이름을 수정합니다." onClick={() => setShowNicknameModal(true)} />
@@ -147,84 +113,35 @@ export function More() {
             </div>
           </Section>
 
-          <Section title="환경 허브" subtitle="테마, 앱 환경, 지원 진입점을 같은 구조로 정리했습니다." icon={Palette} className="px-0 pb-0">
-            <div className="space-y-3">
-              <SettingsGroupCard
-                icon={Palette}
-                title="테마 설정"
-                description="라이트, 다크, 시스템 모드를 같은 규칙으로 전환합니다."
-              >
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <MenuItem
-                      icon={Palette}
-                      title="현재 테마"
-                      description="앱 전체 색상 모드를 즉시 전환합니다."
-                      trailing={
-                        <span className="rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                          {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
-                        </span>
-                      }
-                      isLast
-                    />
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="rounded-t-[32px] px-0 pb-10">
-                    <div className="px-6 py-4">
-                      <h3 className="text-lg font-bold">테마 설정</h3>
-                      <p className="text-sm text-muted-foreground">앱 전체 색상 모드를 전환합니다.</p>
-                    </div>
-                    <div className="space-y-1">
-                      <ThemeOption 
-                        label="라이트" 
-                        icon={Sun} 
-                        active={theme === "light"} 
-                        onClick={() => setTheme("light")} 
-                      />
-                      <ThemeOption 
-                        label="다크" 
-                        icon={Moon} 
-                        active={theme === "dark"} 
-                        onClick={() => setTheme("dark")} 
-                      />
-                      <ThemeOption 
-                        label="시스템" 
-                        icon={Monitor} 
-                        active={theme === "system"} 
-                        onClick={() => setTheme("system")} 
-                      />
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </SettingsGroupCard>
-
-              <SettingsGroupCard
-                icon={Settings}
-                title="앱 설정"
-                description="추가 환경 설정과 실험 기능 진입점을 같은 형식으로 유지합니다."
-              >
-                <MenuItem
-                  icon={Settings}
-                  title="일반 설정"
-                  description="앱 사용 환경과 이후 확장될 기능 설정을 모아둡니다."
-                  onClick={() => toast.info("준비 중입니다.")}
-                  isLast
-                />
-              </SettingsGroupCard>
-
-              <SettingsGroupCard
-                icon={HelpCircle}
-                title="고객 지원"
-                description="도움말, 문의, 제품 가이드를 같은 구조로 진입할 수 있게 정리했습니다."
-              >
-                <MenuItem
-                  icon={HelpCircle}
-                  title="도움 및 문의"
-                  description="문의, 도움말, 제품 가이드 진입점입니다."
-                  onClick={() => toast.info("준비 중입니다.")}
-                  isLast
-                />
-              </SettingsGroupCard>
-            </div>
+          <Section title="테마 설정" subtitle="앱 전체 색상 모드를 전환합니다." icon={Palette} className="px-0 pb-0">
+            <Sheet>
+              <SheetTrigger asChild>
+                <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+                  <MenuItem
+                    icon={Palette}
+                    title="현재 테마"
+                    description="라이트, 다크, 시스템 모드를 선택합니다."
+                    trailing={
+                      <span className="rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                        {theme === "dark" ? "다크" : theme === "light" ? "라이트" : "시스템"}
+                      </span>
+                    }
+                    isLast
+                  />
+                </div>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-[32px] px-0 pb-10">
+                <div className="px-6 py-4">
+                  <h3 className="text-lg font-bold">테마 설정</h3>
+                  <p className="text-sm text-muted-foreground">앱 전체 색상 모드를 전환합니다.</p>
+                </div>
+                <div className="space-y-1">
+                  <ThemeOption label="라이트" icon={Sun} active={theme === "light"} onClick={() => setTheme("light")} />
+                  <ThemeOption label="다크" icon={Moon} active={theme === "dark"} onClick={() => setTheme("dark")} />
+                  <ThemeOption label="시스템" icon={Monitor} active={theme === "system"} onClick={() => setTheme("system")} />
+                </div>
+              </SheetContent>
+            </Sheet>
           </Section>
 
           <Section title="계정" subtitle="로그아웃 및 탈퇴 관련 동작입니다." icon={LogOut} className="px-0">
@@ -262,7 +179,6 @@ export function More() {
               </AlertDialog>
             </div>
           </Section>
-        </div>
       </div>
 
       <p className="mt-6 mb-4 text-center text-xs text-muted-foreground">
@@ -386,35 +302,6 @@ function MenuItem({
   );
 }
 
-function SettingsGroupCard({
-  icon: Icon,
-  title,
-  description,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-      <div className="border-b border-border/80 px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-            <Icon className="h-4.5 w-4.5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{title}</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
-          </div>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 function MetricTile({
   label,
   value,
@@ -426,7 +313,9 @@ function MetricTile({
   tone?: "neutral" | "up" | "down";
   icon?: ReactNode;
 }) {
-  const toneClassName = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-foreground";
+  const toneClassName = tone === "neutral"
+    ? "text-foreground"
+    : getTrendClassName(tone === "up" ? 1 : -1, { neutral: "text-foreground" });
 
   return (
     <div className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/60 bg-card/70 px-3 py-3 text-center md:rounded-2xl">

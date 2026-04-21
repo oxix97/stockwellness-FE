@@ -10,7 +10,6 @@ const Search = lazy(() => import("@/app/components/screens/Search").then(m => ({
 const More = lazy(() => import("@/app/components/screens/More").then(m => ({ default: m.More })));
 const NotificationSettings = lazy(() => import("@/app/components/screens/NotificationSettings").then(m => ({ default: m.NotificationSettings })));
 const StockDetail = lazy(() => import("@/app/components/screens/StockDetail").then(m => ({ default: m.StockDetail })));
-const HealthDiagnosis = lazy(() => import("@/app/components/screens/HealthDiagnosis").then(m => ({ default: m.HealthDiagnosis })));
 const BacktestSetup = lazy(() => import("@/app/components/screens/BacktestSetup").then(m => ({ default: m.BacktestSetup })));
 const BacktestResult = lazy(() => import("@/app/components/screens/BacktestResult").then(m => ({ default: m.BacktestResult })));
 const Login = lazy(() => import("@/app/components/screens/Login").then(m => ({ default: m.Login })));
@@ -47,14 +46,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <StockDetail />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/health-diagnosis",
-    element: (
-      <ProtectedRoute>
-        <HealthDiagnosis />
       </ProtectedRoute>
     ),
   },

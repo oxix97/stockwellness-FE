@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Outlet, Link, useLocation } from "react-router";
-import { Home, Search, Star, Wallet, User, PanelLeft, Bell } from "lucide-react";
+import { Home, Search, Star, Wallet, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useMe } from "@/hooks/use-member";
 import { Skeleton } from "@/app/components/ui";
@@ -84,35 +84,11 @@ export function Layout() {
                   <div className={cn("rounded-2xl p-2 transition-colors", isActive ? "bg-primary/12 text-primary" : "bg-secondary/70 text-muted-foreground group-hover:text-foreground")}>
                     <Icon style={{ width: item.size, height: item.size }} />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.path === "/" && "시장 흐름과 오늘의 컨텍스트"}
-                      {item.path === "/search" && "종목과 테마 탐색"}
-                      {item.path === "/watchlist" && "관심 종목 모니터링"}
-                      {item.path === "/portfolio" && "핵심 성과와 액션"}
-                      {item.path === "/more" && "프로필과 환경 설정"}
-                    </p>
-                  </div>
+                  <span className="text-sm font-semibold">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
-
-          <div className="mt-auto space-y-3 rounded-[28px] border border-border/60 bg-background/75 p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              <PanelLeft className="h-3.5 w-3.5 text-primary" />
-              Desktop shell
-            </div>
-            <p className="text-sm font-semibold text-foreground">모바일 흐름을 유지하면서 더 넓게 탐색할 수 있는 레이아웃입니다.</p>
-            <Link
-              to="/more/notifications"
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
-            >
-              <Bell className="h-4 w-4 text-primary" />
-              알림 보기
-            </Link>
-          </div>
         </aside>
 
         <div className="min-w-0 flex-1">

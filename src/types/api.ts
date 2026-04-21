@@ -292,6 +292,7 @@ export interface InceptionChartComparison {
 
 export interface PortfolioInceptionChartResponse {
   portfolioInceptionDate: string;
+  daysElapsed: number;
   dailyResults: InceptionChartDailyResult[];
   comparisons: InceptionChartComparison[];
 }
