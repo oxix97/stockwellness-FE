@@ -8,11 +8,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } 
 import { PageHeader } from "@/app/components/shared";
 
 const periods = [
-  { id: "1m", label: "최근 1개월" },
-  { id: "3m", label: "최근 3개월" },
-  { id: "6m", label: "최근 6개월" },
-  { id: "1y", label: "최근 1년" },
-  { id: "3y", label: "최근 3년" },
+  { id: "1M", label: "최근 1개월" },
+  { id: "3M", label: "최근 3개월" },
+  { id: "6M", label: "최근 6개월" },
+  { id: "1Y", label: "최근 1년" },
 ];
 
 const strategies = [
