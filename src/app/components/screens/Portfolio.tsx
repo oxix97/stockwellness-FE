@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Activity,
   ArrowRight,
   BrainCircuit,
   ChevronDown,
+  FlaskConical,
   PieChart,
   RefreshCcw,
   Orbit,
@@ -25,6 +27,7 @@ import {
   Button,
   Skeleton,
 } from "@/app/components/ui";
+import { cn } from "@/app/components/ui/utils";
 import { PortfolioBottomSheet, AnalysisType } from "@/app/components/portfolio/PortfolioBottomSheet";
 import { PortfolioEditSheet } from "@/app/components/portfolio/PortfolioEditSheet";
 import { PortfolioHoldingsSheet } from "@/app/components/portfolio/PortfolioHoldingsSheet";
@@ -51,6 +54,7 @@ const BENCHMARK_LABELS: Record<string, string> = {
  * 핵심 인사이트를 메인에서 먼저 보여주고, 상세 분석은 바텀시트로 연결한다.
  */
 export function Portfolio() {
+  const navigate = useNavigate();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const [showWizard, setShowWizard] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -309,6 +313,12 @@ export function Portfolio() {
 
             <div className="grid grid-cols-2 gap-3">
               <SecondaryActionCard
+                icon={FlaskConical}
+                title="성과 시뮬레이션"
+                description="과거 성과 백테스트"
+                onClick={() => navigate("/backtest/setup")}
+              />
+              <SecondaryActionCard
                 icon={PieChart}
                 title="분산도 분석"
                 description="자산군, 섹터, 국가 비중"
@@ -319,6 +329,7 @@ export function Portfolio() {
                 title="상관관계"
                 description={`${Object.keys(symbolNames).length}개 종목 위험 분산`}
                 onClick={() => setAnalysisType("correlation")}
+                className="col-span-2"
               />
             </div>
           </section>
@@ -426,17 +437,19 @@ function SecondaryActionCard({
   title,
   description,
   onClick,
+  className,
 }: {
   icon: typeof PieChart;
   title: string;
   description: string;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="rounded-3xl border border-border bg-card p-4 text-left"
+      className={cn("rounded-3xl border border-border bg-card p-4 text-left", className)}
     >
       <div className="mb-3 inline-flex rounded-2xl bg-primary/10 p-2 text-primary">
         <Icon className="h-5 w-5" />

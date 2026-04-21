@@ -89,7 +89,7 @@ function RadarSection({ data }: { data: { metric: string; value: number }[] }) {
           <RadarChart data={data}>
             <PolarGrid stroke="#E5E7EB" />
             <PolarAngleAxis dataKey="metric" tick={{ fill: "#6B7280", fontSize: 12, fontWeight: 600 }} />
-            <Radar dataKey="value" stroke="#2EBE7A" fill="#2EBE7A" fillOpacity={0.25} strokeWidth={3} />
+            <Radar dataKey="value" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.25} strokeWidth={3} />
           </RadarChart>
         </ResponsiveContainer>
       </div>

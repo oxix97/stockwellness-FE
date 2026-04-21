@@ -4,7 +4,7 @@ import { usePortfolioSummary } from "@/hooks/use-portfolio";
 import { AssetRatio } from "@/types/api";
 
 const CHART_COLORS = [
-  "#2EBE7A",
+  "var(--primary)",
   "#1A56DB",
   "#F59E0B",
   "#EF4444",

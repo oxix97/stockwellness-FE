@@ -59,7 +59,7 @@ export function Phase3Allocation({ state, dispatch }: Props) {
           <span className="text-sm font-semibold text-foreground">목표 비중 합계</span>
           <span
             className="text-sm font-bold tabular-nums"
-            style={{ color: isDone ? "#2EBE7A" : isOver ? "#EF4444" : undefined }}
+            style={{ color: isDone ? "var(--primary)" : isOver ? "var(--destructive)" : undefined }}
           >
             {total}%
             {isDone && " ✓"}

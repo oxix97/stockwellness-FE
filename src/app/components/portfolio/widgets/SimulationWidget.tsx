@@ -173,10 +173,10 @@ export function SimulationWidget() {
               name="내 포트폴리오"
               type="monotone"
               dataKey="portfolio"
-              stroke="#2EBE7A"
+              stroke="var(--primary)"
               strokeWidth={2.5}
               dot={false}
-              activeDot={{ r: 4, fill: "#2EBE7A", stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "var(--primary)", stroke: "#fff", strokeWidth: 2 }}
             />
             {benchmarks.map((benchmark, i) => (
               <Line
