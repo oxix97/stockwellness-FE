@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
-import { Plus, ChevronDown, Sparkles, FolderTree, Radar, TriangleAlert } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, ChevronDown, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { useWatchlist } from "@/hooks/use-watchlist";
@@ -33,9 +33,6 @@ export function Watchlist() {
     return new Date(itemsQuery.dataUpdatedAt);
   }, [itemsQuery.dataUpdatedAt]);
 
-  const aiInsightCount = stocks.filter((stock) => Boolean(stock.aiInsight)).length;
-  const cautionCount = stocks.filter((stock) => stock.rsiStatus === "OVERBOUGHT" || stock.rsiStatus === "OVERSOLD").length;
-
   const handleCreateGroup = (name: string) => {
     createGroup.mutate(name, {
       onSuccess: () => toast.success("그룹이 생성되었습니다."),
@@ -68,7 +65,6 @@ export function Watchlist() {
         <ContextHeader
           variant="watch"
           layout="split"
-          eyebrow="Watch Garden"
           title={
             <div>
               <button
@@ -89,23 +85,8 @@ export function Watchlist() {
               </Button>
             ) : null
           }
-          ornament={
-            <div className="absolute bottom-4 right-4 flex gap-2">
-              <div className="rounded-2xl border border-border/50 bg-card/72 px-3 py-2 backdrop-blur-sm">
-                <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                  <Radar className="h-3 w-3 text-primary" />
-                  Monitor
-                </div>
-                <p className="mt-1 text-sm font-bold text-foreground">{aiInsightCount} signals</p>
-              </div>
-            </div>
-          }
           footer={
-            <div className="grid grid-cols-2 gap-2 min-[408px]:grid-cols-3 min-[408px]:[&>*:last-child]:col-span-1 [&>*:last-child]:col-span-2">
-              <SummaryChip label="종목 수" value={`${stocks.length}개`} />
-              <SummaryChip label="AI 인사이트" value={`${aiInsightCount}개`} />
-              <SummaryChip label="주의 신호" value={`${cautionCount}개`} icon={<TriangleAlert className="h-3 w-3 text-amber-500" />} />
-            </div>
+            <SummaryChip label="종목 수" value={`${stocks.length}개`} />
           }
         />
       </div>
@@ -183,36 +164,14 @@ export function Watchlist() {
                 </div>
               ) : (
                 <GardenEmptyState
-                  title="아직 이 정원에 심은 종목이 없어요"
-                  description="관심 종목을 추가하면 RSI 신호와 AI 한줄 인사이트를 함께 쌓아가며 관리할 수 있습니다."
+                  title="아직 관심 종목이 없어요"
+                  description="관심 종목을 추가하면 RSI 신호와 AI 한줄 인사이트를 함께 확인할 수 있습니다."
                   actionLabel="첫 종목 추가하기"
                   onAction={() => setIsAddSheetOpen(true)}
                 />
               )}
             </div>
           </Section>
-
-          {lastUpdatedAt && stocks.length > 0 && (
-            <Section
-              title="그룹 관리"
-              subtitle="모바일에서는 시트, 큰 화면에서는 좌측 패널과 함께 관리합니다."
-              icon={FolderTree}
-              className="px-0 pb-4 lg:hidden"
-              rightContent={
-                <Button variant="ghost" size="sm" className="text-xs" onClick={() => setIsGroupSheetOpen(true)}>
-                  그룹 편집
-                </Button>
-              }
-            >
-              <div className="rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-                마지막 업데이트:{" "}
-                {lastUpdatedAt.toLocaleTimeString("ko-KR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
-            </Section>
-          )}
         </div>
       </div>
 
@@ -261,13 +220,10 @@ export function Watchlist() {
   );
 }
 
-function SummaryChip({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
+function SummaryChip({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/60 bg-card/70 px-3 py-3 md:rounded-2xl">
-      <div className="flex items-center gap-1">
-        {icon}
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-      </div>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-bold text-foreground">{value}</p>
     </div>
   );

@@ -2,7 +2,9 @@ import { motion } from "motion/react";
 import { Skeleton } from "@/app/components/ui";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { MarketIndexResult } from "@/types/api";
+import { getTrendClassName } from "@/utils/trend";
 import { HomeBadge } from "./HomeListItem";
+import { getHomeCardTone } from "./home-card-tone";
 
 /**
  * Task #67 — 시장 인덱스 미니카드 (KOSPI / KOSDAQ / S&P500)
@@ -42,7 +44,7 @@ export function MarketIndexSection() {
 
 function MarketIndexCard({ index }: { index: MarketIndexResult }) {
   const isUp = index.fluctuationRate >= 0;
-  const tone = getMarketTone(isUp);
+  const tone = getHomeCardTone(isUp ? "up" : "down");
   
   // 시장별 아이콘 결정 로직 (한글/영어 대응)
   const getIndexIcon = (name: string) => {
@@ -94,7 +96,7 @@ function MarketIndexCard({ index }: { index: MarketIndexResult }) {
         </p>
 
         <div className="flex items-center gap-2">
-          <p className={`text-sm font-bold tabular-nums ${isUp ? "text-up" : "text-down"}`}>
+          <p className={`text-sm font-bold tabular-nums ${getTrendClassName(index.fluctuationRate, { neutral: "text-up" })}`}>
             {isUp ? "▲ " : "▼ "}{Math.abs(index.fluctuationRate).toFixed(2)}%
           </p>
           <HomeBadge opacity={20} className={`text-[10px] py-0 px-1.5 h-4 ${tone.badgeClassName}`}>
@@ -104,48 +106,4 @@ function MarketIndexCard({ index }: { index: MarketIndexResult }) {
       </div>
     </div>
   );
-}
-
-function getMarketTone(isUp: boolean) {
-  if (isUp) {
-    return {
-      cardClassName:
-        "border-red-100/80 hover:border-red-300/40 dark:border-red-400/10 dark:hover:border-red-400/25",
-      badgeClassName:
-        "border border-red-200/60 bg-red-500/12 text-red-600 dark:border-red-400/20 dark:bg-red-500/18 dark:text-red-200",
-      decoration: (
-        <>
-          {/* Breathing Glow */}
-          <div className="absolute -left-8 -top-8 h-24 w-24 rounded-full bg-red-400/20 blur-2xl animate-healing-breath dark:bg-red-400/25" />
-          <div className="absolute left-0 top-0 h-20 w-full bg-gradient-to-br from-red-500/12 via-orange-400/8 to-transparent dark:from-red-400/16 dark:via-orange-300/10" />
-          
-          {/* Edge Highlight */}
-          <div className="absolute left-0 top-0 h-px w-24 bg-gradient-to-r from-red-500/40 via-red-400/10 to-transparent" />
-          <div className="absolute left-0 top-0 w-px h-16 bg-gradient-to-b from-red-500/40 via-red-400/10 to-transparent" />
-          
-          <div className="absolute left-4 top-4 h-px w-14 rotate-[-24deg] bg-gradient-to-r from-transparent via-red-300/50 to-transparent dark:via-red-300/35" />
-        </>
-      ),
-    };
-  }
-
-  return {
-    cardClassName:
-      "border-sky-100/90 hover:border-sky-300/40 dark:border-sky-400/10 dark:hover:border-sky-400/25",
-    badgeClassName:
-      "border border-blue-200/60 bg-blue-500/12 text-blue-600 dark:border-blue-400/20 dark:bg-blue-500/18 dark:text-blue-200",
-    decoration: (
-      <>
-        {/* Breathing Glow */}
-        <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-400/20 blur-2xl animate-healing-breath dark:bg-sky-400/25" />
-        <div className="absolute right-0 top-0 h-20 w-full bg-gradient-to-bl from-sky-500/12 via-blue-400/8 to-transparent dark:from-sky-400/16 dark:via-blue-300/10" />
-        
-        {/* Edge Highlight */}
-        <div className="absolute right-0 top-0 h-px w-24 bg-gradient-to-l from-sky-500/40 via-sky-400/10 to-transparent" />
-        <div className="absolute right-0 top-0 w-px h-16 bg-gradient-to-b from-sky-500/40 via-sky-400/10 to-transparent" />
-
-        <div className="absolute right-4 top-4 h-px w-16 bg-gradient-to-r from-transparent via-sky-300/50 to-transparent dark:via-sky-300/35" />
-      </>
-    ),
-  };
 }

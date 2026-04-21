@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Search as SearchIcon, Sparkles, TrendingUp, Clock, X, Loader2, Leaf, Compass, Hash, ArrowUpRight } from "lucide-react";
-import { motion } from "motion/react";
+import { Search as SearchIcon, TrendingUp, Clock, X, Loader2, Leaf, ArrowUpRight } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import { useSearch } from "@/hooks/use-search";
 import { Button, Skeleton } from "@/app/components/ui";
@@ -60,27 +59,8 @@ export function Search() {
         <ContextHeader
           variant="search"
           layout="split"
-          eyebrow="Search Garden"
           title={<p className="max-w-[15rem] text-[length:var(--mobile-hero-title-size)] font-bold leading-[1.08] tracking-tight min-[408px]:max-w-[17rem]">찾고 싶은 종목과 테마를 바로 탐색해보세요</p>}
-          description="검색은 이 앱의 작업 허브입니다. 종목명, 티커, 업종 흐름을 한 번에 좁혀나갈 수 있도록 구성했습니다."
-          actions={
-            <div className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/70 bg-card/75 px-3 py-2 text-right backdrop-blur-sm md:rounded-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Mode</p>
-              <p className="mt-1 text-sm font-bold text-foreground">탐색 허브</p>
-            </div>
-          }
-          ornament={
-            <div className="absolute right-5 top-12 hidden flex-col gap-2 min-[408px]:flex min-[408px]:top-14">
-              <div className="flex items-center gap-1 rounded-full border border-border/50 bg-card/70 px-2 py-1 text-xs text-muted-foreground">
-                <Compass className="h-3 w-3 text-primary" />
-                종목
-              </div>
-              <div className="ml-5 flex items-center gap-1 rounded-full border border-border/50 bg-card/70 px-2 py-1 text-xs text-muted-foreground">
-                <Hash className="h-3 w-3 text-primary" />
-                테마
-              </div>
-            </div>
-          }
+          description="종목명, 티커, 업종 흐름을 한 번에 좁혀가며 탐색할 수 있습니다."
           footer={
             <div className="space-y-3">
               <div className="relative group">
@@ -119,40 +99,22 @@ export function Search() {
 
       <div className="page-shell page-content py-6">
         {searchMode ? (
-          <div className="grid gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)]">
-            <aside className="hidden self-start lg:sticky lg:top-24 lg:block">
-              <div className="space-y-4 rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-                <div>
-                  <p className="text-sm font-bold text-foreground">탐색 상태</p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">검색어와 업종 필터를 조합해 큰 화면에서도 빠르게 탐색할 수 있도록 고정 패널로 유지합니다.</p>
+          <div className="space-y-6">
+            {suggestedPaths.length > 0 && (
+              <Section title="추천 검색어" subtitle="자주 찾는 종목이나 테마로 바로 이동할 수 있습니다." icon={TrendingUp} className="px-0 py-0">
+                <div className="flex flex-wrap gap-2">
+                  {suggestedPaths.map((pathKeyword) => (
+                    <button
+                      key={pathKeyword}
+                      onClick={() => handleSelectKeyword(pathKeyword)}
+                      className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
+                    >
+                      {pathKeyword}
+                    </button>
+                  ))}
                 </div>
-                <div className="rounded-2xl bg-secondary/70 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Keyword</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">{keyword || "전체 종목"}</p>
-                </div>
-                {(sectorCode || sectorName) && (
-                  <div className="rounded-2xl bg-secondary/70 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Sector</p>
-                    <p className="mt-1 text-sm font-semibold text-foreground">{sectorName || sectorCode}</p>
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">인기 탐색어</p>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestedPaths.map((pathKeyword) => (
-                      <button
-                        key={pathKeyword}
-                        onClick={() => handleSelectKeyword(pathKeyword)}
-                        className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/30 hover:bg-primary/5"
-                      >
-                        {pathKeyword}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </aside>
-
+              </Section>
+            )}
             <SearchResultsList
               results={results}
               isLoading={isSearching}

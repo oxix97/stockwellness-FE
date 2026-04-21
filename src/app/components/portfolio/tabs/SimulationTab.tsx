@@ -204,7 +204,7 @@ function CorrelationHeatmap({
                 return (
                   <div
                     key={`${rowTicker}-${colTicker}`}
-                    style={{ backgroundColor: isDiagonal ? "rgba(46, 190, 122, 0.12)" : getColor(value) }}
+                    style={{ backgroundColor: isDiagonal ? "color-mix(in srgb, var(--primary) 12%, transparent)" : getColor(value) }}
                     className="h-14 rounded-lg px-1 flex flex-col items-center justify-center text-center"
                   >
                     <p className="text-[10px] text-muted-foreground">{labels[colTicker] || colTicker}</p>

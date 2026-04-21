@@ -15,6 +15,12 @@ export interface NotificationSettings {
   newListing: boolean;
 }
 
+export const memberKeys = {
+  all: ["member"] as const,
+  me: () => [...memberKeys.all, "me"] as const,
+  notifications: () => [...memberKeys.all, "notifications"] as const,
+};
+
 export const memberApi = {
   getMe: async (): Promise<MemberProfile> => {
     const data = await apiClient.get("/v1/members/me");

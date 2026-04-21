@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { getPriceStatus } from "@/utils/calculate";
 import { formatPercent } from "@/utils/format";
+import { getTrendClassName, getTrendTone } from "@/utils/trend";
 
 interface PriceTrendLabelProps {
   change: number;
@@ -10,9 +10,8 @@ interface PriceTrendLabelProps {
 }
 
 export function PriceTrendLabel({ change, returnRate, className = "", showIcon = true }: PriceTrendLabelProps) {
-  const status = getPriceStatus(change);
-  
-  const colorClass = status === 'up' ? "text-up" : status === 'down' ? "text-down" : "text-muted-foreground";
+  const status = getTrendTone(change);
+  const colorClass = getTrendClassName(change);
   const icon = status === 'up' ? "🔺" : status === 'down' ? "🔻" : "";
 
   return (

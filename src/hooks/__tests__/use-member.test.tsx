@@ -4,14 +4,17 @@ import { renderHookWithQuery, setAuthState, clearAuthState } from "@/test/test-u
 import { makeNotificationSettings } from "@/test/fixtures";
 import { useMe, useNotificationSettings, useUpdateNotifications } from "../use-member";
 
-vi.mock("@/api/member", () => ({
-  memberApi: {
-    getMe: vi.fn(),
-    getNotifications: vi.fn(),
-    updateNotifications: vi.fn(),
-  },
-  NotificationSettings: undefined,
-}));
+vi.mock("@/api/member", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api/member")>();
+  return {
+    ...actual,
+    memberApi: {
+      getMe: vi.fn(),
+      getNotifications: vi.fn(),
+      updateNotifications: vi.fn(),
+    },
+  };
+});
 
 import { memberApi } from "@/api/member";
 

@@ -110,7 +110,7 @@ describe("portfolioApi", () => {
     const backtest = { dailyResults: [] };
     mockClient.post.mockResolvedValue(backtest);
 
-    const params = { strategy: "DCA" as const, amount: 1_000_000, benchmarkTicker: "SPY" };
+    const params = { strategy: "DCA" as const, amount: 1_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" as const };
     const result = await portfolioApi.runBacktest("1", params);
 
     expect(mockClient.post).toHaveBeenCalledWith("/v1/portfolios/1/analysis/backtest", params);

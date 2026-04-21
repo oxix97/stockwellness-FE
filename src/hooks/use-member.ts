@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { memberApi, NotificationSettings } from "@/api/member";
+import { memberApi, memberKeys, NotificationSettings } from "@/api/member";
 import { useAuthStore } from "@/store/auth";
 
 export function useMe() {
   const accessToken = useAuthStore((s) => s.accessToken);
 
   return useQuery({
-    queryKey: ["member", "me"],
+    queryKey: memberKeys.me(),
     queryFn: () => memberApi.getMe(),
     enabled: !!accessToken,
     staleTime: 5 * 60 * 1000,
@@ -17,7 +17,7 @@ export function useNotificationSettings() {
   const accessToken = useAuthStore((s) => s.accessToken);
 
   return useQuery({
-    queryKey: ["member", "notifications"],
+    queryKey: memberKeys.notifications(),
     queryFn: () => memberApi.getNotifications(),
     enabled: !!accessToken,
     staleTime: 5 * 60 * 1000,
@@ -31,7 +31,7 @@ export function useUpdateNotifications() {
     mutationFn: (settings: Partial<NotificationSettings>) =>
       memberApi.updateNotifications(settings),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["member", "notifications"] });
+      queryClient.invalidateQueries({ queryKey: memberKeys.notifications() });
     },
   });
 }

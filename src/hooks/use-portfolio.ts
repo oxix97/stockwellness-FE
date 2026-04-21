@@ -1,6 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { portfolioApi } from "@/api/portfolio";
+import { toast } from "sonner";
+import { portfolioApi, portfolioKeys } from "@/api/portfolio";
+import {
+  applyOptimisticQueryUpdate,
+  rollbackOptimisticQueryUpdate,
+} from "@/hooks/query-cache";
 import { useAuthStore } from "@/store/auth";
 import {
   CreatePortfolioRequest,
@@ -18,9 +23,26 @@ export function useCreatePortfolio() {
 
   return useMutation({
     mutationFn: (body: CreatePortfolioRequest) => portfolioApi.create(body),
+    onMutate: async (newPortfolio) => {
+      return applyOptimisticQueryUpdate<any[]>(
+        queryClient,
+        portfolioKeys.list(),
+        (old) => [
+          ...(old || []),
+          { id: "temp-id", ...newPortfolio, createdAt: new Date().toISOString() },
+        ],
+      );
+    },
+    onError: (_err, _newPortfolio, context) => {
+      rollbackOptimisticQueryUpdate(queryClient, context);
+      toast.error("포트폴리오 생성에 실패했습니다.");
+    },
     onSuccess: (id: number) => {
       setPortfolioId(String(id));
-      queryClient.invalidateQueries({ queryKey: ["portfolio"] });
+      toast.success("새로운 포트폴리오가 생성되었습니다!");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.list() });
     },
   });
 }
@@ -32,8 +54,35 @@ export function useUpdatePortfolio() {
   return useMutation({
     mutationFn: (body: UpdatePortfolioRequest) =>
       portfolioApi.updatePortfolio(portfolioId!, body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["portfolio", portfolioId] });
+
+    onMutate: async (newPortfolio) => {
+      return applyOptimisticQueryUpdate<any>(
+        queryClient,
+        portfolioKeys.detail(portfolioId),
+        (old) => {
+          if (!old) return old;
+          const updatedItems = newPortfolio.items.map((newItem: any) => {
+            const existingItem = old.items?.find((i: any) => i.symbol === newItem.symbol);
+            return existingItem ? { ...existingItem, ...newItem } : newItem;
+          });
+
+          return {
+            ...old,
+            name: newPortfolio.name,
+            description: newPortfolio.description,
+            items: updatedItems,
+          };
+        },
+      );
+    },
+
+    onError: (_err, _newPortfolio, context) => {
+      rollbackOptimisticQueryUpdate(queryClient, context);
+      toast.error("변경사항 저장에 실패했습니다. 복구합니다.");
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.detailBase(portfolioId) });
     },
   });
 }
@@ -46,7 +95,7 @@ export function useDeletePortfolio() {
     mutationFn: (id: number) => portfolioApi.deletePortfolio(String(id)),
     onSuccess: () => {
       setPortfolioId(null);
-      queryClient.invalidateQueries({ queryKey: ["portfolio"] });
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.list() });
     },
   });
 }
@@ -58,7 +107,7 @@ export function usePortfolioSummary() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   const query = useQuery<AnalysisSummaryResponse>({
-    queryKey: ["portfolio", portfolioId, "summary"],
+    queryKey: portfolioKeys.summary(portfolioId),
     queryFn: () => portfolioApi.getAnalysisSummary(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
@@ -84,7 +133,7 @@ export function usePortfolioValuation() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   return useQuery<PortfolioValuationResponse>({
-    queryKey: ["portfolio", portfolioId, "valuation"],
+    queryKey: portfolioKeys.valuation(portfolioId),
     queryFn: () => portfolioApi.getValuation(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
@@ -98,7 +147,7 @@ export function usePortfolioRebalancing() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   return useQuery({
-    queryKey: ["portfolio", portfolioId, "rebalancing"],
+    queryKey: portfolioKeys.rebalancing(portfolioId),
     queryFn: () => portfolioApi.getRebalancing(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
@@ -112,7 +161,7 @@ export function usePortfolioHealth() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   return useQuery<DiagnosisResponse>({
-    queryKey: ["portfolio", portfolioId, "health"],
+    queryKey: portfolioKeys.health(portfolioId),
     queryFn: () => portfolioApi.getHealth(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
@@ -126,7 +175,7 @@ export function usePortfolioDetails() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   return useQuery({
-    queryKey: ["portfolio", portfolioId, "detail"],
+    queryKey: portfolioKeys.detail(portfolioId),
     queryFn: () => portfolioApi.getHoldings(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,
@@ -138,7 +187,7 @@ export function usePortfolioAdvice() {
   const queryClient = useQueryClient();
 
   return useQuery<AdviceResponse>({
-    queryKey: ["portfolio", portfolioId, "advice"],
+    queryKey: portfolioKeys.advice(portfolioId),
     queryFn: async () => {
       try {
         return await portfolioApi.getAdvice(portfolioId!);
@@ -148,7 +197,7 @@ export function usePortfolioAdvice() {
         }
 
         const created = await portfolioApi.createAdvice(portfolioId!);
-        queryClient.invalidateQueries({ queryKey: ["portfolio", portfolioId, "advice"] });
+        queryClient.invalidateQueries({ queryKey: portfolioKeys.advice(portfolioId) });
         return created;
       }
     },
@@ -164,7 +213,7 @@ export function useCreateAdvice() {
   return useMutation({
     mutationFn: () => portfolioApi.createAdvice(portfolioId!),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["portfolio", portfolioId, "advice"] });
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.advice(portfolioId) });
     },
   });
 }
@@ -173,7 +222,7 @@ export function usePortfolioCorrelation() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   return useQuery<CorrelationMatrix>({
-    queryKey: ["portfolio", portfolioId, "correlation"],
+    queryKey: portfolioKeys.correlation(portfolioId),
     queryFn: () => portfolioApi.getCorrelation(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 5,

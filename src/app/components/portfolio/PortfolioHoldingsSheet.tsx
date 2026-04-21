@@ -1,12 +1,8 @@
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
 } from "@/app/components/ui/drawer";
-import { Button } from "@/app/components/ui/button";
-import { X } from "lucide-react";
+import { DrawerSheetHeader } from "@/app/components/shared/DrawerSheetHeader";
 import { usePortfolioDetails } from "@/hooks/use-portfolio";
 import { formatCurrency, formatPercent } from "@/utils/format";
 
@@ -21,20 +17,7 @@ export function PortfolioHoldingsSheet({ isOpen, onClose }: PortfolioHoldingsShe
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="max-h-[90vh]">
-        <DrawerHeader className="relative border-b border-border pb-4">
-          <DrawerTitle className="text-center text-base font-bold">
-            보유 종목 전체 ({portfolio?.items?.length ?? 0})
-          </DrawerTitle>
-          <DrawerClose asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DrawerClose>
-        </DrawerHeader>
+        <DrawerSheetHeader title={`보유 종목 전체 (${portfolio?.items?.length ?? 0})`} />
 
         <div className="overflow-y-auto p-4 divide-y divide-border scrollbar-hide">
           {portfolio?.items?.map((item) => (

@@ -263,14 +263,12 @@ export interface BacktestRequest {
   amount: number;
   /** 비교 벤치마크 티커 */
   benchmarkTicker: string;
-  /**
-   * 클라이언트 사이드 필터링 전용.
-   * BE는 이 값을 무시하고 전체 이력 데이터를 반환한다.
-   * 실제 기간 슬라이싱은 use-backtest.ts sliceByPeriod()에서 처리.
-   */
+  /** 시뮬레이션 기간 (1M, 3M, 6M, 1Y, 2Y, 3Y, ALL) */
   period?: ChartPeriod;
   /** 리밸런싱 주기 (NONE, MONTHLY, QUARTERLY, YEARLY) */
   rebalancingPeriod: RebalancingPeriod;
+  /** 배당금 재투자 여부 */
+  dividendReinvested?: boolean;
   /** 각 종목별 가상 비중 설정 (ticker -> percentage) */
   weights?: Record<string, number>;
 }
@@ -294,6 +292,7 @@ export interface InceptionChartComparison {
 
 export interface PortfolioInceptionChartResponse {
   portfolioInceptionDate: string;
+  daysElapsed: number;
   dailyResults: InceptionChartDailyResult[];
   comparisons: InceptionChartComparison[];
 }

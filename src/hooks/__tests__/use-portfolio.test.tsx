@@ -4,21 +4,25 @@ import { renderHookWithQuery, setAuthState, clearAuthState } from "@/test/test-u
 import { makeValuation, makeDiversification, makePortfolio, makeRebalancing } from "@/test/fixtures";
 import { usePortfolio, useCreatePortfolio, useUpdatePortfolio } from "../use-portfolio";
 
-vi.mock("@/api/portfolio", () => ({
-  portfolioApi: {
-    getValuation: vi.fn(),
-    getDiversification: vi.fn(),
-    getAdvice: vi.fn(),
-    createAdvice: vi.fn(),
-    getHoldings: vi.fn(),
-    getCorrelation: vi.fn(),
-    getRebalancing: vi.fn(),
-    getAnalysisSummary: vi.fn(),
-    getHealth: vi.fn(),
-    create: vi.fn(),
-    updatePortfolio: vi.fn(),
-  },
-}));
+vi.mock("@/api/portfolio", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api/portfolio")>();
+  return {
+    ...actual,
+    portfolioApi: {
+      getValuation: vi.fn(),
+      getDiversification: vi.fn(),
+      getAdvice: vi.fn(),
+      createAdvice: vi.fn(),
+      getHoldings: vi.fn(),
+      getCorrelation: vi.fn(),
+      getRebalancing: vi.fn(),
+      getAnalysisSummary: vi.fn(),
+      getHealth: vi.fn(),
+      create: vi.fn(),
+      updatePortfolio: vi.fn(),
+    },
+  };
+});
 
 import { portfolioApi } from "@/api/portfolio";
 

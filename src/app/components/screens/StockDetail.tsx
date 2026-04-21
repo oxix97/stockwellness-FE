@@ -650,7 +650,7 @@ function RsiCard({ rsi, isLoading }: RsiCardProps) {
         </div>
         <div
           className="relative h-3 rounded-full"
-          style={{ background: "linear-gradient(to right, #3182F6, #2EBE7A, #FF4756)" }}
+          style={{ background: "linear-gradient(to right, var(--down-color), var(--primary), var(--up-color))" }}
         >
           <div
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-white border-2 border-foreground rounded-full shadow"

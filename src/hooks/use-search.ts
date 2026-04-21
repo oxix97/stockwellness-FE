@@ -40,13 +40,21 @@ export function useSearch(initialKeyword: string = "", initialSectorCode: string
     staleTime: 0,
   });
 
+  // 한글 완성형 글자가 포함되어 있는지 확인하는 정규식
+  const isCompleteKeyword = (kw: string) => {
+    if (!kw) return false;
+    // 한글 자음/모음만 있는 경우(ㄱ~ㅎ, ㅏ~ㅣ) 제외
+    const hasIncompleteHangul = /^[ㄱ-ㅎㅏ-ㅣ]+$/.test(kw);
+    return !hasIncompleteHangul;
+  };
+
   // 실시간 검색 (무한 스크롤 지원)
   const autocomplete = useInfiniteQuery<StockSearchResponse>({
     queryKey: ["stocks", "search", debouncedKeyword, sectorCode, sectorName],
     queryFn: ({ pageParam = 0 }) => stockApi.search(debouncedKeyword, pageParam as number, sectorCode, sectorName),
     initialPageParam: 0,
     getNextPageParam: (lastPage: StockSearchResponse) => (lastPage.hasNext ? lastPage.number + 1 : undefined),
-    enabled: debouncedKeyword.length >= 2 || sectorCode.length > 0 || sectorName.length > 0,
+    enabled: (debouncedKeyword.length >= 2 && isCompleteKeyword(debouncedKeyword)) || sectorCode.length > 0 || sectorName.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 

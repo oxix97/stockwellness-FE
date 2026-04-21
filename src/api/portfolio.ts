@@ -15,6 +15,19 @@ import {
   PortfolioInceptionChartResponse,
 } from "@/types/api";
 
+export const portfolioKeys = {
+  all: ["portfolio"] as const,
+  list: () => [...portfolioKeys.all] as const,
+  detailBase: (portfolioId: string | null | undefined) => [...portfolioKeys.all, portfolioId] as const,
+  summary: (portfolioId: string | null | undefined) => [...portfolioKeys.detailBase(portfolioId), "summary"] as const,
+  valuation: (portfolioId: string | null | undefined) => [...portfolioKeys.detailBase(portfolioId), "valuation"] as const,
+  rebalancing: (portfolioId: string | null | undefined) => [...portfolioKeys.detailBase(portfolioId), "rebalancing"] as const,
+  health: (portfolioId: string | null | undefined) => [...portfolioKeys.detailBase(portfolioId), "health"] as const,
+  detail: (portfolioId: string | null | undefined) => [...portfolioKeys.detailBase(portfolioId), "detail"] as const,
+  advice: (portfolioId: string | null | undefined) => [...portfolioKeys.detailBase(portfolioId), "advice"] as const,
+  correlation: (portfolioId: string | null | undefined) => [...portfolioKeys.detailBase(portfolioId), "correlation"] as const,
+};
+
 /**
  * 포트폴리오 관련 API 호출 객체
  */

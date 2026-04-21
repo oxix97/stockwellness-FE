@@ -1,7 +1,6 @@
 export * from "./AuthCallbackHandler";
 export * from "./BacktestResult";
 export * from "./BacktestSetup";
-export * from "./HealthDiagnosis";
 export * from "./Home";
 export * from "./Login";
 export * from "./More";

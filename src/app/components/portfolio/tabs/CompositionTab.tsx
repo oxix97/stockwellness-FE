@@ -3,7 +3,7 @@ import { Skeleton } from "@/app/components/ui";
 import { usePortfolioDetails } from "@/hooks/use-portfolio";
 import { formatCurrency, formatPercent } from "@/utils/format";
 
-const CHART_COLORS = ["#2EBE7A", "#1A56DB", "#F59E0B", "#EF4444", "#8B5CF6", "#6B7280"];
+const CHART_COLORS = ["var(--primary)", "#1A56DB", "#F59E0B", "#EF4444", "#8B5CF6", "#6B7280"];
 
 /**
  * Task #81 — 구성/비중 탭: 도넛 차트 + 보유 종목 테이블

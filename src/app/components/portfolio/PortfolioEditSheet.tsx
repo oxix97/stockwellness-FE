@@ -1,20 +1,18 @@
 import { useState, useEffect } from "react";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
   DrawerFooter,
 } from "@/app/components/ui/drawer";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { X, Trash2, AlertCircle, Search } from "lucide-react";
+import { Trash2, AlertCircle, Search, X } from "lucide-react";
 import { usePortfolioDetails, useUpdatePortfolio } from "@/hooks/use-portfolio";
 import { useSearch } from "@/hooks/use-search";
 import { CreatePortfolioItemRequest, StockSearchResult } from "@/types/api";
 import { toast } from "sonner";
+import { DrawerSheetHeader } from "@/app/components/shared/DrawerSheetHeader";
 
 interface PortfolioEditSheetProps {
   isOpen: boolean;
@@ -101,20 +99,7 @@ export function PortfolioEditSheet({ isOpen, onClose }: PortfolioEditSheetProps)
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="max-h-[90vh]">
-        <DrawerHeader className="relative border-b border-border pb-4">
-          <DrawerTitle className="text-center text-base font-bold">
-            포트폴리오 편집
-          </DrawerTitle>
-          <DrawerClose asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DrawerClose>
-        </DrawerHeader>
+        <DrawerSheetHeader title="포트폴리오 편집" />
 
         <div className="overflow-y-auto p-5 space-y-6 scrollbar-hide">
           <div className="space-y-4">

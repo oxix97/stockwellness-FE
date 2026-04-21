@@ -1,40 +1,35 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Activity,
   ArrowRight,
   BrainCircuit,
   ChevronDown,
+  FlaskConical,
   PieChart,
-  RefreshCcw,
-  Orbit,
   Settings,
   ShieldCheck,
   Target,
   TrendingUp,
+  Calendar,
 } from "lucide-react";
 import { motion } from "motion/react";
-import {
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import {
   Button,
   Skeleton,
 } from "@/app/components/ui";
+import { cn } from "@/app/components/ui/utils";
 import { PortfolioBottomSheet, AnalysisType } from "@/app/components/portfolio/PortfolioBottomSheet";
 import { PortfolioEditSheet } from "@/app/components/portfolio/PortfolioEditSheet";
 import { PortfolioHoldingsSheet } from "@/app/components/portfolio/PortfolioHoldingsSheet";
 import { PortfolioWizard } from "@/app/components/portfolio/wizard/PortfolioWizard";
 import { usePortfolioAdvice, usePortfolioDetails, usePortfolioHealth, usePortfolioSummary } from "@/hooks/use-portfolio";
-import { computeMetrics, usePortfolioSimulation } from "@/hooks/use-backtest";
+import { usePortfolioSimulation } from "@/hooks/use-backtest";
 import { useAuthStore } from "@/store/auth";
 import { PortfolioItemResponse, RebalancingItem } from "@/types/api";
 import { calculateHealthBadge, calculateInvestorType } from "@/utils/calculate";
-import { formatCurrency, formatDate, formatPercent } from "@/utils/format";
+import { formatCurrency, formatDate } from "@/utils/format";
+import { getTrendClassName } from "@/utils/trend";
 
 const PERFORMANCE_OPTIONS = ["1M", "3M", "6M", "1Y"] as const;
 type PerformancePeriod = (typeof PERFORMANCE_OPTIONS)[number];
@@ -51,12 +46,13 @@ const BENCHMARK_LABELS: Record<string, string> = {
  * 핵심 인사이트를 메인에서 먼저 보여주고, 상세 분석은 바텀시트로 연결한다.
  */
 export function Portfolio() {
+  const navigate = useNavigate();
   const portfolioId = useAuthStore((state) => state.portfolioId);
   const [showWizard, setShowWizard] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showHoldings, setShowHoldings] = useState(false);
   const [analysisType, setAnalysisType] = useState<AnalysisType | null>(null);
-  const [period, setPeriod] = useState<PerformancePeriod>("1Y");
+  const [period] = useState<PerformancePeriod>("1Y");
 
   const summary = usePortfolioSummary();
   const healthQuery = usePortfolioHealth();
@@ -83,7 +79,7 @@ export function Portfolio() {
             onClick={() => setShowWizard(true)}
             className="bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold"
           >
-            📊 포트폴리오 만들기
+            포트폴리오 만들기
           </button>
         </div>
         {showWizard && <PortfolioWizard onClose={() => setShowWizard(false)} />}
@@ -108,29 +104,12 @@ export function Portfolio() {
   const score = healthQuery.data?.overallScore;
   const healthBadge = calculateHealthBadge(score ?? 0);
   const investorType = calculateInvestorType(score);
-  const simulationMetrics = computeMetrics(simulation.data?.dailyResults);
   const topHoldings = [...holdings]
     .sort((a, b) => (b.currentValue ?? 0) - (a.currentValue ?? 0))
     .slice(0, 4);
 
   const symbolNames = Object.fromEntries(holdings.map((item) => [item.symbol, item.name || item.symbol]));
 
-  const chartData =
-    simulation.data?.dailyResults.map((result) => ({
-      date: formatDate(result.date),
-      portfolio: Number((result.portfolioReturnRate ?? 0).toFixed(2)),
-      ...Object.fromEntries(
-        Object.entries(result.benchmarkReturnRates ?? {}).map(([ticker, value]) => [
-          ticker,
-          Number(value.toFixed(2)),
-        ])
-      ),
-    })) ?? [];
-
-  const leadingBenchmark = simulation.data?.comparisons?.[0];
-  const leadingBenchmarkLabel = leadingBenchmark
-    ? leadingBenchmark.indexName || BENCHMARK_LABELS[leadingBenchmark.ticker] || leadingBenchmark.ticker
-    : "벤치마크 없음";
   const adviceSummary = getAdviceSummary(adviceQuery.data?.content);
   const insightCards = [
     {
@@ -154,6 +133,13 @@ export function Portfolio() {
     },
   ];
 
+  // 성과 요약 비교 데이터 가공
+  const inceptionDate = simulation.data?.portfolioInceptionDate;
+  const dPlusDays = simulation.data?.daysElapsed ?? 0;
+  const lastResult = simulation.data?.dailyResults?.[simulation.data.dailyResults.length - 1];
+  const myTotalReturn = lastResult?.portfolioReturnRate ?? 0;
+  const comparisons = simulation.data?.comparisons ?? [];
+
   return (
     <div className="min-h-full pb-10">
       <section className="page-shell page-content pt-4 md:pt-6">
@@ -163,13 +149,6 @@ export function Portfolio() {
             <div className="absolute right-8 top-7 h-20 w-20 rounded-full border border-primary/10" />
             <div className="absolute right-16 top-16 h-px w-16 bg-gradient-to-r from-primary/50 to-transparent rotate-45" />
             <div className="absolute left-5 top-5 h-px w-20 bg-gradient-to-r from-primary/40 to-transparent" />
-            <div className="absolute bottom-5 right-5 rounded-2xl border border-border/50 bg-card/66 px-3 py-2 backdrop-blur-sm">
-              <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                <Orbit className="h-3 w-3 text-primary" />
-                Portfolio Core
-              </div>
-              <p className="mt-1 text-sm font-bold text-foreground">{holdings.length} holdings</p>
-            </div>
           </div>
           <div className="flex items-start justify-between gap-3">
             <button className="relative z-10 flex items-center gap-1">
@@ -192,12 +171,12 @@ export function Portfolio() {
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className={getToneClassName(valuation?.totalReturnRate ?? 0, "text-sm font-semibold tabular-nums")}>
-                  {formatSignedCurrency(valuation?.totalProfitLoss ?? 0)} {formatPercent(valuation?.totalReturnRate ?? 0)}
+                  ₩{formatCurrency(Math.abs(valuation?.totalProfitLoss ?? 0))} {Math.abs(valuation?.totalReturnRate ?? 0).toFixed(2)}%
                 </span>
                 <span className="text-muted-foreground text-xs">누적</span>
                 <span className="text-border">•</span>
                 <span className={getToneClassName(valuation?.dailyReturnRate ?? 0, "text-xs tabular-nums")}>
-                  오늘 {formatSignedCurrency(valuation?.dailyProfitLoss ?? 0)} {formatPercent(valuation?.dailyReturnRate ?? 0)}
+                  오늘 ₩{formatCurrency(Math.abs(valuation?.dailyProfitLoss ?? 0))} {Math.abs(valuation?.dailyReturnRate ?? 0).toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -217,9 +196,80 @@ export function Portfolio() {
             <div className="min-w-0">
               <p className="text-xs font-semibold text-foreground">{investorType.label}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {healthQuery.data?.nextSteps?.[0] ?? "핵심 포트폴리오 인사이트를 확인해보세요."}
+                {healthQuery.data?.nextSteps?.[0] ?? "다음 점검 포인트를 확인해보세요."}
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="page-shell page-content pt-6">
+        <div className="rounded-[32px] border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="bg-primary/10 p-2 rounded-xl">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-foreground font-bold text-base">성과 요약 비교</p>
+                {inceptionDate && (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                    <p className="text-muted-foreground text-[10px] font-medium uppercase tracking-wider">
+                      시작일: {formatDate(inceptionDate)} (D+{dPlusDays})
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <PerformanceBar 
+              label="내 포트폴리오" 
+              value={myTotalReturn} 
+              isPortfolio 
+              maxAbsValue={Math.max(Math.abs(myTotalReturn), ...comparisons.map(c => Math.abs(c.totalReturn)))}
+            />
+            
+            <div className="pt-2 space-y-4 border-t border-border/50">
+              {comparisons.map((comp) => (
+                <PerformanceBar 
+                  key={comp.ticker}
+                  label={BENCHMARK_LABELS[comp.ticker] || comp.indexName} 
+                  value={comp.totalReturn} 
+                  maxAbsValue={Math.max(Math.abs(myTotalReturn), ...comparisons.map(c => Math.abs(c.totalReturn)))}
+                />
+              ))}
+              {comparisons.length === 0 && (
+                <p className="text-center py-4 text-xs text-muted-foreground italic">
+                  비교할 벤치마크 데이터가 없습니다.
+                </p>
+              )}
+            </div>
+
+            {comparisons.length > 0 && (
+              <div className="mt-6 rounded-2xl bg-primary/5 p-4 border border-primary/10">
+                <p className="text-xs sm:text-sm text-foreground leading-relaxed">
+                  <span className="font-bold text-primary">
+                    {(() => {
+                      const betterThan = comparisons.filter(c => myTotalReturn > c.totalReturn);
+                      if (betterThan.length === comparisons.length) {
+                        return "모든 주요 지수보다 높은 성과를 내고 있습니다! ✨";
+                      } else if (betterThan.length > 0) {
+                        const bestBench = betterThan.sort((a, b) => b.totalReturn - a.totalReturn)[0];
+                        const diff = (myTotalReturn - bestBench.totalReturn).toFixed(1);
+                        return `${BENCHMARK_LABELS[bestBench.ticker] || bestBench.indexName}보다 ${diff}% 더 높은 수익을 기록 중이에요! 🚀`;
+                      } else {
+                        const bestOverall = [...comparisons].sort((a, b) => b.totalReturn - a.totalReturn)[0];
+                        const diff = (bestOverall.totalReturn - myTotalReturn).toFixed(1);
+                        return `${BENCHMARK_LABELS[bestOverall.ticker] || bestOverall.indexName} 대비 ${diff}% 차이로 바짝 추격하고 있어요. 🔥`;
+                      }
+                    })()}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -258,12 +308,6 @@ export function Portfolio() {
                         <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                       </div>
                       <p className="mt-2 text-sm leading-relaxed text-foreground/80">{card.description}</p>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">signal card</span>
-                        <span className="rounded-full border border-border/60 bg-card/80 px-2 py-1 text-xs font-medium text-foreground">
-                          열어보기
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </motion.button>
@@ -304,10 +348,16 @@ export function Portfolio() {
           <section className="space-y-3">
             <div>
               <p className="text-foreground font-bold text-base">추가 분석</p>
-              <p className="text-muted-foreground text-xs">필요할 때 깊게 보는 보조 분석입니다.</p>
+              <p className="text-muted-foreground text-xs">성과 검증과 핵심 보조 분석으로 바로 이동합니다.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+              <SecondaryActionCard
+                icon={FlaskConical}
+                title="성과 시뮬레이션"
+                description="과거 성과 백테스트"
+                onClick={() => navigate("/backtest/setup")}
+              />
               <SecondaryActionCard
                 icon={PieChart}
                 title="분산도 분석"
@@ -319,6 +369,7 @@ export function Portfolio() {
                 title="상관관계"
                 description={`${Object.keys(symbolNames).length}개 종목 위험 분산`}
                 onClick={() => setAnalysisType("correlation")}
+                className="col-span-2"
               />
             </div>
           </section>
@@ -355,21 +406,46 @@ function HeroMetric({
   );
 }
 
-function PerformanceMetric({
-  label,
-  value,
-  positive,
-}: {
-  label: string;
-  value: string;
-  positive?: boolean;
+function PerformanceBar({ 
+  label, 
+  value, 
+  isPortfolio = false, 
+  maxAbsValue 
+}: { 
+  label: string; 
+  value: number; 
+  isPortfolio?: boolean; 
+  maxAbsValue: number;
 }) {
+  const percentage = maxAbsValue > 0 ? (Math.abs(value) / maxAbsValue) * 100 : 0;
+  const isPositive = value > 0;
+  const isZero = value === 0;
+
   return (
-    <div className="rounded-[calc(var(--mobile-card-radius)-2px)] border border-border bg-background/50 px-3 py-3 md:rounded-2xl">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-sm font-bold tabular-nums ${positive === undefined ? "text-foreground" : positive ? "text-up" : "text-down"}`}>
-        {value}
-      </p>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className={cn("font-medium", isPortfolio ? "text-foreground font-bold" : "text-muted-foreground")}>
+          {label}
+        </span>
+        <span className={cn("font-bold tabular-nums", isZero ? "text-muted-foreground/50" : getTrendClassName(value))}>
+          {Math.abs(value).toFixed(1)}%
+        </span>
+      </div>
+      <div className="h-2 w-full bg-secondary/30 rounded-full overflow-hidden">
+        {isZero ? (
+          <div className="h-full w-[2px] bg-muted-foreground/20 rounded-full" />
+        ) : (
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.max(percentage, 2)}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className={cn(
+              "h-full rounded-full",
+              isPortfolio ? "bg-primary" : isPositive ? "bg-up/60" : "bg-down/60"
+            )}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -397,7 +473,7 @@ function HoldingRow({
             ₩{formatCurrency(item.currentValue ?? 0)}
           </p>
           <p className={getToneClassName(item.returnRate ?? 0, "text-xs tabular-nums")}>
-            {formatPercent(item.returnRate ?? 0)}
+            {Math.abs(item.returnRate ?? 0).toFixed(2)}%
           </p>
         </div>
       </div>
@@ -426,17 +502,19 @@ function SecondaryActionCard({
   title,
   description,
   onClick,
+  className,
 }: {
   icon: typeof PieChart;
   title: string;
   description: string;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="rounded-3xl border border-border bg-card p-4 text-left"
+      className={cn("rounded-3xl border border-border bg-card p-4 text-left", className)}
     >
       <div className="mb-3 inline-flex rounded-2xl bg-primary/10 p-2 text-primary">
         <Icon className="h-5 w-5" />
@@ -447,15 +525,8 @@ function SecondaryActionCard({
   );
 }
 
-function formatSignedCurrency(value: number) {
-  const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
-  return `${prefix}₩${formatCurrency(Math.abs(value))}`;
-}
-
 function getToneClassName(value: number, baseClassName: string) {
-  if (value > 0) return `${baseClassName} text-up`;
-  if (value < 0) return `${baseClassName} text-down`;
-  return `${baseClassName} text-foreground`;
+  return `${baseClassName} ${getTrendClassName(value, { neutral: "text-foreground" })}`;
 }
 
 function getAdviceSummary(content: string | undefined) {
