@@ -93,10 +93,19 @@ export function computeMetrics(results: any[] | undefined) {
 
   // Sharpe Ratio: 일별 수익률의 평균 / 표준편차 * sqrt(252)
   let sharpeRatio = 0;
+  let sortinoRatio = 0;
   if (dailyReturns.length > 0) {
     const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
     const variance = dailyReturns.reduce((a, b) => a + Math.pow(b - meanReturn, 2), 0) / dailyReturns.length;
     sharpeRatio = variance > 0 ? (meanReturn / Math.sqrt(variance)) * Math.sqrt(252) : 0;
+
+    // Sortino Ratio: 하락 변동성(Downside Deviation)만을 고려
+    const downsideReturns = dailyReturns.filter(r => r < 0);
+    const downsideVariance = downsideReturns.length > 0
+      ? downsideReturns.reduce((a, b) => a + Math.pow(b, 2), 0) / dailyReturns.length // 전체 기간으로 나눔 (표준 방식 중 하나)
+      : 0;
+    const downsideDeviation = Math.sqrt(downsideVariance);
+    sortinoRatio = downsideDeviation > 0 ? (meanReturn / downsideDeviation) * Math.sqrt(252) : 0;
   }
 
   // Beta calculation
@@ -122,6 +131,7 @@ export function computeMetrics(results: any[] | undefined) {
     finalValue: last.totalValue ?? 0,
     mdd: +Math.abs(mdd).toFixed(1),
     sharpeRatio: +sharpeRatio.toFixed(2),
+    sortinoRatio: +sortinoRatio.toFixed(2),
     cagr: +cagr.toFixed(1),
     beta: +beta.toFixed(2),
     recoveryPeriod: recoveryPeriod,

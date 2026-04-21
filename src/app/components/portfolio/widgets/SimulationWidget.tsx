@@ -102,6 +102,7 @@ export function SimulationWidget() {
             isNegative={true}
           />
           <MetricCard label="샤프 지수" value={metrics.sharpeRatio.toString()} />
+          <MetricCard label="소르티노 지수" value={metrics.sortinoRatio.toString()} />
           <MetricCard
             label="시장 민감도 (Beta)"
             value={metrics.beta.toString()}

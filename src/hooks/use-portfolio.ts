@@ -19,8 +19,32 @@ export function useCreatePortfolio() {
 
   return useMutation({
     mutationFn: (body: CreatePortfolioRequest) => portfolioApi.create(body),
+    onMutate: async (newPortfolio) => {
+      // 1. Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["portfolio"] });
+
+      // 2. Snapshot the previous value
+      const previousPortfolios = queryClient.getQueryData(["portfolio"]);
+
+      // 3. Optimistically update to the new value (임시 ID 부여)
+      queryClient.setQueryData(["portfolio"], (old: any[]) => [
+        ...(old || []),
+        { id: "temp-id", ...newPortfolio, createdAt: new Date().toISOString() }
+      ]);
+
+      return { previousPortfolios };
+    },
+    onError: (_err, _newPortfolio, context) => {
+      if (context?.previousPortfolios) {
+        queryClient.setQueryData(["portfolio"], context.previousPortfolios);
+      }
+      toast.error("포트폴리오 생성에 실패했습니다.");
+    },
     onSuccess: (id: number) => {
       setPortfolioId(String(id));
+      toast.success("새로운 포트폴리오가 생성되었습니다!");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["portfolio"] });
     },
   });
@@ -56,7 +80,7 @@ export function useUpdatePortfolio() {
       return { previousDetail };
     },
 
-    onError: (err, newPortfolio, context) => {
+    onError: (_err, _newPortfolio, context) => {
       if (context?.previousDetail) {
         queryClient.setQueryData(["portfolio", portfolioId, "detail"], context.previousDetail);
       }

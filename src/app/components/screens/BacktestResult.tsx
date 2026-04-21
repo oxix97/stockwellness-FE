@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Activity, Sparkles } from "lucide-react";
+import { Activity, Sparkles, Printer } from "lucide-react";
 import { XAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
 import { useBacktest } from "@/hooks/use-backtest";
 import { BacktestDailyResult } from "@/types/api";
@@ -40,6 +40,10 @@ export function BacktestResult() {
   }, [searchParams]);
 
   const hasRun = useRef(false);
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   // useBacktest에 선택된 기간을 전달하여 클라이언트 사이드 슬라이싱 및 지표 계산 활성화
   const { run, data, isLoading, metrics, serverMetrics, isError, aiComment } = useBacktest(config?.period);
@@ -157,10 +161,24 @@ export function BacktestResult() {
   const displayWorstYear = serverMetrics?.worstYearRate ?? yearlyStats.worst?.returnPct;
 
   return (
-    <div className="min-h-screen bg-background pb-8">
-      <PageHeader title="시뮬레이션 결과" description="설정한 전략을 과거 데이터에 적용한 모바일 웹 리포트" showBack />
+    <div className="min-h-screen bg-background pb-8 print:bg-white print:pb-0">
+      <PageHeader 
+        title="시뮬레이션 결과" 
+        description="설정한 전략을 과거 데이터에 적용한 모바일 웹 리포트" 
+        showBack 
+        className="print:hidden"
+        rightContent={
+          <button 
+            onClick={handlePrint}
+            className="rounded-full p-2 transition-colors hover:bg-secondary"
+            title="리포트 출력"
+          >
+            <Printer className="h-6 w-6 text-muted-foreground" />
+          </button>
+        }
+      />
 
-      <div className="page-shell page-content space-y-6 py-6">
+      <div className="page-shell page-content space-y-6 py-6 print:m-0 print:p-0">
         <section className="rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] px-5 py-6 text-center shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Badge variant="outline" className="bg-background/50 border-primary/20 text-primary">
@@ -208,6 +226,7 @@ export function BacktestResult() {
           <MetricCard label="연평균 수익률" value={displayCagr != null ? `${displayCagr}%` : "-"} sub="CAGR" color="text-up" />
           <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-down" />
           <MetricCard label="위험 대비 수익" value={displaySharpe ?? "-"} sub="샤프 지수" />
+          <MetricCard label="하락 변동성 대비 수익" value={metrics.sortinoRatio.toString()} sub="소르티노 지수" />
           <MetricCard label="시장 민감도" value={displayBeta ?? "-"} sub="Beta" />
           <MetricCard label="최장 회복 기간" value={`${metrics.recoveryPeriod}일`} sub="Recovery" />
           {displayBestYear != null && (
