@@ -4,7 +4,8 @@ import {
 } from "@/app/components/ui/drawer";
 import { DrawerSheetHeader } from "@/app/components/shared/DrawerSheetHeader";
 import { usePortfolioDetails } from "@/hooks/use-portfolio";
-import { formatCurrency, formatPercent } from "@/utils/format";
+import { formatCurrency } from "@/utils/format";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 
 interface PortfolioHoldingsSheetProps {
   isOpen: boolean;
@@ -46,13 +47,12 @@ export function PortfolioHoldingsSheet({ isOpen, onClose }: PortfolioHoldingsShe
                   <span className="text-[10px] text-muted-foreground">
                     평단 ₩{formatCurrency(item.purchasePrice)}
                   </span>
-                  <span
-                    className={`text-[11px] font-bold tabular-nums ${
-                      (item.returnRate ?? 0) >= 0 ? "text-up" : "text-down"
-                    }`}
-                  >
-                    {formatPercent(item.returnRate ?? 0)}
-                  </span>
+                  <SignedValueLabel
+                    value={item.returnRate ?? 0}
+                    format="percent"
+                    className="text-[11px] font-bold"
+                    ariaLabelPrefix={`${item.name || item.symbol} 수익률`}
+                  />
                 </div>
               </div>
             </div>

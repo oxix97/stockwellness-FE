@@ -1,7 +1,8 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/app/components/ui";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { usePortfolioDetails } from "@/hooks/use-portfolio";
-import { formatCurrency, formatPercent } from "@/utils/format";
+import { formatCurrency } from "@/utils/format";
 
 const CHART_COLORS = ["var(--primary)", "#1A56DB", "#F59E0B", "#EF4444", "#8B5CF6", "#6B7280"];
 
@@ -91,11 +92,15 @@ export function CompositionTab() {
               </p>
               <div className="text-right">
                 <p className="text-foreground tabular-nums">₩{formatCurrency(item.currentPrice ?? item.purchasePrice)}</p>
-                <p className={`text-xs tabular-nums ${(item.currentValue ?? 0) - item.purchaseAmount >= 0 ? "text-up" : "text-down"}`}>
-                  {`${(item.currentValue ?? 0) - item.purchaseAmount >= 0 ? "+" : "-"}₩${formatCurrency(Math.abs((item.currentValue ?? 0) - item.purchaseAmount))}`}
+                <p className="text-xs">
+                  <SignedValueLabel
+                    value={(item.currentValue ?? 0) - item.purchaseAmount}
+                    format="currency"
+                    ariaLabelPrefix={`${item.name || item.symbol} 평가손익`}
+                  />
                 </p>
-                <p className={`text-xs tabular-nums ${(item.returnRate ?? 0) >= 0 ? "text-up" : "text-down"}`}>
-                  {formatPercent(item.returnRate ?? 0)}
+                <p className="text-xs">
+                  <SignedValueLabel value={item.returnRate ?? 0} format="percent" ariaLabelPrefix={`${item.name || item.symbol} 수익률`} />
                 </p>
               </div>
             </div>

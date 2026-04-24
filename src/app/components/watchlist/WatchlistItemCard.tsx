@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "motion/react";
 import { WatchlistItemDetail } from "@/types/api";
-import { formatPercent } from "@/utils/format";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { toast } from "sonner";
 
@@ -155,10 +155,13 @@ export function WatchlistItemCard({
               <p className="text-sm font-semibold text-foreground tabular-nums">
                 {stock.currentPrice !== null ? `₩${stock.currentPrice.toLocaleString()}` : "-"}
               </p>
-              <p
-                className={`text-xs font-medium tabular-nums ${stock.fluctuationRate !== null && stock.fluctuationRate >= 0 ? "text-up" : stock.fluctuationRate !== null ? "text-down" : "text-muted-foreground"}`}
-              >
-                {stock.fluctuationRate !== null ? formatPercent(stock.fluctuationRate) : "-"}
+              <p className="text-xs font-medium">
+                <SignedValueLabel
+                  value={stock.fluctuationRate}
+                  format="percent"
+                  ariaLabelPrefix={`${stock.name} 등락률`}
+                  fallback="-"
+                />
               </p>
             </div>
           </div>

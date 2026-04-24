@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { Progress } from "@/app/components/ui";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { useSupply } from "@/hooks/use-supply";
 import { SectorSupplyItem } from "@/types/api";
 import { HomeCard, HomeCardSkeleton } from "./HomeCard";
@@ -94,7 +95,6 @@ function SupplyCard({
   const progressValue = maxAmount > 0 ? (dominantAmt / maxAmount) * 100 : 0;
   const secondaryWidth = maxAmount > 0 ? (secondaryAmt / maxAmount) * 100 : 0;
   
-  const formattedAmt = `${(dominantAmt / 1e8).toFixed(0)}억`;
   const badgeOpacity = consecutiveDays >= 10 ? 30 : consecutiveDays >= 5 ? 20 : 10;
 
   return (
@@ -117,7 +117,16 @@ function SupplyCard({
         </div>
       }
       displayValue={
-        <span className="text-up">+{formattedAmt} 유입</span>
+        <span>
+          <SignedValueLabel
+            value={dominantAmt / 1e8}
+            format="number"
+            fractionDigits={0}
+            showArrow
+            ariaLabelPrefix={`${sector.sectorName} 수급 유입액`}
+          />억{" "}
+          유입
+        </span>
       }
       description={
         <div className="flex flex-col gap-1 w-full mt-1">

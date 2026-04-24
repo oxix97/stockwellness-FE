@@ -6,8 +6,8 @@ import { HomeBadge } from "./HomeListItem";
 import { HomeCard, HomeCardSkeleton } from "./HomeCard";
 import { useStockSupplyRanking } from "@/hooks/use-stock";
 import { StockSupplyRankingItem, TradeDirection } from "@/types/api";
-import { formatPercent } from "@/utils/format";
 import { getTrendClassName } from "@/utils/trend";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { getHomeCardTone } from "./home-card-tone";
 
 const containerVariants = {
@@ -42,7 +42,7 @@ function formatAmount(value: number) {
 }
 
 function formatEffectiveDate(date: string) {
-  return date.replaceAll("-", ".");
+  return date.replace(/-/g, ".");
 }
 
 function formatCurrentPrice(value: number) {
@@ -87,6 +87,7 @@ function RankingCard({
   onItemClick: (ticker: string) => void;
 }) {
   const tone = getHomeCardTone(direction === "BUY" ? "up" : "down");
+  const signedNetAmount = direction === "BUY" ? Math.abs(item.netBuyingAmount) : -Math.abs(item.netBuyingAmount);
 
   return (
     <HomeCard
@@ -104,17 +105,23 @@ function RankingCard({
       displayValue={
         <div className="flex items-center gap-2 tabular-nums">
           <span className="text-foreground">{formatCurrentPrice(item.currentPrice)}</span>
-          <span className={getTrendClassName(item.fluctuationRate)}>
-            {formatPercent(item.fluctuationRate).replace(" ", "")}
-          </span>
+          <SignedValueLabel
+            value={item.fluctuationRate}
+            format="percent"
+            className="font-semibold"
+            ariaLabelPrefix={`${item.stockName} 등락률`}
+          />
         </div>
       }
       description={
         <div className="flex items-center gap-1 tabular-nums text-xs">
           <span className="text-muted-foreground">{getNetAmountLabel(direction)}</span>
-          <span className={getTrendClassName(item.netBuyingAmount)}>
-            {direction === "BUY" ? "▲ " : "▼ "}
-            {formatAmount(item.netBuyingAmount)}
+          <span
+            className={getTrendClassName(signedNetAmount)}
+            aria-label={`${item.stockName} ${getNetAmountLabel(direction)} ${signedNetAmount > 0 ? "상승" : signedNetAmount < 0 ? "하락" : "보합"}`}
+          >
+            {signedNetAmount > 0 ? "▲ " : signedNetAmount < 0 ? "▼ " : ""}
+            {formatAmount(signedNetAmount)}
           </span>
         </div>
       }
