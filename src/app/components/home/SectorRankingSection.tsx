@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { useSector } from "@/hooks/use-sector";
 import { HomeCard, HomeCardSkeleton } from "./HomeCard";
 import { HomeBadge } from "./HomeListItem";
@@ -80,9 +81,11 @@ function RankingCard({
         )
       }
       displayValue={
-        <span className={isUp ? "text-up" : "text-down"}>
-          {isUp ? "▲ " : "▼ "}{Math.abs(sector.fluctuationRate).toFixed(2)}%
-        </span>
+        <SignedValueLabel
+          value={sector.fluctuationRate}
+          format="percent"
+          ariaLabelPrefix={`${sector.sectorName} 등락률`}
+        />
       }
     />
   );

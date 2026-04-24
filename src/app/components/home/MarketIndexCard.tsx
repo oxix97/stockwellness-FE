@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { Skeleton } from "@/app/components/ui";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { MarketIndexResult } from "@/types/api";
-import { getTrendClassName } from "@/utils/trend";
 import { HomeBadge } from "./HomeListItem";
 import { getHomeCardTone } from "./home-card-tone";
 
@@ -43,8 +43,7 @@ export function MarketIndexSection() {
 }
 
 function MarketIndexCard({ index }: { index: MarketIndexResult }) {
-  const isUp = index.fluctuationRate >= 0;
-  const tone = getHomeCardTone(isUp ? "up" : "down");
+  const tone = getHomeCardTone(index.fluctuationRate >= 0 ? "up" : "down");
   
   // 시장별 아이콘 결정 로직 (한글/영어 대응)
   const getIndexIcon = (name: string) => {
@@ -96,11 +95,14 @@ function MarketIndexCard({ index }: { index: MarketIndexResult }) {
         </p>
 
         <div className="flex items-center gap-2">
-          <p className={`text-sm font-bold tabular-nums ${getTrendClassName(index.fluctuationRate, { neutral: "text-up" })}`}>
-            {isUp ? "▲ " : "▼ "}{Math.abs(index.fluctuationRate).toFixed(2)}%
-          </p>
+          <SignedValueLabel
+            value={index.fluctuationRate}
+            format="percent"
+            className="text-sm font-bold"
+            ariaLabelPrefix={`${index.name} 등락률`}
+          />
           <HomeBadge opacity={20} className={`text-[10px] py-0 px-1.5 h-4 ${tone.badgeClassName}`}>
-            {isUp ? "상승" : "하락"}
+            {index.fluctuationRate > 0 ? "상승" : index.fluctuationRate < 0 ? "하락" : "보합"}
           </HomeBadge>
         </div>
       </div>

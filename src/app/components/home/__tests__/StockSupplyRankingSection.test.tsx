@@ -201,8 +201,6 @@ describe("StockSupplyRankingSection", () => {
       </MemoryRouter>
     );
 
-    // The implementation formats it as: {direction === "BUY" ? "▲ " : "▼ "}{formatAmount(item.netBuyingAmount)}
-    // And formatAmount(NaN) returns "-"
-    expect(screen.getByText(/▲ -/)).toBeInTheDocument();
+    expect(screen.getByText("-")).toBeInTheDocument();
   });
 });

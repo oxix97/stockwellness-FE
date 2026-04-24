@@ -1,6 +1,7 @@
 import { usePortfolioSummary } from "@/hooks/use-portfolio";
-import { formatPercent } from "@/utils/format";
+import { formatSignedPercent } from "@/utils/format";
 import { Skeleton } from "@/app/components/ui";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { AIAdviceWidget } from "./AIAdviceWidget";
 import { RebalancingItem } from "@/types/api";
 
@@ -66,24 +67,19 @@ export function RebalancingWidget() {
               <div className="flex-1">
                 <p className="text-muted-foreground text-[10px] mb-1">현재 비중</p>
                 <p className="text-foreground font-semibold text-sm">
-                  {formatPercent(item.currentWeight)}
+                  {formatSignedPercent(item.currentWeight, { showArrow: false, showSign: false })}
                 </p>
               </div>
               <div className="flex-1">
                 <p className="text-muted-foreground text-[10px] mb-1">목표 비중</p>
                 <p className="text-foreground font-semibold text-sm">
-                  {formatPercent(item.targetWeight)}
+                  {formatSignedPercent(item.targetWeight, { showArrow: false, showSign: false })}
                 </p>
               </div>
               <div className="flex-1">
                 <p className="text-muted-foreground text-[10px] mb-1">차이</p>
-                <p
-                  className={`font-semibold text-sm ${
-                    item.diffWeight > 0 ? "text-up" : "text-down"
-                  }`}
-                >
-                  {item.diffWeight > 0 ? "+" : ""}
-                  {formatPercent(item.diffWeight)}
+                <p className="font-semibold text-sm">
+                  <SignedValueLabel value={item.diffWeight} format="percent" ariaLabelPrefix={`${item.name} 비중 차이`} />
                 </p>
               </div>
             </div>

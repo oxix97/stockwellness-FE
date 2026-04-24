@@ -18,8 +18,8 @@ import { usePortfolio } from "@/hooks/use-portfolio";
 import { useWithdraw, useUpdateProfile } from "@/hooks/use-member";
 import { useAuthStore } from "@/store/auth";
 import { calculateInvestorType } from "@/utils/calculate";
-import { formatPercent } from "@/utils/format";
 import { getTrendClassName } from "@/utils/trend";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 
 export function More() {
   const navigate = useNavigate();
@@ -86,10 +86,9 @@ export function More() {
               <MetricTile label="보유 종목" value={`${holdings?.items?.length ?? "—"}개`} />
               <MetricTile
                 label="총 수익률"
-                value={
-                  valuation?.totalReturnRate != null
-                    ? formatPercent(valuation.totalReturnRate)
-                    : "—"
+                value={valuation?.totalReturnRate != null
+                  ? <SignedValueLabel value={valuation.totalReturnRate} format="percent" ariaLabelPrefix="총 수익률" />
+                  : "—"
                 }
                 tone={
                   valuation?.totalReturnRate != null
@@ -309,7 +308,7 @@ function MetricTile({
   icon,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   tone?: "neutral" | "up" | "down";
   icon?: ReactNode;
 }) {
