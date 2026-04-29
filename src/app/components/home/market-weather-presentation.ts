@@ -7,18 +7,18 @@ export interface MarketWeatherPresentation {
   toneClassName: string;
 }
 
-const WEATHER_APPEARANCE: Record<MarketWeatherLevel, { emoji: string; toneClassName: string }> = {
-  CLEAR: { emoji: "☀️", toneClassName: "text-up" },
-  SUNNY: { emoji: "🌤️", toneClassName: "text-up" },
-  PARTLY_CLOUDY: { emoji: "🌥️", toneClassName: "text-emerald-600" },
-  CLOUDY: { emoji: "⛅", toneClassName: "text-muted-foreground" },
-  FOGGY: { emoji: "🌫️", toneClassName: "text-amber-600" },
-  RAINY: { emoji: "🌧️", toneClassName: "text-down" },
-  STORMY: { emoji: "⛈️", toneClassName: "text-down" },
+const WEATHER_APPEARANCE: Record<string, { emoji: string; toneClassName: string; label: string }> = {
+  CLEAR: { emoji: "☀️", toneClassName: "text-orange-500", label: "매우 맑음" },
+  SUNNY: { emoji: "🌤️", toneClassName: "text-yellow-500", label: "맑음" },
+  PARTLY_CLOUDY: { emoji: "🌥️", toneClassName: "text-blue-400", label: "구름 조금" },
+  CLOUDY: { emoji: "⛅", toneClassName: "text-muted-foreground", label: "흐림" },
+  FOGGY: { emoji: "🌫️", toneClassName: "text-amber-600", label: "안개" },
+  RAINY: { emoji: "🌧️", toneClassName: "text-blue-600", label: "비" },
+  STORMY: { emoji: "⛈️", toneClassName: "text-purple-600", label: "천둥번개" },
 };
 
 export function getMarketWeatherPresentation(
-  weather: MarketWeatherResult | null | undefined,
+  weather: any, // API 응답 타입에 맞춰 유연하게 처리
   isLoading: boolean,
   isError: boolean,
 ): MarketWeatherPresentation {
@@ -40,10 +40,12 @@ export function getMarketWeatherPresentation(
     };
   }
 
-  const appearance = WEATHER_APPEARANCE[weather.weatherLevel];
+  const state = weather.weatherState || "CLOUDY";
+  const appearance = WEATHER_APPEARANCE[state] || WEATHER_APPEARANCE.CLOUDY;
+
   return {
-    text: weather.weatherMessage,
-    description: weather.weatherDescription,
+    text: `오늘의 증시는 ${appearance.label}이에요`,
+    description: weather.aiSummary || "시장의 주요 지표를 기반으로 분석한 결과입니다.",
     emoji: appearance.emoji,
     toneClassName: appearance.toneClassName,
   };
