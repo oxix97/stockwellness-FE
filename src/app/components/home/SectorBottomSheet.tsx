@@ -35,6 +35,10 @@ export interface SectorData {
   leadingStocks?: LeadingStock[];
   technicalIndicators?: Partial<TechnicalIndicators> | null;
   detailLoading?: boolean;
+  weatherScore?: number;
+  weatherState?: string;
+  weatherEmoji?: string;
+  aiInsight?: string;
 }
 
 interface SectorBottomSheetProps {
@@ -139,18 +143,31 @@ function SheetBody({
         </div>
 
         {/* 2. AI 인사이트 (컴팩트 카드) */}
-        {(sector.diagnosisMessage || sector.detailLoading) && (
+        {(sector.diagnosisMessage || sector.aiInsight || sector.detailLoading) && (
           <div className="bg-card rounded-2xl p-4 border border-border/70 shadow-sm">
-            <h3 className="text-[11px] font-black text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3" /> AI Insight
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3" /> AI Weather Insight
+              </h3>
+              {sector.weatherScore !== undefined && (
+                <div className="flex items-center gap-1 bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
+                  <span className="text-[10px] font-bold text-primary">{sector.weatherEmoji} {sector.weatherScore}점</span>
+                </div>
+              )}
+            </div>
             {sector.detailLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-3 w-full" />
                 <Skeleton className="h-3 w-4/5" />
               </div>
             ) : (
-              <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.diagnosisMessage}</p>
+              <div className="space-y-2">
+                {sector.aiInsight ? (
+                  <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.aiInsight}</p>
+                ) : (
+                  <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.diagnosisMessage}</p>
+                )}
+              </div>
             )}
           </div>
         )}

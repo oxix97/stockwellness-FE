@@ -7,6 +7,7 @@ import { ContextHeader, GardenEmptyState, Section } from "@/app/components/share
 import { useAuthStore } from "@/store/auth";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
+import { MarketWeatherWidget } from "@/app/components/home/MarketWeatherWidget";
 import { getMarketWeatherPresentation } from "@/app/components/home/market-weather-presentation";
 import { StockSupplyRankingSection } from "@/app/components/home/StockSupplyRankingSection";
 import { SectorRankingSection } from "@/app/components/home/SectorRankingSection";
@@ -18,50 +19,19 @@ export function Home() {
   const nickname = useAuthStore((state) => state.nickname);
   const { data: marketDashboard, isLoading, isError } = useMarketIndex();
   const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
-  const greeting = getMarketWeatherPresentation(marketDashboard?.weather, isLoading, isError);
 
   return (
     <div className="min-h-full pb-6">
-      <div className="page-shell page-content pt-4 md:pt-6">
-        <ContextHeader
-          variant="market"
-          layout="split"
-          title={
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              <p className="max-w-[15rem] text-[length:var(--mobile-hero-title-size)] font-bold leading-[1.08] tracking-tight min-[408px]:max-w-[17rem] md:max-w-[24rem] md:text-[32px]">
-                {nickname ?? "투자자"}님,
-                <br />
-                {greeting.text} {greeting.emoji}
-              </p>
-            </motion.div>
-          }
-          description="오늘 시장 요약을 빠르게 확인하고 다음 탐색을 시작할 수 있도록 정리했습니다."
-          actions={
-            <div className="relative z-20">
-              <button
-                onClick={() => navigate("/more/notifications")}
-                className="rounded-full border border-border/70 bg-card/80 p-2 text-muted-foreground transition-colors hover:bg-card"
-              >
-                <Bell className="h-5 w-5" />
-              </button>
-            </div>
-          }
-        />
+      <div className="page-shell page-content pt-4 md:pt-6 flex justify-end">
+        <button
+          onClick={() => navigate("/more/notifications")}
+          className="rounded-full border border-border/70 bg-card/80 p-2 text-muted-foreground transition-colors hover:bg-card"
+        >
+          <Bell className="h-5 w-5" />
+        </button>
       </div>
 
-      <Section
-        title="시장 현황"
-        subtitle="대표 지수 흐름을 먼저 확인하고 오늘의 투자 감도를 맞춥니다."
-        icon={BarChart2}
-        className="pt-6"
-        rightContent={
-          <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate("/search")}>
-            시장 탐색
-          </Button>
-        }
-      >
-        <MarketIndexSection />
-      </Section>
+      <MarketWeatherWidget />
 
       <Section
         title="오늘의 주목 섹터"
