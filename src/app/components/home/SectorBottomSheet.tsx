@@ -4,18 +4,18 @@ import { motion } from "motion/react";
 import { 
   ComposedChart, 
   Area, 
-  Line, 
   XAxis, 
   YAxis, 
   Tooltip, 
   ResponsiveContainer, 
-  Cell,
   ReferenceLine
 } from "recharts";
-import { Sparkles, ArrowRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, Skeleton } from "@/app/components/ui";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { LeadingStock, TechnicalIndicators, SectorComparisonResponse } from "@/types/api";
-import { formatCurrency, formatPercent } from "@/utils/format";
+import { formatCurrency, formatSignedCurrency } from "@/utils/format";
+import { getTrendClassName } from "@/utils/trend";
 import { useSectorDetail, useSector } from "@/hooks/use-sector";
 
 const CHART_COLORS = {
@@ -35,6 +35,10 @@ export interface SectorData {
   leadingStocks?: LeadingStock[];
   technicalIndicators?: Partial<TechnicalIndicators> | null;
   detailLoading?: boolean;
+  weatherScore?: number;
+  weatherState?: string;
+  weatherEmoji?: string;
+  aiInsight?: string;
 }
 
 interface SectorBottomSheetProps {
@@ -123,9 +127,12 @@ function SheetBody({
               {(sector.currentPrice ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
             <div className="flex items-center gap-2">
-              <p className={`text-base font-bold tabular-nums ${isUp ? "text-up" : "text-down"}`}>
-                {formatPercent(sector.fluctuationRate)}
-              </p>
+              <SignedValueLabel
+                value={sector.fluctuationRate}
+                format="percent"
+                className="text-base font-bold"
+                ariaLabelPrefix={`${sector.sectorName} 등락률`}
+              />
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                 isUp ? "border-up/30 bg-up/10 text-up" : "border-down/30 bg-down/10 text-down"
               }`}>
@@ -136,18 +143,31 @@ function SheetBody({
         </div>
 
         {/* 2. AI 인사이트 (컴팩트 카드) */}
-        {(sector.diagnosisMessage || sector.detailLoading) && (
+        {(sector.diagnosisMessage || sector.aiInsight || sector.detailLoading) && (
           <div className="bg-card rounded-2xl p-4 border border-border/70 shadow-sm">
-            <h3 className="text-[11px] font-black text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3" /> AI Insight
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3" /> AI Weather Insight
+              </h3>
+              {sector.weatherScore !== undefined && (
+                <div className="flex items-center gap-1 bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
+                  <span className="text-[10px] font-bold text-primary">{sector.weatherEmoji} {sector.weatherScore}점</span>
+                </div>
+              )}
+            </div>
             {sector.detailLoading ? (
               <div className="space-y-2">
                 <Skeleton className="h-3 w-full" />
                 <Skeleton className="h-3 w-4/5" />
               </div>
             ) : (
-              <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.diagnosisMessage}</p>
+              <div className="space-y-2">
+                {sector.aiInsight ? (
+                  <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.aiInsight}</p>
+                ) : (
+                  <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.diagnosisMessage}</p>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -249,7 +269,6 @@ function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const data = payload[0].payload;
   const rate = data.sectorRate ?? 0;
-  const isUp = rate >= 0;
 
   return (
     <div className="bg-card/90 backdrop-blur-md border border-border p-3 rounded-2xl shadow-xl min-w-[120px]">
@@ -260,31 +279,33 @@ function CustomTooltip({ active, payload }: any) {
       </div>
       <div className="flex justify-between items-center gap-4">
         <span className="text-[11px] font-bold text-muted-foreground">수익률</span>
-        <span className={`text-[12px] font-extrabold font-mono ${isUp ? "text-up" : "text-down"}`}>
-          {isUp ? "+" : ""}{rate.toFixed(2)}%
-        </span>
+        <SignedValueLabel value={rate} format="percent" className="text-[12px] font-extrabold font-mono" />
       </div>
     </div>
   );
 }
 
 function SummaryItem({ label, value, color, isPercent }: { label: string; value: string | number; color: "up" | "down" | "neutral"; isPercent?: boolean }) {
+  const numericValue = typeof value === "number" ? value : Number(value);
+
   return (
     <div className="bg-secondary/20 rounded-2xl p-3 text-center border border-border/50">
       <p className="text-[10px] font-bold text-muted-foreground mb-1">{label}</p>
-      <p className={`text-[14px] font-black font-mono ${
-        color === "up" ? "text-up" : color === "down" ? "text-down" : "text-foreground"
-      }`}>
-        {isPercent && Number(value) > 0 ? "+" : ""}{value}{isPercent ? "%" : ""}
-      </p>
+      {isPercent && Number.isFinite(numericValue) ? (
+        <SignedValueLabel value={numericValue} format="percent" className="text-[14px] font-black font-mono" />
+      ) : (
+        <p className={`text-[14px] font-black font-mono ${
+          color === "up" ? "text-up" : color === "down" ? "text-down" : "text-foreground"
+        }`}>
+          {value}
+        </p>
+      )}
     </div>
   );
 }
 
 function LeadingStockItem({ stock }: { stock: LeadingStock }) {
   const navigate = useNavigate();
-  const isUp = stock.fluctuationRate > 0;
-  const isDown = stock.fluctuationRate < 0;
 
   return (
     <motion.div 
@@ -303,11 +324,9 @@ function LeadingStockItem({ stock }: { stock: LeadingStock }) {
       </div>
       <div className="text-right">
         <p className="text-foreground font-bold text-[15px] font-mono">{formatCurrency(stock.currentPrice)}원</p>
-        <div className={`flex items-center justify-end gap-1 text-[12px] font-bold font-mono ${
-          isUp ? "text-up" : isDown ? "text-down" : "text-muted-foreground"
-        }`}>
-          {isUp ? <TrendingUp className="h-3 w-3" /> : isDown ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-          {Math.abs(stock.changePrice).toLocaleString()} ({Math.abs(stock.fluctuationRate).toFixed(2)}%)
+        <div className={`flex items-center justify-end gap-1 text-[12px] font-bold font-mono ${getTrendClassName(stock.fluctuationRate)}`}>
+          <span>{formatSignedCurrency(stock.changePrice)}</span>
+          <SignedValueLabel value={stock.fluctuationRate} format="percent" />
         </div>
       </div>
     </motion.div>
@@ -345,4 +364,3 @@ function getStats(data?: any[]) {
     isUp: change >= 0
   };
 }
-

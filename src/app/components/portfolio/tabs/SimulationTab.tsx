@@ -8,10 +8,10 @@ import {
   YAxis,
 } from "recharts";
 import { Skeleton } from "@/app/components/ui";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { usePortfolioCorrelation, usePortfolioDetails } from "@/hooks/use-portfolio";
 import { usePortfolioSimulation } from "@/hooks/use-backtest";
 import { CorrelationMatrix } from "@/types/api";
-import { formatPercent } from "@/utils/format";
 
 const PERIOD_OPTIONS = ["1M", "3M", "6M", "1Y"] as const;
 type Period = (typeof PERIOD_OPTIONS)[number];
@@ -41,6 +41,9 @@ export function SimulationTab() {
       Object.entries(result.benchmarkReturnRates ?? {}).map(([ticker, value]) => [ticker, Number(value.toFixed(2))])
     ),
   })) ?? [];
+  const latestPortfolioReturnRate = simulation.data?.dailyResults.length
+    ? simulation.data.dailyResults[simulation.data.dailyResults.length - 1].portfolioReturnRate
+    : 0;
 
   return (
     <div className="px-4 py-4 space-y-4">
@@ -111,7 +114,7 @@ export function SimulationTab() {
             <div className="mt-4 grid grid-cols-2 gap-2">
               <BenchmarkSummaryCard
                 label="내 포트폴리오"
-                returnRate={simulation.data?.dailyResults.at(-1)?.portfolioReturnRate ?? 0}
+                returnRate={latestPortfolioReturnRate ?? 0}
                 emphasize
               />
               {simulation.data?.comparisons.map((comparison) => (
@@ -145,8 +148,8 @@ function BenchmarkSummaryCard({
   return (
     <div className={`rounded-xl border px-3 py-3 ${emphasize ? "border-primary/30 bg-primary/5" : "border-border bg-background/40"}`}>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-sm font-semibold tabular-nums ${returnRate >= 0 ? "text-up" : "text-down"}`}>
-        {formatPercent(returnRate)}
+      <p className="mt-1 text-sm font-semibold">
+        <SignedValueLabel value={returnRate} format="percent" ariaLabelPrefix={`${label} 수익률`} />
       </p>
     </div>
   );

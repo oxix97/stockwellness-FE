@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Activity, Sparkles, Printer } from "lucide-react";
-import { XAxis, Tooltip, ResponsiveContainer, ComposedChart, Line, ReferenceArea } from "recharts";
+import { XAxis, Tooltip, ResponsiveContainer, ComposedChart, Line } from "recharts";
 import { useBacktest } from "@/hooks/use-backtest";
 import { BacktestDailyResult } from "@/types/api";
 import { Skeleton, Badge } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 
 export function BacktestResult() {
   const navigate = useNavigate();
@@ -185,7 +186,9 @@ export function BacktestResult() {
           </div>
           <div className="mb-2 font-medium text-muted-foreground">{(config.amount || 0).toLocaleString()}원이</div>
           <div className="mb-3 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">₩ {finalValue.toLocaleString()}</div>
-          <div className="mb-4 text-[2rem] font-bold text-up md:text-3xl">{totalReturn >= 0 ? "+" : ""}{totalReturn}%</div>
+          <div className="mb-4 text-[2rem] font-bold md:text-3xl">
+            <SignedValueLabel value={totalReturn} format="percent" fractionDigits={1} ariaLabelPrefix="총 수익률" />
+          </div>
           <div className="font-medium text-muted-foreground">되었을 거예요!</div>
 
           <div className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-sm">
@@ -197,8 +200,8 @@ export function BacktestResult() {
               <div className="text-right">
                 {hasBenchmarkReturn ? (
                   <>
-                    <div className="text-[1.75rem] font-bold text-up md:text-3xl">
-                      {outperformance >= 0 ? "+" : ""}{outperformance.toFixed(1)}%
+                    <div className="text-[1.75rem] font-bold md:text-3xl">
+                      <SignedValueLabel value={outperformance} format="percent" fractionDigits={1} ariaLabelPrefix="벤치마크 대비 수익률" />
                     </div>
                     <div className="text-sm font-medium text-muted-foreground">더 높은 수익</div>
                   </>
@@ -216,8 +219,8 @@ export function BacktestResult() {
         <section className="rounded-[32px] border border-border bg-card px-5 py-6 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
           <div className="text-foreground mb-6 font-bold text-xl md:text-2xl">상세 성과 지표</div>
           <div className="grid grid-cols-2 gap-4">
-            <MetricCard label="연평균 수익률" value={displayCagr != null ? `${displayCagr}%` : "-"} sub="CAGR" color="text-up" />
-            <MetricCard label="최대 낙폭" value={displayMdd != null ? `${displayMdd}%` : "-"} sub="MDD" color="text-down" />
+            <MetricCard label="연평균 수익률" value={displayCagr != null ? <SignedValueLabel value={displayCagr} format="percent" /> : "-"} sub="CAGR" />
+            <MetricCard label="최대 낙폭" value={displayMdd != null ? <SignedValueLabel value={displayMdd} format="percent" /> : "-"} sub="MDD" />
             <MetricCard label="위험 대비 수익" value={displaySharpe ?? "-"} sub="샤프 지수" />
             <MetricCard label="하락 변동성 대비 수익" value={metrics.sortinoRatio?.toString() ?? "0"} sub="소르티노 지수" />
             <MetricCard label="시장 민감도" value={displayBeta ?? "-"} sub="Beta" />
@@ -225,17 +228,15 @@ export function BacktestResult() {
             {displayBestYear != null && (
               <MetricCard
                 label={yearlyStats.best?.year ? `최고 연도 (${yearlyStats.best.year})` : "최고 연도"}
-                value={`${displayBestYear > 0 ? "▲ " : "▼ "}${Math.abs(displayBestYear)}%`}
+                value={<SignedValueLabel value={displayBestYear} format="percent" fractionDigits={1} />}
                 sub="Best Year"
-                color="text-up"
               />
             )}
             {displayWorstYear != null && (
               <MetricCard
                 label={yearlyStats.worst?.year ? `최저 연도 (${yearlyStats.worst.year})` : "최저 연도"}
-                value={`${displayWorstYear}%`}
+                value={<SignedValueLabel value={displayWorstYear} format="percent" fractionDigits={1} />}
                 sub="Worst Year"
-                color="text-down"
               />
             )}
           </div>
@@ -245,11 +246,11 @@ export function BacktestResult() {
   );
 }
 
-function MetricCard({ label, value, sub, color = "text-foreground" }: { label: string; value: string; sub: string; color?: string }) {
+function MetricCard({ label, value, sub }: { label: string; value: ReactNode; sub: string }) {
   return (
     <div className="rounded-2xl bg-secondary/30 p-4">
       <div className="mb-1 text-xs font-medium text-muted-foreground">{label}</div>
-      <div className={`mb-1 text-lg font-bold ${color}`}>{value}</div>
+      <div className="mb-1 text-lg font-bold text-foreground">{value}</div>
       <div className="text-[10px] text-muted-foreground opacity-60 uppercase tracking-wider">{sub}</div>
     </div>
   );
@@ -283,8 +284,12 @@ function ChartSection({ backtestData }: { backtestData: BacktestDailyResult[] })
                   return (
                     <div className="rounded-2xl border border-border bg-card/90 p-3 shadow-xl backdrop-blur-md">
                       <div className="mb-1 text-xs text-muted-foreground">{data.date}</div>
-                      <div className="text-sm font-bold text-up">수익률: {data.return.toFixed(1)}%</div>
-                      <div className="text-xs text-muted-foreground">벤치마크: {data.bench.toFixed(1)}%</div>
+                      <div className="text-sm font-bold">
+                        수익률: <SignedValueLabel value={data.return} format="percent" fractionDigits={1} />
+                      </div>
+                      <div className="text-xs">
+                        벤치마크: <SignedValueLabel value={data.bench} format="percent" fractionDigits={1} />
+                      </div>
                     </div>
                   );
                 }

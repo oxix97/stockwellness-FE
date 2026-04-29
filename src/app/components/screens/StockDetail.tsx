@@ -9,7 +9,8 @@ import { useWatchlist } from "@/hooks/use-watchlist";
 import { useAuthStore } from "@/store/auth";
 import { Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
-import { formatCurrency, formatPercent } from "@/utils/format";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
+import { formatCurrency } from "@/utils/format";
 import { StockReturnsResponse } from "@/api/stock";
 import { ChartPeriod, ChartFrequency } from "@/types/api";
 import { toast } from "sonner";
@@ -219,7 +220,7 @@ export function StockDetail() {
         
         // 날짜가 정확히 일치하지 않으면 해당 날짜 이전의 가장 가까운 벤치마크 데이터를 찾음
         if (returnRate === undefined && sortedBenchmarkDates.length > 0) {
-          const closestDate = sortedBenchmarkDates.findLast(date => date <= p.date);
+          const closestDate = findClosestDate(sortedBenchmarkDates, p.date);
           if (closestDate) {
             returnRate = benchmarkMap.get(closestDate);
           }
@@ -406,8 +407,14 @@ export function StockDetail() {
   );
 }
 
+function findClosestDate(dates: string[], targetDate: string) {
+  for (let i = dates.length - 1; i >= 0; i -= 1) {
+    if (dates[i] <= targetDate) return dates[i];
+  }
+  return undefined;
+}
+
 function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectionProps) {
-  const isUp = dailyRate != null && dailyRate >= 0;
   return (
     <section className="page-shell page-content py-6">
       <div className="overflow-hidden rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] px-5 py-6 shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
@@ -419,8 +426,8 @@ function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectio
         {stockName && <div className="mb-2 text-lg font-bold text-foreground">{stockName}</div>}
         <div className="mb-2 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">₩{formatCurrency(latestPrice)}</div>
         {dailyRate != null && (
-          <div className={`text-lg font-bold ${isUp ? "text-up" : "text-down"}`}>
-            어제보다 {formatPercent(dailyRate)}
+          <div className="text-lg font-bold">
+            어제보다 <SignedValueLabel value={dailyRate} format="percent" ariaLabelPrefix={`${stockName || ticker} 일간 등락률`} />
           </div>
         )}
         <div className="mt-5 rounded-[24px] border border-border/70 bg-card/80 px-4 py-4">
@@ -680,7 +687,6 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
           {returnsData.map(({ label, data, isLoading }) => {
             const stockRate = data?.stockReturnRate;
             const benchRate = data?.benchmarkReturnRate;
-            const isUp = stockRate != null && stockRate >= 0;
             return (
               <div key={label} className="grid grid-cols-3 items-center py-3 border-t border-border">
                 <span className="text-muted-foreground font-medium text-sm">{label}</span>
@@ -691,12 +697,12 @@ function ComparisonSection({ returnsData }: ComparisonSectionProps) {
                   </>
                 ) : (
                   <>
-                    <span className={`text-center font-bold text-sm ${isUp ? "text-up" : "text-down"}`}>
-                      {stockRate != null ? formatPercent(stockRate) : "-"}
+                    <span className="text-center font-bold text-sm">
+                      <SignedValueLabel value={stockRate} format="percent" ariaLabelPrefix={`${label} 종목 수익률`} fallback="-" />
                     </span>
-                    <span className="text-right font-bold text-sm text-foreground">
+                    <span className="text-right font-bold text-sm">
                       {benchRate != null
-                        ? formatPercent(benchRate)
+                        ? <SignedValueLabel value={benchRate} format="percent" ariaLabelPrefix={`${label} 벤치마크 수익률`} />
                         : <span className="text-muted-foreground font-medium">데이터 없음</span>}
                     </span>
                   </>

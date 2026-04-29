@@ -17,7 +17,8 @@ import {
   Legend,
 } from "recharts";
 import { format } from "date-fns";
-import { Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 
 const PERIOD_OPTIONS: { label: string; value: ChartPeriod }[] = [
   { label: "1M", value: "1M" },
@@ -88,24 +89,24 @@ export function SimulationWidget() {
         <div className="grid grid-cols-2 gap-3">
           <MetricCard
             label="누적 수익률"
-            value={`${metrics.totalReturn}%`}
-            isPositive={metrics.totalReturn >= 0}
+            value={metrics.totalReturn}
+            signed
           />
           <MetricCard
             label="연평균 (CAGR)"
-            value={`${metrics.cagr}%`}
-            isPositive={metrics.cagr >= 0}
+            value={metrics.cagr}
+            signed
           />
           <MetricCard
             label="최대 낙폭 (MDD)"
-            value={`${metrics.mdd}%`}
-            isNegative={true}
+            value={metrics.mdd}
+            signed
           />
-          <MetricCard label="샤프 지수" value={metrics.sharpeRatio.toString()} />
-          <MetricCard label="소르티노 지수" value={metrics.sortinoRatio.toString()} />
+          <MetricCard label="샤프 지수" value={metrics.sharpeRatio?.toString() ?? "-"} />
+          <MetricCard label="소르티노 지수" value={metrics.sortinoRatio?.toString() ?? "0"} />
           <MetricCard
             label="시장 민감도 (Beta)"
-            value={metrics.beta.toString()}
+            value={metrics.beta?.toString() ?? "-"}
           />
           <MetricCard
             label="최장 회복 기간"
@@ -150,9 +151,7 @@ export function SimulationWidget() {
                             />
                             <span className="text-muted-foreground">{entry.name}</span>
                           </div>
-                          <span className={Number(entry.value) >= 0 ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
-                            {entry.value}%
-                          </span>
+                          <SignedValueLabel value={Number(entry.value)} format="percent" className="font-bold" />
                         </div>
                       ))}
                     </div>
@@ -200,13 +199,11 @@ export function SimulationWidget() {
 function MetricCard({
   label,
   value,
-  isPositive,
-  isNegative,
+  signed = false,
 }: {
   label: string;
-  value: string;
-  isPositive?: boolean;
-  isNegative?: boolean;
+  value: string | number;
+  signed?: boolean;
 }) {
   return (
     <Card className="border shadow-none bg-muted/10">
@@ -215,15 +212,11 @@ function MetricCard({
           {label}
         </p>
         <div className="flex items-center gap-1">
-          <span
-            className={`text-sm font-bold ${
-              isPositive ? "text-emerald-600" : isNegative ? "text-rose-600" : "text-foreground"
-            }`}
-          >
-            {value}
-          </span>
-          {isPositive && <TrendingUp className="h-3 w-3 text-emerald-600" />}
-          {isNegative && <TrendingDown className="h-3 w-3 text-rose-600" />}
+          {signed ? (
+            <SignedValueLabel value={value} format="percent" className="text-sm font-bold" />
+          ) : (
+            <span className="text-sm font-bold text-foreground">{value}</span>
+          )}
         </div>
       </CardContent>
     </Card>

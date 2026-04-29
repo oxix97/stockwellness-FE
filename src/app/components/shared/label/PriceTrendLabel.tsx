@@ -1,6 +1,5 @@
 import { motion } from "motion/react";
-import { formatPercent } from "@/utils/format";
-import { getTrendClassName, getTrendTone } from "@/utils/trend";
+import { SignedValueLabel } from "./SignedValueLabel";
 
 interface PriceTrendLabelProps {
   change: number;
@@ -10,18 +9,15 @@ interface PriceTrendLabelProps {
 }
 
 export function PriceTrendLabel({ change, returnRate, className = "", showIcon = true }: PriceTrendLabelProps) {
-  const status = getTrendTone(change);
-  const colorClass = getTrendClassName(change);
-  const icon = status === 'up' ? "🔺" : status === 'down' ? "🔻" : "";
+  const label = change > 0 ? "가격 상승률" : change < 0 ? "가격 하락률" : "가격 보합률";
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`flex items-center gap-1 font-bold ${colorClass} ${className}`}
+      className={`flex items-center gap-1 font-bold ${className}`}
     >
-      <span>{formatPercent(returnRate)}</span>
-      {showIcon && icon && <span>{icon}</span>}
+      <SignedValueLabel value={returnRate} format="percent" showArrow={showIcon} ariaLabelPrefix={label} />
     </motion.div>
   );
 }

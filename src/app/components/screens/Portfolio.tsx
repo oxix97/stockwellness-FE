@@ -19,6 +19,7 @@ import {
   Skeleton,
 } from "@/app/components/ui";
 import { cn } from "@/app/components/ui/utils";
+import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { PortfolioBottomSheet, AnalysisType } from "@/app/components/portfolio/PortfolioBottomSheet";
 import { PortfolioEditSheet } from "@/app/components/portfolio/PortfolioEditSheet";
 import { PortfolioHoldingsSheet } from "@/app/components/portfolio/PortfolioHoldingsSheet";
@@ -29,7 +30,6 @@ import { useAuthStore } from "@/store/auth";
 import { PortfolioItemResponse, RebalancingItem } from "@/types/api";
 import { calculateHealthBadge, calculateInvestorType } from "@/utils/calculate";
 import { formatCurrency, formatDate } from "@/utils/format";
-import { getTrendClassName } from "@/utils/trend";
 
 const PERFORMANCE_OPTIONS = ["1M", "3M", "6M", "1Y"] as const;
 type PerformancePeriod = (typeof PERFORMANCE_OPTIONS)[number];
@@ -170,13 +170,32 @@ export function Portfolio() {
                 ₩{formatCurrency(valuation?.currentTotalValue ?? 0)}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className={getToneClassName(valuation?.totalReturnRate ?? 0, "text-sm font-semibold tabular-nums")}>
-                  ₩{formatCurrency(Math.abs(valuation?.totalProfitLoss ?? 0))} {Math.abs(valuation?.totalReturnRate ?? 0).toFixed(2)}%
+                <span className="text-sm font-semibold tabular-nums">
+                  <SignedValueLabel
+                    value={valuation?.totalProfitLoss ?? 0}
+                    format="currency"
+                    ariaLabelPrefix="누적 평가손익"
+                  />{" "}
+                  <SignedValueLabel
+                    value={valuation?.totalReturnRate ?? 0}
+                    format="percent"
+                    ariaLabelPrefix="누적 수익률"
+                  />
                 </span>
                 <span className="text-muted-foreground text-xs">누적</span>
                 <span className="text-border">•</span>
-                <span className={getToneClassName(valuation?.dailyReturnRate ?? 0, "text-xs tabular-nums")}>
-                  오늘 ₩{formatCurrency(Math.abs(valuation?.dailyProfitLoss ?? 0))} {Math.abs(valuation?.dailyReturnRate ?? 0).toFixed(2)}%
+                <span className="text-xs tabular-nums">
+                  오늘{" "}
+                  <SignedValueLabel
+                    value={valuation?.dailyProfitLoss ?? 0}
+                    format="currency"
+                    ariaLabelPrefix="오늘 평가손익"
+                  />{" "}
+                  <SignedValueLabel
+                    value={valuation?.dailyReturnRate ?? 0}
+                    format="percent"
+                    ariaLabelPrefix="오늘 수익률"
+                  />
                 </span>
               </div>
             </div>
@@ -258,12 +277,12 @@ export function Portfolio() {
                         return "모든 주요 지수보다 높은 성과를 내고 있습니다! ✨";
                       } else if (betterThan.length > 0) {
                         const bestBench = betterThan.sort((a, b) => b.totalReturn - a.totalReturn)[0];
-                        const diff = (myTotalReturn - bestBench.totalReturn).toFixed(1);
-                        return `${BENCHMARK_LABELS[bestBench.ticker] || bestBench.indexName}보다 ${diff}% 더 높은 수익을 기록 중이에요! 🚀`;
+                        const diff = myTotalReturn - bestBench.totalReturn;
+                        return `${BENCHMARK_LABELS[bestBench.ticker] || bestBench.indexName}보다 ${formatSignedPercentText(diff)} 더 높은 수익을 기록 중이에요! 🚀`;
                       } else {
                         const bestOverall = [...comparisons].sort((a, b) => b.totalReturn - a.totalReturn)[0];
-                        const diff = (bestOverall.totalReturn - myTotalReturn).toFixed(1);
-                        return `${BENCHMARK_LABELS[bestOverall.ticker] || bestOverall.indexName} 대비 ${diff}% 차이로 바짝 추격하고 있어요. 🔥`;
+                        const diff = myTotalReturn - bestOverall.totalReturn;
+                        return `${BENCHMARK_LABELS[bestOverall.ticker] || bestOverall.indexName} 대비 ${formatSignedPercentText(diff)} 차이로 바짝 추격하고 있어요. 🔥`;
                       }
                     })()}
                   </span>
@@ -427,9 +446,13 @@ function PerformanceBar({
         <span className={cn("font-medium", isPortfolio ? "text-foreground font-bold" : "text-muted-foreground")}>
           {label}
         </span>
-        <span className={cn("font-bold tabular-nums", isZero ? "text-muted-foreground/50" : getTrendClassName(value))}>
-          {Math.abs(value).toFixed(1)}%
-        </span>
+        <SignedValueLabel
+          value={value}
+          format="percent"
+          fractionDigits={1}
+          className={cn("font-bold", isZero && "text-muted-foreground/50")}
+          ariaLabelPrefix={`${label} 수익률`}
+        />
       </div>
       <div className="h-2 w-full bg-secondary/30 rounded-full overflow-hidden">
         {isZero ? (
@@ -472,8 +495,8 @@ function HoldingRow({
           <p className="text-sm font-semibold text-foreground tabular-nums">
             ₩{formatCurrency(item.currentValue ?? 0)}
           </p>
-          <p className={getToneClassName(item.returnRate ?? 0, "text-xs tabular-nums")}>
-            {Math.abs(item.returnRate ?? 0).toFixed(2)}%
+          <p className="text-xs">
+            <SignedValueLabel value={item.returnRate ?? 0} format="percent" ariaLabelPrefix={`${item.name || item.symbol} 수익률`} />
           </p>
         </div>
       </div>
@@ -525,8 +548,9 @@ function SecondaryActionCard({
   );
 }
 
-function getToneClassName(value: number, baseClassName: string) {
-  return `${baseClassName} ${getTrendClassName(value, { neutral: "text-foreground" })}`;
+function formatSignedPercentText(value: number) {
+  const prefix = value > 0 ? "▲ " : value < 0 ? "▼ " : "";
+  return `${prefix}${Math.abs(value).toFixed(1)}%`;
 }
 
 function getAdviceSummary(content: string | undefined) {
