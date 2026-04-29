@@ -2,7 +2,6 @@ name: CD (Main Deployment)
 
 on:
   push:
-    branches: [ main ]
     tags: [ 'v*' ]
   workflow_dispatch: # GitHub 웹 UI에서 수동으로 파이프라인을 실행할 수 있는 버튼을 추가합니다.
 
