@@ -1,23 +1,32 @@
 import { Cloud, Sun, CloudRain, Zap, CloudSun, CloudFog, SunMedium } from "lucide-react";
 import { motion } from "motion/react";
-import { useMarketWeather } from "@/hooks/use-market-weather";
 import { Skeleton, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/app/components/ui";
 import { useAuthStore } from "@/store/auth";
+import { MarketWeatherResult } from "@/types/api";
 
-export function MarketWeatherWidget() {
-  const { data: weather, isLoading, isError } = useMarketWeather();
+interface MarketWeatherWidgetProps {
+  weather?: MarketWeatherResult | null;
+  isLoading?: boolean;
+  isError?: boolean;
+}
+
+export function MarketWeatherWidget({ weather, isLoading, isError }: MarketWeatherWidgetProps) {
   const nickname = useAuthStore((state) => state.nickname);
 
   if (isLoading) {
-    return <Skeleton className="h-[120px] w-full rounded-2xl" />;
+    return (
+      <div className="px-4 md:px-0">
+        <Skeleton className="h-[140px] w-full rounded-2xl" />
+      </div>
+    );
   }
 
   if (isError || !weather) {
     return null;
   }
 
-  const getWeatherAppearance = (state: string) => {
-    switch (state) {
+  const getWeatherAppearance = (level: string) => {
+    switch (level) {
       case "CLEAR": 
         return { icon: <SunMedium className="h-8 w-8 text-orange-500" />, label: "매우 맑음", color: "text-orange-500" };
       case "SUNNY": 
@@ -33,11 +42,11 @@ export function MarketWeatherWidget() {
       case "STORMY": 
         return { icon: <Zap className="h-8 w-8 text-purple-600" />, label: "천둥번개", color: "text-purple-600" };
       default: 
-        return { icon: <Cloud className="h-8 w-8 text-gray-400" />, label: state, color: "text-primary" };
+        return { icon: <Cloud className="h-8 w-8 text-gray-400" />, label: level, color: "text-primary" };
     }
   };
 
-  const appearance = getWeatherAppearance(weather.weatherState);
+  const appearance = getWeatherAppearance(weather.weatherLevel);
 
   return (
     <motion.div 
@@ -49,14 +58,18 @@ export function MarketWeatherWidget() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {weather.marketType} Market Insight
+              Market Insight
             </span>
             <div className="h-1 w-1 rounded-full bg-border" />
-            <span className="text-xs text-muted-foreground">{weather.baseDate}</span>
+            <span className="text-xs text-muted-foreground">{weather.asOfDate}</span>
           </div>
           <h3 className="text-xl md:text-2xl font-bold tracking-tight mt-1 leading-snug">
             {nickname ?? "투자자"}님,<br />
-            오늘의 증시는 <span className={appearance.color}>'{appearance.label}'</span>이에요 {appearance.icon.props.children}
+            {weather.weatherMessage.includes("오늘의 증시") ? (
+              weather.weatherMessage
+            ) : (
+              <>오늘의 증시는 <span className={appearance.color}>'{appearance.label}'</span>이에요</>
+            )}
           </h3>
         </div>
         <div className="flex flex-col items-end gap-1">
@@ -64,17 +77,16 @@ export function MarketWeatherWidget() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary cursor-help">
-                  Score {weather.weatherScore}
+                  Market Status
                 </div>
               </TooltipTrigger>
               <TooltipContent align="end">
                 <div className="space-y-1 text-left">
-                  <p className="font-semibold text-sm">기상 점수 산출 기준</p>
-                  <ul className="text-[11px] text-muted-foreground list-disc pl-4">
-                    <li>이격도 점수 (40%): MA20 기준 상하편차</li>
-                    <li>RSI 상대강도 (30%): 최근 14일 상승압력</li>
-                    <li>ADR 등락비율 (30%): 상승/하락 종목 비율</li>
-                  </ul>
+                  <p className="font-semibold text-sm">기상 상태 안내</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    주요 시장 지수의 등락률과 수급 상황을<br />
+                    종합하여 도출한 증시 기상도입니다.
+                  </p>
                 </div>
               </TooltipContent>
             </Tooltip>
@@ -85,33 +97,8 @@ export function MarketWeatherWidget() {
 
       <div className="mt-4 rounded-xl bg-muted/50 p-4">
         <p className="text-sm leading-relaxed text-foreground/90">
-          {weather.aiSummary}
+          {weather.weatherDescription}
         </p>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <span className="text-[10px] font-bold uppercase text-muted-foreground/70">Top Sectors</span>
-          <div className="flex flex-wrap gap-1.5">
-            {weather.topSectors.map((s) => (
-              <div key={s.sectorCode} className="flex items-center gap-1 rounded-md bg-green-500/10 px-2 py-1 text-[11px] font-medium text-green-600 dark:text-green-400">
-                <span>{s.emoji}</span>
-                <span>{s.sectorName && s.sectorName !== s.sectorCode ? s.sectorName : s.sectorCode}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-2">
-          <span className="text-[10px] font-bold uppercase text-muted-foreground/70">Watch Out</span>
-          <div className="flex flex-wrap gap-1.5">
-            {weather.bottomSectors.map((s) => (
-              <div key={s.sectorCode} className="flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-1 text-[11px] font-medium text-red-600 dark:text-red-400">
-                <span>{s.emoji}</span>
-                <span>{s.sectorName && s.sectorName !== s.sectorCode ? s.sectorName : s.sectorCode}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </motion.div>
   );
