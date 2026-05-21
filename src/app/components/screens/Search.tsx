@@ -2,10 +2,12 @@ import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Search as SearchIcon, TrendingUp, Clock, X, Loader2, Leaf, ArrowUpRight } from "lucide-react";
 import { useInView } from "react-intersection-observer";
+import { motion } from "motion/react";
 import { useSearch } from "@/hooks/use-search";
 import { Button, Skeleton } from "@/app/components/ui";
-import { ContextHeader, GardenEmptyState, Section, StockLogo } from "@/app/components/shared";
+import { ContextHeader, GardenEmptyState, Section, StockLogo, AdUnit } from "@/app/components/shared";
 import { StockSearchResult } from "@/types/api";
+import { injectAds } from "@/utils/array-inject";
 
 export function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -215,6 +217,8 @@ function SearchResultsList({
   hasNextPage?: boolean;
   isFetchingNextPage: boolean;
 }) {
+  const items = useMemo(() => injectAds(results), [results]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -235,33 +239,44 @@ function SearchResultsList({
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-        {results.map((stock, index) => (
-          <Link key={stock.ticker} to={`/stock/${stock.ticker}`}>
-            <motion.div
-              whileTap={{ backgroundColor: "var(--color-secondary)" }}
-              className={`flex items-center justify-between gap-4 px-5 py-4 active:bg-accent transition-colors md:py-5 ${index !== results.length - 1 ? "border-b border-border" : ""}`}
-            >
-              <div className="flex min-w-0 items-center gap-4">
-                <StockLogo name={stock.name} />
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="truncate font-bold text-foreground">{stock.name}</div>
-                    <span className="rounded-full border border-border/60 bg-secondary/70 px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                      {stock.marketType}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>{stock.ticker}</span>
-                    <span>•</span>
-                    <span>watchable</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">가격, 수급 흐름, 상세 지표를 바로 확인할 수 있어요.</p>
-                </div>
+        {items.map((item, index) => {
+          if ("isAd" in item) {
+            return (
+              <div key={`ad-${index}`} className={`px-5 py-4 ${index !== items.length - 1 ? "border-b border-border" : ""}`}>
+                <AdUnit type="search-in-feed" className="my-2" />
               </div>
-              <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-            </motion.div>
-          </Link>
-        ))}
+            );
+          }
+
+          const stock = item;
+          return (
+            <Link key={stock.ticker} to={`/stock/${stock.ticker}`}>
+              <motion.div
+                whileTap={{ backgroundColor: "var(--color-secondary)" }}
+                className={`flex items-center justify-between gap-4 px-5 py-4 active:bg-accent transition-colors md:py-5 ${index !== items.length - 1 ? "border-b border-border" : ""}`}
+              >
+                <div className="flex min-w-0 items-center gap-4">
+                  <StockLogo name={stock.name} />
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="truncate font-bold text-foreground">{stock.name}</div>
+                      <span className="rounded-full border border-border/60 bg-secondary/70 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        {stock.marketType}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span>{stock.ticker}</span>
+                      <span>•</span>
+                      <span>watchable</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">가격, 수급 흐름, 상세 지표를 바로 확인할 수 있어요.</p>
+                  </div>
+                </div>
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </Link>
+          );
+        })}
       </div>
 
       <div ref={loadMoreRef} className="flex h-10 items-center justify-center">
