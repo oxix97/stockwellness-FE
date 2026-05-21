@@ -8,7 +8,6 @@ import { useAuthStore } from "@/store/auth";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
 import { MarketWeatherWidget } from "@/app/components/home/MarketWeatherWidget";
-import { getMarketWeatherPresentation } from "@/app/components/home/market-weather-presentation";
 import { StockSupplyRankingSection } from "@/app/components/home/StockSupplyRankingSection";
 import { SectorRankingSection } from "@/app/components/home/SectorRankingSection";
 import { NewListingsSection } from "@/app/components/home/NewListingsSection";
@@ -31,7 +30,15 @@ export function Home() {
         </button>
       </div>
 
-      <MarketWeatherWidget />
+      <MarketWeatherWidget 
+        weather={marketDashboard?.weather} 
+        isLoading={isLoading} 
+        isError={isError} 
+      />
+
+      <div className="mt-6">
+        <MarketIndexSection />
+      </div>
 
       <Section
         title="오늘의 주목 섹터"

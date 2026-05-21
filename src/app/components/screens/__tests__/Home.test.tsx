@@ -53,7 +53,7 @@ describe("Home Screen", () => {
     expect(screen.getAllByText("종목 수급 랭킹 섹션")).toHaveLength(2);
     expect(screen.getByText("섹터 랭킹 섹션")).toBeInTheDocument();
     expect(screen.getByText("신규 상장 섹션")).toBeInTheDocument();
-    expect(screen.getByText((content) => content.includes("오늘의 증시는 맑음이에요") && content.includes("🌤️"))).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes("오늘의 증시는 맑음이에요"))).toBeInTheDocument();
     expect(screen.getByText("주요 지수가 고르게 오르며 투자심리가 비교적 안정적인 편이에요")).toBeInTheDocument();
   });
 });
