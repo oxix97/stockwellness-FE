@@ -61,11 +61,12 @@ describe("useBacktest", () => {
       strategy: "LUMP_SUM",
       amount: 10_000_000,
       benchmarkTicker: "SPY",
+      rebalancingPeriod: "NONE",
     });
   });
 
   it("getMetrics — dailyResults 비어있으면 null", async () => {
-    mockRunBacktest.mockResolvedValue({ dailyResults: [] });
+    mockRunBacktest.mockResolvedValue({ dailyResults: [], totalReturnRate: undefined });
 
     const { result } = renderHookWithQuery(() => useBacktest());
 
@@ -79,7 +80,16 @@ describe("useBacktest", () => {
 
   it("getMetrics — 정상 데이터 → totalReturn, mdd, sharpeRatio 범위 검증", async () => {
     const dailyResults = makeDailyResults(252);
-    mockRunBacktest.mockResolvedValue({ dailyResults });
+    mockRunBacktest.mockResolvedValue({ 
+      dailyResults,
+      totalReturnRate: 10.5,
+      alpha: 2.1,
+      mdd: 5.2,
+      sharpeRatio: 1.5,
+      cagr: 8.0,
+      beta: 0.9,
+      comparisons: [{ totalReturn: 8.4 }]
+    });
 
     const { result } = renderHookWithQuery(() => useBacktest());
 

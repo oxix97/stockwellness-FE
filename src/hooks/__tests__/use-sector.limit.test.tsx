@@ -4,12 +4,16 @@ import { useSector } from "../use-sector";
 import { sectorApi } from "@/api/sector";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 
-vi.mock("@/api/sector", () => ({
-  sectorApi: {
-    getFluctuationRanking: vi.fn(),
-    getSectorDetail: vi.fn(),
-  },
-}));
+vi.mock("@/api/sector", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api/sector")>();
+  return {
+    ...actual,
+    sectorApi: {
+      getFluctuationRanking: vi.fn(),
+      getSectorDetail: vi.fn(),
+    },
+  };
+});
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
