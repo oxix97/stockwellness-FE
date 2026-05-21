@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { ADSENSE_CONFIG } from '@/config/adsense';
-import { Skeleton } from '@/app/components/ui/skeleton';
 
 interface AdUnitProps {
   type: 'home-in-feed' | 'search-in-feed' | 'detail-in-article';
