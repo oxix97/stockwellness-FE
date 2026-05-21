@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { portfolioApi } from "@/api/portfolio";
 import { BacktestRequest, ChartPeriod, PortfolioInceptionChartResponse } from "@/types/api";
@@ -78,10 +79,18 @@ export function usePortfolioSimulation(period: ChartPeriod) {
     staleTime: 1000 * 60 * 10,
   });
 
-  return query;
+  const filteredData = useMemo(() => {
+    if (!query.data) return query.data;
+    return {
+      ...query.data,
+      dailyResults: sliceByPeriod(query.data.dailyResults, period)
+    };
+  }, [query.data, period]);
+
+  return { ...query, data: filteredData };
 }
 
-export function useBacktest(period?: string) {
+export function useBacktest(_period?: string) {
   const portfolioId = useAuthStore((state) => state.portfolioId) || "1";
 
   const mutation = useMutation({

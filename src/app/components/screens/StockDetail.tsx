@@ -346,6 +346,8 @@ export function StockDetail() {
 
       <ChartSection data={candleData} periodLabel={periodLabel} benchmarkName={benchmarkName} />
 
+      <AdUnit type="detail-in-article" className="px-6 my-4" />
+
       <RsiCard rsi={rsi} isLoading={dailyHistory.isLoading} />
 
       <ComparisonSection
