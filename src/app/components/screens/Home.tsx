@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Bell, BarChart2, Sprout, TrendingUp } from "lucide-react";
-import { motion } from "motion/react";
-import { Button } from "@/app/components/ui";
-import { ContextHeader, GardenEmptyState, Section } from "@/app/components/shared";
-import { useAuthStore } from "@/store/auth";
+import { Bell, Sprout, TrendingUp } from "lucide-react";
+import { GardenEmptyState, Section, AdUnit } from "@/app/components/shared";
 import { useMarketIndex } from "@/hooks/use-market-index";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
 import { MarketWeatherWidget } from "@/app/components/home/MarketWeatherWidget";
@@ -15,7 +12,6 @@ import { SectorBottomSheet, SectorData } from "@/app/components/home/SectorBotto
 
 export function Home() {
   const navigate = useNavigate();
-  const nickname = useAuthStore((state) => state.nickname);
   const { data: marketDashboard, isLoading, isError } = useMarketIndex();
   const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
 
@@ -47,6 +43,10 @@ export function Home() {
       >
         <SectorRankingSection onSectorClick={setSelectedSector} />
       </Section>
+
+      <div className="page-shell page-content">
+        <AdUnit type="home-in-feed" className="my-6" />
+      </div>
 
       <StockSupplyRankingSection />
 
