@@ -8,7 +8,7 @@ import { usePortfolio, useUpdatePortfolio } from "@/hooks/use-portfolio";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { useAuthStore } from "@/store/auth";
 import { Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui";
-import { PageHeader } from "@/app/components/shared";
+import { PageHeader, AdUnit } from "@/app/components/shared";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { formatCurrency } from "@/utils/format";
 import { StockReturnsResponse } from "@/api/stock";
@@ -345,6 +345,8 @@ export function StockDetail() {
       </div>
 
       <ChartSection data={candleData} periodLabel={periodLabel} benchmarkName={benchmarkName} />
+
+      <AdUnit type="detail-in-article" className="px-6 my-4" />
 
       <RsiCard rsi={rsi} isLoading={dailyHistory.isLoading} />
 

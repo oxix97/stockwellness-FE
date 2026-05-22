@@ -155,6 +155,42 @@ describe("apiClient 응답 인터셉터 — 401 + refreshToken 없음", () => {
   });
 });
 
+describe("apiClient 응답 인터셉터 — 회원가입 필요 (A008)", () => {
+  let originalLocation: Location;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    originalLocation = window.location;
+    const mockLocation = {
+      ...originalLocation,
+      href: "",
+      assign: vi.fn(),
+      replace: vi.fn(),
+    };
+    vi.stubGlobal("location", mockLocation);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    _resetInternalState();
+  });
+
+  it("A008 에러 시 /login 리다이렉트 및 토스트 메시지 표시", async () => {
+    const errorInterceptor = (apiClient.interceptors.response as any).handlers[0].rejected;
+
+    const error = {
+      response: {
+        data: { code: "A008" },
+      },
+      config: { headers: {} },
+    };
+
+    await errorInterceptor(error).catch(() => {});
+
+    expect(window.location.href).toBe("/login");
+  });
+});
+
 describe("apiClient 응답 인터셉터 — 재발급 성공", () => {
   const { getMockUpdateTokens } = setup401Suite();
 

@@ -19,18 +19,35 @@ const NotFoundPage = lazy(() => import("@/app/components/screens/error/NotFoundP
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
-    ),
+    element: <Layout />,
     children: [
       { index: true, Component: Home },
       { path: "search", Component: Search },
-      { path: "portfolio", Component: Portfolio },
-      { path: "watchlist", Component: Watchlist },
+      {
+        path: "portfolio",
+        element: (
+          <ProtectedRoute>
+            <Portfolio />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "watchlist",
+        element: (
+          <ProtectedRoute>
+            <Watchlist />
+          </ProtectedRoute>
+        ),
+      },
       { path: "more", Component: More },
-      { path: "more/notifications", Component: NotificationSettings },
+      {
+        path: "more/notifications",
+        element: (
+          <ProtectedRoute>
+            <NotificationSettings />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
@@ -43,11 +60,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/stock/:symbol",
-    element: (
-      <ProtectedRoute>
-        <StockDetail />
-      </ProtectedRoute>
-    ),
+    Component: StockDetail,
   },
   {
     path: "/backtest/setup",
