@@ -53,6 +53,13 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // 회원가입 필요 에러 처리 (A008)
+    if (error.response?.data?.code === "A008") {
+      toast.error("회원가입이 필요한 기능입니다. 로그인 페이지로 이동합니다.");
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
     // 401 에러 처리: 토큰 만료
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isReissuing) {
