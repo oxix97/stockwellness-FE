@@ -3,10 +3,11 @@ import { useNavigate, useSearchParams } from "react-router";
 import { Activity, Sparkles, Printer } from "lucide-react";
 import { XAxis, Tooltip, ResponsiveContainer, ComposedChart, Line } from "recharts";
 import { useBacktest } from "@/hooks/use-backtest";
-import { BacktestDailyResult } from "@/types/api";
+import { BacktestDailyResult, ChartPeriod } from "@/types/api";
 import { Skeleton, Badge } from "@/app/components/ui";
 import { PageHeader } from "@/app/components/shared";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
+import { formatDate } from "@/utils/format";
 
 export function BacktestResult() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export function BacktestResult() {
     try {
       const strategy = searchParams.get("strategy") as "DCA" | "LUMP_SUM" | null;
       const amount = Number(searchParams.get("amount") || 0);
-      const period = searchParams.get("period") as any; // ChartPeriod
+      const period = searchParams.get("period") as ChartPeriod | null;
       const rebalancingPeriod = searchParams.get("rebalancingPeriod") as any;
       const dividendReinvested = searchParams.get("dividendReinvested") === "true";
       const weightsStr = searchParams.get("weights");
@@ -283,7 +284,7 @@ function ChartSection({ backtestData }: { backtestData: BacktestDailyResult[] })
                   const data = payload[0].payload;
                   return (
                     <div className="rounded-2xl border border-border bg-card/90 p-3 shadow-xl backdrop-blur-md">
-                      <div className="mb-1 text-xs text-muted-foreground">{data.date}</div>
+                      <div className="mb-1 text-xs text-muted-foreground">{formatDate(data.date)}</div>
                       <div className="text-sm font-bold">
                         수익률: <SignedValueLabel value={data.return} format="percent" fractionDigits={1} />
                       </div>

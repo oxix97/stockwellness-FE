@@ -1,6 +1,12 @@
 import React, { useEffect } from 'react';
 import { ADSENSE_CONFIG } from '@/config/adsense';
 
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
+
 interface AdUnitProps {
   type: 'home-in-feed' | 'search-in-feed' | 'detail-in-article';
   className?: string;
@@ -18,7 +24,7 @@ export const AdUnit: React.FC<AdUnitProps> = ({ type, className }) => {
   useEffect(() => {
     if (!ADSENSE_CONFIG.isDevelopment) {
       try {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch (e) {
         console.error('AdSense error:', e);
       }
