@@ -20,13 +20,15 @@ import { useAuthStore } from "@/store/auth";
 import { calculateInvestorType } from "@/utils/calculate";
 import { getTrendClassName } from "@/utils/trend";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
+import { formatDate } from "@/utils/format";
 
 export function More() {
   const navigate = useNavigate();
-  const { nickname, logout, joinedDate } = useAuthStore();
+  const { nickname, logout, joinedDate, accessToken } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { holdings, valuation, health } = usePortfolio();
   const withdraw = useWithdraw();
+  const isLoggedIn = !!accessToken;
   const investorType = calculateInvestorType(health.overallScore);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
 
@@ -56,42 +58,47 @@ export function More() {
           title={
             <div>
               <p className="text-[length:var(--mobile-hero-title-size)] font-bold leading-tight tracking-tight text-foreground">
-                {nickname ?? "투자자"}님의
+                {isLoggedIn ? (nickname ?? "투자자") : "게스트"}님의
                 <br />
                 계정 설정
               </p>
             </div>
           }
-          description="프로필과 앱 환경 설정을 한 화면에서 정리하고 관리할 수 있습니다."
+          description={isLoggedIn ? "프로필과 앱 환경 설정을 한 화면에서 정리하고 관리할 수 있습니다." : "로그인하면 포트폴리오 분석과 관심 종목 관리 기능을 사용할 수 있습니다."}
           actions={
-            <div className="rounded-2xl border border-border/60 bg-card/72 px-3 py-2 text-right backdrop-blur-sm">
-              <p className="text-xs font-semibold text-muted-foreground">투자 성향</p>
-              <p className={`mt-1 text-sm font-bold ${investorType.color}`}>{investorType.label}</p>
-            </div>
+            isLoggedIn ? (
+              <div className="rounded-2xl border border-border/60 bg-card/72 px-3 py-2 text-right backdrop-blur-sm">
+                <p className="text-xs font-semibold text-muted-foreground">투자 성향</p>
+                <p className={`mt-1 text-sm font-bold ${investorType.color}`}>{investorType.label}</p>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="rounded-2xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-sm transition-transform active:scale-95"
+              >
+                로그인하기
+              </button>
+            )
           }
           footer={
             <div className="grid grid-cols-2 gap-2 min-[408px]:grid-cols-3 min-[408px]:[&>*:last-child]:col-span-1 [&>*:last-child]:col-span-2">
               <MetricTile
                 label="가입일"
                 value={
-                  joinedDate
-                    ? new Date(joinedDate).toLocaleDateString("ko-KR", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })
+                  isLoggedIn && joinedDate
+                    ? formatDate(joinedDate)
                     : "—"
                 }
               />
-              <MetricTile label="보유 종목" value={`${holdings?.items?.length ?? "—"}개`} />
+              <MetricTile label="보유 종목" value={isLoggedIn ? `${holdings?.items?.length ?? 0}개` : "—"} />
               <MetricTile
                 label="총 수익률"
-                value={valuation?.totalReturnRate != null
+                value={isLoggedIn && valuation?.totalReturnRate != null
                   ? <SignedValueLabel value={valuation.totalReturnRate} format="percent" ariaLabelPrefix="총 수익률" />
                   : "—"
                 }
                 tone={
-                  valuation?.totalReturnRate != null
+                  isLoggedIn && valuation?.totalReturnRate != null
                     ? valuation.totalReturnRate >= 0
                       ? "up"
                       : "down"
@@ -105,12 +112,14 @@ export function More() {
       </div>
 
       <div className="page-shell page-content space-y-6 pt-5">
-          <Section title="계정 설정" subtitle="프로필과 알림 관련 설정을 관리합니다." icon={User} className="px-0 pb-0">
-            <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-              <MenuItem icon={User} title="닉네임 변경" description="앱 전역에서 보이는 나의 표시 이름을 수정합니다." onClick={() => setShowNicknameModal(true)} />
-              <MenuItem icon={Bell} title="알림 설정" description="리밸런싱, 관심 종목, 이벤트 알림을 관리합니다." onClick={() => navigate("/more/notifications")} isLast />
-            </div>
-          </Section>
+          {isLoggedIn && (
+            <Section title="계정 설정" subtitle="프로필과 알림 관련 설정을 관리합니다." icon={User} className="px-0 pb-0">
+              <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+                <MenuItem icon={User} title="닉네임 변경" description="앱 전역에서 보이는 나의 표시 이름을 수정합니다." onClick={() => setShowNicknameModal(true)} />
+                <MenuItem icon={Bell} title="알림 설정" description="리밸런싱, 관심 종목, 이벤트 알림을 관리합니다." onClick={() => navigate("/more/notifications")} isLast />
+              </div>
+            </Section>
+          )}
 
           <Section title="테마 설정" subtitle="앱 전체 색상 모드를 전환합니다." icon={Palette} className="px-0 pb-0">
             <Sheet>
@@ -143,45 +152,47 @@ export function More() {
             </Sheet>
           </Section>
 
-          <Section title="계정" subtitle="로그아웃 및 탈퇴 관련 동작입니다." icon={LogOut} className="px-0">
-            <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
-              <MenuItem icon={LogOut} title="로그아웃" description="현재 계정 세션을 종료하고 로그인 화면으로 돌아갑니다." onClick={handleLogout} />
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button className="flex w-full items-center justify-between px-4 py-4 text-left">
-                    <div className="flex items-start gap-3">
-                      <span className="mt-1 h-4 w-4 rounded-full bg-red-500/12" />
-                      <div>
-                        <span className="block text-sm font-medium text-red-500">회원 탈퇴</span>
-                        <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                          포트폴리오와 관심 종목 데이터를 포함한 계정 정보를 모두 삭제합니다.
-                        </span>
+          {isLoggedIn && (
+            <Section title="계정" subtitle="로그아웃 및 탈퇴 관련 동작입니다." icon={LogOut} className="px-0">
+              <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_18px_36px_-30px_rgba(15,23,42,0.35)]">
+                <MenuItem icon={LogOut} title="로그아웃" description="현재 계정 세션을 종료하고 로그인 화면으로 돌아갑니다." onClick={handleLogout} />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="flex w-full items-center justify-between px-4 py-4 text-left">
+                      <div className="flex items-start gap-3">
+                        <span className="mt-1 h-4 w-4 rounded-full bg-red-500/12" />
+                        <div>
+                          <span className="block text-sm font-medium text-red-500">회원 탈퇴</span>
+                          <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                            포트폴리오와 관심 종목 데이터를 포함한 계정 정보를 모두 삭제합니다.
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="mx-4 rounded-2xl">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>정말 탈퇴하시겠습니까?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      탈퇴 시 모든 포트폴리오와 관심 종목 데이터가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-xl">취소</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleWithdraw} className="rounded-xl bg-red-500 hover:bg-red-600">
-                      탈퇴하기
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </Section>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="mx-4 rounded-2xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>정말 탈퇴하시겠습니까?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        탈퇴 시 모든 포트폴리오와 관심 종목 데이터가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="rounded-xl">취소</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleWithdraw} className="rounded-xl bg-red-500 hover:bg-red-600">
+                        탈퇴하기
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </Section>
+          )}
       </div>
 
       <p className="mt-6 mb-4 text-center text-xs text-muted-foreground">
-        Stockwellness v1.0.0 · © 2026 Stockwellness
+        Stockwellness v1.2.0 · © 2026 Stockwellness
       </p>
 
       <NicknameEditModal
@@ -322,7 +333,7 @@ function MetricTile({
         {icon}
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       </div>
-      <p className={`mt-1 text-sm font-bold tabular-nums ${toneClassName}`}>{value}</p>
+      <div className={`mt-1 text-sm font-bold tabular-nums ${toneClassName}`}>{value}</div>
     </div>
   );
 }
