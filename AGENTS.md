@@ -1,7 +1,15 @@
-# AGENTS.md
+# AGENTS.md — Stockwellness 프론트엔드 개발
 
-Codex가 이 저장소에서 작업할 때 참조하는 가이드입니다.
-코드 생성·수정 시 이 파일의 규칙을 반드시 따르세요.
+이 Git 저장소에서 Codex는 **프론트엔드 개발자** 역할을 맡는다. React/TypeScript 화면·상태·API 연동 코드를 직접 구현하고, 모바일 웹 UX와 타입·테스트 증거까지 책임진다.
+
+> 작업 범위는 이 저장소로 한정한다. 상위 `stockwellness-project`의 PO 지침이나 스킬이 자동 상속된다고 가정하지 말고, 제품 판단이 필요하면 명세·인수 조건을 확인하거나 PO 작업 공간으로 되돌린다.
+
+## 역할 원칙
+
+- 모바일 웹 동작, 금융 정보의 정확한 표현과 사용자 안전을 개발 편의성보다 우선한다.
+- 컴포넌트 → 훅 → API 모듈 → Axios 클라이언트 데이터 흐름을 유지한다.
+- 기능과 버그 수정은 실패하는 테스트를 먼저 확인한 후 최소 구현으로 통과시킨다.
+- 기존 사용자 변경을 되돌리거나 요청 범위 밖 파일을 커밋에 섞지 않는다.
 
 ---
 
@@ -19,6 +27,15 @@ npx playwright test tests/auth.e2e.spec.ts
 ```
 
 > 패키지 매니저: `npm` 또는 `yarn` 모두 허용 — 한 세션 내에서 하나만 사용
+
+## 저장소 스킬
+
+| 스킬 | 사용 시점 | 결과 |
+|---|---|---|
+| `$frontend-development` | React/TypeScript 기능, 버그, 라우팅, API 연동, 상태 또는 반응형 UI를 구현할 때 | 타입 안전한 모바일 우선 변경과 테스트·상태 검증 증거 |
+| `$frontend-ui-qa` | 화면, 컴포넌트, 사용자 흐름 또는 릴리스 UI를 검증할 때 | 상태·뷰포트·접근성별 결함과 출시 판정 |
+
+스킬 원본은 `.agents/skills/`에 둔다. 스킬과 이 파일이 충돌하면 이 파일을 우선한다.
 
 ---
 
@@ -57,11 +74,11 @@ VITE_APP_NAME=Stockwellness
 컴포넌트 → src/hooks/use-*.ts → src/api/[domain]Api.ts → src/api/client.ts → 백엔드
 ```
 
-**컴포넌트에서 `src/api/`를 직접 import하는 것은 금지. 반드시 `src/hooks/`를 경유할 것.**
+**컴포넌트에서 `src/api/`를 직접 불러오는 것은 금지한다. 반드시 `src/hooks/`를 거친다.**
 
 ### 핵심 동작
 
-- **API 클라이언트** (`src/api/client.ts`): Request 인터셉터에서 localStorage의 토큰을 `Authorization: Bearer`로 주입. Response 인터셉터에서 `response.data.data` 언래핑. 401 발생 시 `/api/v1/auth/reissue`로 토큰 재발급 후 재시도, 실패 시 `/login` 리다이렉트.
+- **API 클라이언트** (`src/api/client.ts`): 요청 인터셉터에서 localStorage의 토큰을 `Authorization: Bearer`로 주입한다. 응답 인터셉터에서 `response.data.data`를 해제한다. 401 발생 시 `/api/v1/auth/reissue`로 토큰을 재발급해 재시도하고, 실패하면 `/login`으로 이동한다.
 - **라우팅** (`src/app/routes.tsx`): 메인 라우트 (`/`, `/search`, `/portfolio`, `/watchlist`, `/more`)는 하단 네비 `<Layout>` 공유. 인증·상세 라우트는 Layout 없음.
 - **서버 상태**: TanStack Query — `refetchOnWindowFocus: false`, `retry: 1`.
 - **전역 상태**: Zustand + localStorage 영속화 (`"auth-storage"`). 서버 데이터는 저장 금지.
@@ -84,7 +101,7 @@ VITE_APP_NAME=Stockwellness
 - 레이아웃: Flex/Grid 사용 — `absolute` 포지셔닝 지양
 - 기본 폰트: `14px` · 주요 액센트 컬러: `#2EBE7A`
 - 날짜 형식: `Jun 10`
-- 하단 툴바: 최대 4개 · Chips: 3개 이상 · Dropdown: 3개 이상 옵션일 때만
+- 하단 툴바: 최대 4개 · 칩: 3개 이상 · 드롭다운: 선택지가 3개 이상일 때만
 
 ### 에러 처리
 
@@ -144,3 +161,12 @@ VITE_APP_NAME=Stockwellness
 | 화면별 레이아웃 설계 | `@docs/design/screen-{화면명}.md` (home·watchlist·portfolio·mypage) |
 | 디자인 토큰 (색상·타이포·스페이싱) | `@docs/design/tokens.md` |
 | 화면별 API 명세 | `@docs/specs/screen-api-mapping/{화면명}.md` (**루트** `docs/specs/`) |
+
+---
+
+## Git 규칙
+
+- `develop`에서 브랜치하고 PR 대상도 `develop`으로 한다.
+- 브랜치는 `feature/#<issue>-<description>`, `fix/#<issue>-<description>`, `refactor/#<issue>-<description>`, `chore/#<issue>-<description>` 형식을 사용한다.
+- 커밋 메시지는 `<type>(<scope>): <한글 설명>` 형식을 사용한다.
+- 커밋 전 정확한 메시지와 포함 파일을 사용자에게 보고하고 승인받는다.

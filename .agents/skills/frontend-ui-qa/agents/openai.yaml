@@ -1,0 +1,4 @@
+interface:
+  display_name: "프론트엔드 UI 품질 검증"
+  short_description: "모바일 UI 상태와 출시 가능 여부를 검증"
+  default_prompt: "$frontend-ui-qa를 사용해 프론트엔드 화면을 모바일 상태와 접근성 기준으로 검증해줘."
