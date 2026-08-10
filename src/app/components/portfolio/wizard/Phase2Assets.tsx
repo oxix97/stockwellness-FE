@@ -1,13 +1,7 @@
+import { useState } from "react";
 import { X, Search } from "lucide-react";
 import { useSearch } from "@/hooks/use-search";
-import { WizardState, WizardAction, AssetItem } from "./PortfolioWizard";
-
-const QUICK_ASSETS: AssetItem[] = [
-  { ticker: "TLT", name: "미국 장기채", targetWeight: 0 },
-  { ticker: "GLD", name: "금", targetWeight: 0 },
-  { ticker: "CASH", name: "현금", targetWeight: 0 },
-  { ticker: "SPY", name: "S&P500 ETF", targetWeight: 0 },
-];
+import { WizardState, WizardAction, AssetItem, isKrwMarket } from "./PortfolioWizard";
 
 interface Props {
   state: WizardState;
@@ -17,12 +11,18 @@ interface Props {
 /** Task #77 — 위저드 2단계: 자산 담기 */
 export function Phase2Assets({ state, dispatch }: Props) {
   const { keyword, setKeyword, autocomplete } = useSearch();
+  const [unsupportedMessage, setUnsupportedMessage] = useState(false);
   const showResults = keyword.trim().length > 0;
   const autocompleteResults = autocomplete.data?.pages.flatMap((page) => page.content ?? []) ?? [];
+  const hasUnsupportedResult = autocompleteResults.some((stock) => !isKrwMarket(stock.marketType));
 
   const isAdded = (ticker: string) => state.assets.some((a) => a.ticker === ticker);
 
   const addAsset = (item: AssetItem) => {
+    if (!isKrwMarket(item.marketType)) {
+      setUnsupportedMessage(true);
+      return;
+    }
     if (isAdded(item.ticker)) return;
     dispatch({ type: "SET_ASSETS", payload: [...state.assets, { ...item, targetWeight: 0 }] });
   };
@@ -33,33 +33,12 @@ export function Phase2Assets({ state, dispatch }: Props) {
 
   return (
     <div className="px-4 py-6 space-y-5">
-      {/* 빠른 추가 칩 */}
-      <div>
-        <p className="text-foreground font-semibold text-sm mb-3">빠른 추가</p>
-        <div className="flex flex-wrap gap-2">
-          {QUICK_ASSETS.map((asset) => {
-            const added = isAdded(asset.ticker);
-            return (
-              <button
-                key={asset.ticker}
-                onClick={() => addAsset(asset)}
-                disabled={added}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
-                  added
-                    ? "bg-primary/10 text-primary border-primary/30"
-                    : "bg-secondary text-secondary-foreground border-border"
-                }`}
-              >
-                {added ? "✓ " : ""}{asset.name}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* 종목 검색 */}
       <div>
         <p className="text-foreground font-semibold text-sm mb-3">종목 검색</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          현재는 KOSPI·KOSDAQ 원화 종목만 가상 포트폴리오에 담을 수 있습니다.
+        </p>
         <div className="relative">
           <div className="flex items-center gap-2 bg-secondary rounded-xl h-11 px-3">
             <Search className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -87,10 +66,16 @@ export function Phase2Assets({ state, dispatch }: Props) {
                   <button
                     key={stock.ticker}
                     onClick={() => {
-                      addAsset({ ticker: stock.ticker, name: stock.name, targetWeight: 0 });
+                      addAsset({
+                        ticker: stock.ticker,
+                        name: stock.name,
+                        marketType: stock.marketType,
+                        targetWeight: 0,
+                      });
                       setKeyword("");
                     }}
-                    disabled={isAdded(stock.ticker)}
+                    disabled={isAdded(stock.ticker) || !isKrwMarket(stock.marketType)}
+                    aria-describedby={!isKrwMarket(stock.marketType) ? "simulated-foreign-stock-notice" : undefined}
                     className="w-full flex items-center justify-between px-4 py-3 border-b border-border last:border-0 text-left disabled:opacity-40"
                   >
                     <div>
@@ -104,6 +89,11 @@ export function Phase2Assets({ state, dispatch }: Props) {
                 ))
               )}
             </div>
+          )}
+          {(unsupportedMessage || hasUnsupportedResult) && (
+            <p id="simulated-foreign-stock-notice" role="alert" className="mt-2 text-xs text-muted-foreground">
+              환율 지원 전에는 포트폴리오에 담을 수 없습니다
+            </p>
           )}
         </div>
       </div>
@@ -124,7 +114,7 @@ export function Phase2Assets({ state, dispatch }: Props) {
                   <p className="text-foreground font-medium text-sm">{asset.name}</p>
                   <p className="text-muted-foreground text-xs">{asset.ticker}</p>
                 </div>
-                <button onClick={() => removeAsset(asset.ticker)}>
+                <button onClick={() => removeAsset(asset.ticker)} aria-label={`${asset.name} 삭제`}>
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>

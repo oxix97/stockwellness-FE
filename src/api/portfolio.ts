@@ -13,6 +13,8 @@ import {
   DiagnosisResponse,
   AnalysisSummaryResponse,
   PortfolioInceptionChartResponse,
+  CreateSimulatedPortfolioRequest,
+  CreateSimulatedPortfolioResponse,
 } from "@/types/api";
 
 export const portfolioKeys = {
@@ -68,6 +70,14 @@ export const portfolioApi = {
   create: async (body: CreatePortfolioRequest): Promise<number> => {
     const data = await apiClient.post("/v1/portfolios", body);
     return data as unknown as number;
+  },
+
+  /** 서버가 EOD 종가로 가상 수량과 매입 단가를 계산해 포트폴리오를 생성한다. */
+  createSimulated: async (
+    body: CreateSimulatedPortfolioRequest,
+  ): Promise<CreateSimulatedPortfolioResponse> => {
+    const data = await apiClient.post("/v1/portfolios/simulated", body);
+    return data as unknown as CreateSimulatedPortfolioResponse;
   },
   /**
    * 포트폴리오 상세 조회에서 보유 종목 리스트를 반환합니다.
@@ -127,8 +137,8 @@ export const portfolioApi = {
   /**
    * 전략 백테스트를 실행합니다.
    * @param portfolioId 포트폴리오 ID
-   * @param params 백테스트 전략, 금액, 벤치마크 정보
-   * @returns 일별 결과, 수익률 등 백테스트 실행 결과
+   * @param params 백테스트 전략, 금액, 외부 primaryBenchmark 코드, 기간 정보
+   * @returns 서버가 계산한 전략별 CAGR/XIRR/TWR 및 벤치마크 비교 결과
    */
   runBacktest: async (portfolioId: string, params: BacktestRequest): Promise<BacktestResponse> => {
     const data = await apiClient.post(`/v1/portfolios/${portfolioId}/analysis/backtest`, params);

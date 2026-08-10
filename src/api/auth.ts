@@ -1,27 +1,19 @@
 import { apiClient } from "./client";
-import { LoginRequest, LoginResponse, ReissueRequest, ReissueResponse } from "@/types/api";
+import { LoginResponse, ReissueRequest, ReissueResponse } from "@/types/api";
 
 /**
  * 인증 및 사용자 계정 관련 API 호출 객체
  */
 export const authApi = {
-  /**
-   * 지원용 로그인 API를 호출합니다.
-   * 브라우저 기본 OAuth 완료 경로는 백엔드 redirect -> /auth/callback 소비 플로우를 사용합니다.
-   * @param params 로그인 식별 정보 (email, nickname, loginType)
-   * @returns 로그인 성공 시 사용자 정보 및 토큰 세트
-   */
-  login: async (params: LoginRequest): Promise<LoginResponse> => {
-    const data = await apiClient.post("/v1/auth/login", params);
+  /** OAuth 콜백의 일회용 코드를 인증 정보로 교환합니다. */
+  exchange: async (code: string): Promise<LoginResponse> => {
+    const data = await apiClient.post("/v1/auth/exchange", { code });
     return data as unknown as LoginResponse;
   },
 
-  /**
-   * 로그아웃을 수행하고 로컬 스토리지를 비웁니다.
-   */
+  /** 서버 세션을 종료합니다. 로컬 상태 정리는 useLogout이 담당합니다. */
   logout: async (): Promise<void> => {
     await apiClient.post("/v1/auth/logout");
-    localStorage.clear();
   },
 
   /**

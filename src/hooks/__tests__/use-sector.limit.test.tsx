@@ -45,6 +45,11 @@ describe("useSector Limit", () => {
     vi.mocked(sectorApi.getFluctuationRanking).mockResolvedValue(mockRanking);
     vi.mocked(sectorApi.getSectorDetail).mockResolvedValue({
       sectorCode: "S0",
+      sectorName: "Sector 0",
+      baseDate: "2026-03-23",
+      currentPrice: 1000,
+      fluctuationRate: 1.5,
+      isOverheated: false,
       diagnosisMessage: "Test",
       leadingStocks: [],
       technicalIndicators: null,

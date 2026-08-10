@@ -5,33 +5,39 @@ import {
   applyOptimisticQueryUpdate,
   rollbackOptimisticQueryUpdate,
 } from "@/hooks/query-cache";
+import { useAuthStore } from "@/store/auth";
 
 export function useWatchlist() {
   const queryClient = useQueryClient();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const isAuthenticated = Boolean(accessToken);
 
   const groups = useQuery({
     queryKey: watchlistKeys.groups(),
     queryFn: () => watchlistApi.getGroups(),
+    enabled: isAuthenticated,
   });
 
   const useGroupItems = (groupId: number | null) => useQuery({
     queryKey: groupId !== null ? watchlistKeys.items(groupId) : ["watchlist", "items", "null"],
     queryFn: () => watchlistApi.getItems(groupId!),
-    enabled: groupId !== null,
+    enabled: isAuthenticated && groupId !== null,
   });
 
   const useIsTickerInWatchlist = (ticker: string) => {
-    const groupList = groups.data ?? [];
-    
+    // 캐시에 이전 회원의 그룹이 남아 있어도 게스트 화면으로 노출하지 않는다.
+    const groupList = isAuthenticated ? groups.data ?? [] : [];
+
     const itemsQueries = useQueries({
       queries: groupList.map((group) => ({
         queryKey: watchlistKeys.items(group.id),
         queryFn: () => watchlistApi.getItems(group.id),
+        enabled: isAuthenticated,
         staleTime: 1000 * 60 * 5,
       })),
     });
 
-    const isLoading = groups.isLoading || itemsQueries.some(q => q.isLoading);
+    const isLoading = isAuthenticated && (groups.isLoading || itemsQueries.some(q => q.isLoading));
     
     const containedGroups = groupList.filter((_, index) => {
       const items = itemsQueries[index]?.data?.items ?? [];

@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { waitFor, act } from "@testing-library/react";
 import { renderHookWithQuery, setAuthState, clearAuthState } from "@/test/test-utils";
 import { makeValuation, makeDiversification, makePortfolio, makeRebalancing } from "@/test/fixtures";
-import { usePortfolio, useCreatePortfolio, useUpdatePortfolio } from "../use-portfolio";
+import { usePortfolio, useCreatePortfolio, useCreateSimulatedPortfolio, useUpdatePortfolio, usePortfolioSummary } from "../use-portfolio";
+
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
+}));
 
 vi.mock("@/api/portfolio", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/api/portfolio")>();
@@ -19,12 +23,14 @@ vi.mock("@/api/portfolio", async (importOriginal) => {
       getAnalysisSummary: vi.fn(),
       getHealth: vi.fn(),
       create: vi.fn(),
+      createSimulated: vi.fn(),
       updatePortfolio: vi.fn(),
     },
   };
 });
 
 import { portfolioApi } from "@/api/portfolio";
+import { toast } from "sonner";
 
 const mockPortfolioApi = portfolioApi as unknown as {
   getValuation: ReturnType<typeof vi.fn>;
@@ -37,6 +43,7 @@ const mockPortfolioApi = portfolioApi as unknown as {
   getAnalysisSummary: ReturnType<typeof vi.fn>;
   getHealth: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
+  createSimulated: ReturnType<typeof vi.fn>;
   updatePortfolio: ReturnType<typeof vi.fn>;
 };
 
@@ -164,6 +171,41 @@ describe("usePortfolio", () => {
   });
 });
 
+describe("usePortfolioSummary — valuation 상태 계약", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setAuthState({ portfolioId: "1" });
+  });
+
+  afterEach(() => {
+    clearAuthState();
+  });
+
+  it("PARTIAL 응답의 null 집계값과 기준일을 가공하지 않고 노출한다", async () => {
+    const valuation = makeValuation({
+      valuationStatus: "PARTIAL",
+      asOfDate: "2026-08-07",
+      missingSymbols: ["000660"],
+      currentTotalValue: null,
+      totalProfitLoss: null,
+      totalReturnRate: null,
+    });
+    mockPortfolioApi.getAnalysisSummary.mockResolvedValue({
+      valuation,
+      diversification: makeDiversification(),
+      rebalancing: makeRebalancing(),
+      itemContributions: {},
+    });
+
+    const { result } = renderHookWithQuery(() => usePortfolioSummary());
+
+    await waitFor(() => expect(result.current.valuation?.valuationStatus).toBe("PARTIAL"));
+    expect(result.current.valuation?.currentTotalValue).toBeNull();
+    expect(result.current.valuation?.asOfDate).toBe("2026-08-07");
+    expect(result.current.valuation?.missingSymbols).toEqual(["000660"]);
+  });
+});
+
 describe("useCreatePortfolio", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -188,6 +230,60 @@ describe("useCreatePortfolio", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     const { useAuthStore } = await import("@/store/auth");
     expect(useAuthStore.getState().portfolioId).toBe("42");
+  });
+});
+
+describe("useCreateSimulatedPortfolio", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setAuthState({ portfolioId: undefined });
+  });
+
+  afterEach(() => {
+    clearAuthState();
+  });
+
+  it("생성 성공 시 서버가 반환한 portfolioId를 스토어에 저장한다", async () => {
+    mockPortfolioApi.createSimulated.mockResolvedValue({ portfolioId: 42, asOfDate: "2026-08-07" });
+    const { result } = renderHookWithQuery(() => useCreateSimulatedPortfolio());
+
+    result.current.mutate({
+      name: "가상 포트폴리오",
+      description: "",
+      totalAmount: 10_000_000,
+      items: [{ symbol: "005930", targetWeight: 100 }],
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockPortfolioApi.createSimulated).toHaveBeenCalledWith({
+      name: "가상 포트폴리오",
+      description: "",
+      totalAmount: 10_000_000,
+      items: [{ symbol: "005930", targetWeight: 100 }],
+    });
+    const { useAuthStore } = await import("@/store/auth");
+    expect(useAuthStore.getState().portfolioId).toBe("42");
+  });
+
+  it.each([
+    ["P006", "환율 지원 전에는 원화 종목만 포트폴리오에 담을 수 있습니다."],
+    ["S002", "가격 정보를 확인할 수 없는 종목이 있어 가상 포트폴리오를 만들 수 없습니다."],
+  ])("%s 오류를 원시 서버 메시지 없이 안전한 안내로 표시한다", async (code, message) => {
+    mockPortfolioApi.createSimulated.mockRejectedValue({
+      isAxiosError: true,
+      response: { data: { code } },
+    });
+    const { result } = renderHookWithQuery(() => useCreateSimulatedPortfolio());
+
+    result.current.mutate({
+      name: "가상 포트폴리오",
+      description: "",
+      totalAmount: 10_000_000,
+      items: [{ symbol: "005930", targetWeight: 100 }],
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(toast.error).toHaveBeenCalledWith(message);
   });
 });
 

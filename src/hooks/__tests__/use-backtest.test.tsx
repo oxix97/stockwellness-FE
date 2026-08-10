@@ -52,7 +52,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
+      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000 });
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -60,9 +60,29 @@ describe("useBacktest", () => {
     expect(mockRunBacktest).toHaveBeenCalledWith("1", {
       strategy: "LUMP_SUM",
       amount: 10_000_000,
-      benchmarkTicker: "SPY",
+      primaryBenchmark: "KOSPI",
+      period: "1Y",
       rebalancingPeriod: "NONE",
+      dividendReinvested: true,
     });
+    const [, request] = mockRunBacktest.mock.calls[0];
+    expect(request).not.toHaveProperty("benchmarkTicker");
+    expect(request.period).not.toBe("1y");
+  });
+
+  it("기본 벤치마크를 명시적으로 KOSPI로 보내고 SPY 티커를 만들지 않는다", async () => {
+    mockRunBacktest.mockResolvedValue({ dailyResults: makeDailyResults(2) });
+
+    const { result } = renderHookWithQuery(() => useBacktest());
+
+    act(() => {
+      result.current.run({ strategy: "DCA", amount: 1_000_000, period: "1Y" });
+    });
+
+    await waitFor(() => expect(result.current.data).toBeDefined());
+    const [, request] = mockRunBacktest.mock.calls[0];
+    expect(request.primaryBenchmark).toBe("KOSPI");
+    expect(request).not.toHaveProperty("benchmarkTicker");
   });
 
   it("getMetrics — dailyResults 비어있으면 null", async () => {
@@ -71,7 +91,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "DCA", amount: 1_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
+      result.current.run({ strategy: "DCA", amount: 1_000_000, primaryBenchmark: "KOSPI", rebalancingPeriod: "NONE" });
     });
 
     await waitFor(() => expect(result.current.data).toBeDefined());
@@ -94,7 +114,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
+      result.current.run({ strategy: "LUMP_SUM", amount: 10_000_000, primaryBenchmark: "KOSPI", rebalancingPeriod: "NONE" });
     });
 
     await waitFor(() => expect(result.current.metrics).not.toBeNull());
@@ -105,7 +125,7 @@ describe("useBacktest", () => {
     // 상승 추세이므로 totalReturn >= 0
     expect(m.totalReturn).toBeGreaterThanOrEqual(0);
     // outperformance = totalReturn - benchmarkReturn (소수점 반올림으로 최대 0.2 오차 허용)
-    expect(Math.abs(m.outperformance - (m.totalReturn - m.benchmarkReturn))).toBeLessThanOrEqual(0.2);
+    expect(Math.abs(m.outperformance! - (m.totalReturn! - m.benchmarkReturn!))).toBeLessThanOrEqual(0.2);
   });
 
   it("API 오류 시 isError true", async () => {
@@ -114,7 +134,7 @@ describe("useBacktest", () => {
     const { result } = renderHookWithQuery(() => useBacktest());
 
     act(() => {
-      result.current.run({ strategy: "DCA", amount: 1_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" });
+      result.current.run({ strategy: "DCA", amount: 1_000_000, primaryBenchmark: "KOSPI", rebalancingPeriod: "NONE" });
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -135,7 +155,7 @@ describe("computeMetrics", () => {
   it("outperformance = totalReturn - benchmarkReturn", () => {
     const results = makeDailyResults(20);
     const m = computeMetrics(results)!;
-    expect(Math.abs(m.outperformance - (m.totalReturn - m.benchmarkReturn))).toBeLessThanOrEqual(0.2);
+    expect(Math.abs(m.outperformance! - (m.totalReturn! - m.benchmarkReturn!))).toBeLessThanOrEqual(0.2);
   });
 
   it("mdd — 상승 추세이면 0 이상", () => {
