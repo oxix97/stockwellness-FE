@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { waitFor, act } from "@testing-library/react";
-import { renderHookWithQuery, setAuthState, clearAuthState } from "@/test/test-utils";
+import { createTestQueryClient, renderHookWithQuery, setAuthState, clearAuthState } from "@/test/test-utils";
 import { makeNotificationSettings } from "@/test/fixtures";
 import { useMe, useNotificationSettings, useUpdateNotifications } from "../use-member";
 
@@ -60,6 +60,23 @@ describe("useMe", () => {
     const { useAuthStore } = await import("@/store/auth");
     // queryFn 내부 부수효과 제거 확인
     expect(useAuthStore.getState().nickname).toBe("기존닉네임");
+  });
+
+  it("changes the member query key when a different member signs in", async () => {
+    const queryClient = createTestQueryClient();
+    mockApi.getMe
+      .mockResolvedValueOnce({ memberId: 1, nickname: "사용자 A" })
+      .mockResolvedValueOnce({ memberId: 2, nickname: "사용자 B" });
+    setAuthState({ memberId: 1 });
+
+    const { result, rerender } = renderHookWithQuery(() => useMe(), { queryClient });
+    await waitFor(() => expect(result.current.data?.nickname).toBe("사용자 A"));
+
+    setAuthState({ memberId: 2 });
+    rerender();
+
+    await waitFor(() => expect(result.current.data?.nickname).toBe("사용자 B"));
+    expect(mockApi.getMe).toHaveBeenCalledTimes(2);
   });
 
   it("API 오류 시 isError true", async () => {

@@ -16,6 +16,7 @@ import {
 import { ContextHeader, Section } from "@/app/components/shared";
 import { usePortfolio } from "@/hooks/use-portfolio";
 import { useWithdraw, useUpdateProfile } from "@/hooks/use-member";
+import { useLogout } from "@/hooks/use-auth";
 import { useAuthStore } from "@/store/auth";
 import { calculateInvestorType } from "@/utils/calculate";
 import { getTrendClassName } from "@/utils/trend";
@@ -24,24 +25,28 @@ import { formatDate } from "@/utils/format";
 
 export function More() {
   const navigate = useNavigate();
-  const { nickname, logout, joinedDate, accessToken } = useAuthStore();
+  const { nickname, joinedDate, accessToken } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { holdings, valuation, health } = usePortfolio();
   const withdraw = useWithdraw();
+  const logout = useLogout();
   const isLoggedIn = !!accessToken;
   const investorType = calculateInvestorType(health.overallScore);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const handleLogout = () => {
-    logout();
-    toast.success("로그아웃되었습니다.");
-    navigate("/login");
+    logout.mutate(undefined, {
+      onSettled: () => {
+        toast.success("로그아웃되었습니다.");
+        navigate("/login");
+      },
+    });
   };
 
   const handleWithdraw = async () => {
     try {
       await withdraw.mutateAsync();
-      logout();
+      useAuthStore.getState().logout();
       navigate("/login");
       toast.success("탈퇴되었습니다.");
     } catch {

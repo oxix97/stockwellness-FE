@@ -7,15 +7,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_STATE_PATH = path.resolve(__dirname, '../tests/.auth-state.json');
 
 async function generateLocalAuthState() {
-  const backendUrl = 'http://localhost:8080';
-  console.log(`[local-auth-gen] Logging in to ${backendUrl}...`);
+  const backendUrl = (process.env.TEST_BACKEND_URL || 'http://localhost:8080').replace(/\/+$/, '');
+  const exchangeCode = process.env.LOCAL_OAUTH_EXCHANGE_CODE?.trim();
+  if (!exchangeCode) {
+    throw new Error('[local-auth-gen] LOCAL_OAUTH_EXCHANGE_CODE가 필요합니다. OAuth 콜백의 일회용 code만 사용하세요.');
+  }
+  console.log(`[local-auth-gen] Exchanging an OAuth callback code at ${backendUrl}...`);
 
   try {
-    const res = await axios.post(`${backendUrl}/api/v1/auth/login`, {
-      email: 'test@example.com',
-      nickname: 'Tester',
-      loginType: 'GOOGLE'
-    });
+    const res = await axios.post(`${backendUrl}/api/v1/auth/exchange`, { code: exchangeCode });
 
     const payload = res.data.data;
     const authState = {

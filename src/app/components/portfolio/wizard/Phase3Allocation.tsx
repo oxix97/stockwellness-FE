@@ -18,40 +18,31 @@ export function Phase3Allocation({ state, dispatch }: Props) {
 
   return (
     <div className="px-4 py-6 space-y-5">
-      {/* 입력 모드 토글 */}
-      <div className="flex bg-secondary rounded-xl p-1">
-        {(["simulation", "actual"] as const).map((mode) => (
-          <button
-            key={mode}
-            onClick={() => dispatch({ type: "SET_MODE", payload: mode })}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              state.mode === mode
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground"
-            }`}
-          >
-            {mode === "simulation" ? "간편 시뮬레이션" : "실제 계좌"}
-          </button>
-        ))}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+        <p className="font-semibold">가상 포트폴리오</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          최신 종가를 기준으로 가상 수량과 매입 단가를 계산합니다.
+        </p>
       </div>
 
-      {/* 총 투자 금액 (간편 모드) */}
-      {state.mode === "simulation" && (
-        <div>
-          <label className="text-sm font-semibold text-foreground block mb-2">총 투자 금액</label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₩</span>
-            <input
-              type="number"
-              value={state.totalAmount}
-              onChange={(e) =>
-                dispatch({ type: "SET_AMOUNT", payload: Number(e.target.value) || 0 })
-              }
-              className="w-full h-12 bg-secondary rounded-xl pl-8 pr-4 text-foreground outline-none text-[15px] tabular-nums"
-            />
-          </div>
+      <div>
+        <label className="text-sm font-semibold text-foreground block mb-2" htmlFor="simulated-total-amount">
+          총 투자 금액
+        </label>
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₩</span>
+          <input
+            id="simulated-total-amount"
+            type="number"
+            min="1"
+            value={state.totalAmount}
+            onChange={(e) =>
+              dispatch({ type: "SET_AMOUNT", payload: Number(e.target.value) || 0 })
+            }
+            className="w-full h-12 bg-secondary rounded-xl pl-8 pr-4 text-foreground outline-none text-[15px] tabular-nums focus:ring-2 focus:ring-primary"
+          />
         </div>
-      )}
+      </div>
 
       {/* 합계 프로그레스 */}
       <div>
@@ -84,10 +75,7 @@ export function Phase3Allocation({ state, dispatch }: Props) {
       {/* 종목별 슬라이더 */}
       <div className="space-y-5">
         {state.assets.map((asset) => {
-          const amount =
-            state.mode === "simulation"
-              ? Math.round((state.totalAmount * asset.targetWeight) / 100)
-              : null;
+          const amount = Math.round((state.totalAmount * asset.targetWeight) / 100);
 
           return (
             <div key={asset.ticker}>
@@ -100,15 +88,15 @@ export function Phase3Allocation({ state, dispatch }: Props) {
                   <p className="text-foreground font-bold text-sm tabular-nums">
                     {asset.targetWeight}%
                   </p>
-                  {amount !== null && (
-                    <p className="text-muted-foreground text-xs tabular-nums">
-                      ₩{formatCurrency(amount)}
-                    </p>
-                  )}
+                  <p className="text-muted-foreground text-xs tabular-nums">
+                    ₩{formatCurrency(amount)}
+                  </p>
                 </div>
               </div>
               <Slider
                 value={[asset.targetWeight]}
+                thumbAriaLabel={`${asset.name} 목표 비중`}
+                aria-valuetext={`${asset.targetWeight}%`}
                 onValueChange={([val]) =>
                   dispatch({ type: "SET_WEIGHT", payload: { ticker: asset.ticker, weight: val } })
                 }

@@ -17,8 +17,8 @@ export interface NotificationSettings {
 
 export const memberKeys = {
   all: ["member"] as const,
-  me: () => [...memberKeys.all, "me"] as const,
-  notifications: () => [...memberKeys.all, "notifications"] as const,
+  me: (memberId: number | null) => [...memberKeys.all, "me", memberId] as const,
+  notifications: (memberId: number | null) => [...memberKeys.all, "notifications", memberId] as const,
 };
 
 export const memberApi = {

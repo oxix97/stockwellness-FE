@@ -9,6 +9,8 @@ import {
 import { useAuthStore } from "@/store/auth";
 import {
   CreatePortfolioRequest,
+  CreateSimulatedPortfolioRequest,
+  CreateSimulatedPortfolioResponse,
   UpdatePortfolioRequest,
   DiagnosisResponse,
   AnalysisSummaryResponse,
@@ -16,6 +18,21 @@ import {
   CorrelationMatrix,
   PortfolioValuationResponse,
 } from "@/types/api";
+
+function simulatedPortfolioErrorMessage(error: unknown): string {
+  if (isAxiosError(error)) {
+    const response = error.response?.data as { code?: string } | undefined;
+
+    if (response?.code === "P006") {
+      return "환율 지원 전에는 원화 종목만 포트폴리오에 담을 수 있습니다.";
+    }
+    if (response?.code === "S002") {
+      return "가격 정보를 확인할 수 없는 종목이 있어 가상 포트폴리오를 만들 수 없습니다.";
+    }
+  }
+
+  return "가상 포트폴리오 생성에 실패했습니다. 잠시 후 다시 시도해주세요.";
+}
 
 export function useCreatePortfolio() {
   const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
@@ -40,6 +57,25 @@ export function useCreatePortfolio() {
     onSuccess: (id: number) => {
       setPortfolioId(String(id));
       toast.success("새로운 포트폴리오가 생성되었습니다!");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: portfolioKeys.list() });
+    },
+  });
+}
+
+export function useCreateSimulatedPortfolio() {
+  const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
+  const queryClient = useQueryClient();
+
+  return useMutation<CreateSimulatedPortfolioResponse, unknown, CreateSimulatedPortfolioRequest>({
+    mutationFn: (body) => portfolioApi.createSimulated(body),
+    onError: (error) => {
+      toast.error(simulatedPortfolioErrorMessage(error));
+    },
+    onSuccess: ({ portfolioId }) => {
+      setPortfolioId(String(portfolioId));
+      toast.success("가상 포트폴리오가 생성되었습니다.");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: portfolioKeys.list() });

@@ -4,7 +4,17 @@ import { usePortfolioAdvice } from "@/hooks/use-portfolio";
 
 interface Props {
   portfolioId: string | null;
+  asOfDate: string | null;
   onComplete: () => void;
+}
+
+function formatAsOfDate(asOfDate: string | null): string {
+  if (!asOfDate) return "가격 기준일을 확인할 수 없습니다.";
+
+  const [year, month, day] = asOfDate.slice(0, 10).split("-");
+  if (!year || !month || !day) return "가격 기준일을 확인할 수 없습니다.";
+
+  return `${year}.${month}.${day} 종가 기준`;
 }
 
 /**
@@ -12,7 +22,7 @@ interface Props {
  * canvas-confetti 미설치 시 CSS 애니메이션으로 대체
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function Phase4Result({ portfolioId: _portfolioId, onComplete }: Props) {
+export function Phase4Result({ portfolioId: _portfolioId, asOfDate, onComplete }: Props) {
   const [showAdvice, setShowAdvice] = useState(false);
   const advice = usePortfolioAdvice();
 
@@ -62,6 +72,10 @@ export function Phase4Result({ portfolioId: _portfolioId, onComplete }: Props) {
       >
         AI가 내 포트폴리오를 분석하고 있어요
       </motion.p>
+
+      <p className="text-muted-foreground text-xs mt-2" aria-label="가격 기준일">
+        {formatAsOfDate(asOfDate)}
+      </p>
 
       {/* AI 1차 진단 카드 */}
       <AnimatePresence>

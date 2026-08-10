@@ -16,6 +16,8 @@ export interface StockReturnsResponse {
   ticker: string;
   /** 조회 기간 */
   period: string;
+  /** 가격 단위 (백엔드가 제공하지 않는 구버전 응답에서는 undefined) */
+  currency?: "KRW" | "USD";
   /** 종목 수익률 (%) */
   stockReturnRate: number;
   /** 벤치마크 수익률 (%) */
