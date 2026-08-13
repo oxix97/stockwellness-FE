@@ -48,9 +48,13 @@ export function PortfolioEditSheet({ isOpen, onClose }: PortfolioEditSheetProps)
   const totalWeight = items.reduce((sum, item) => sum + item.targetWeight, 0);
   const isWeightValid = Math.abs(totalWeight - 100) < 0.1 || items.length === 0;
 
-  const handleUpdateItem = (index: number, field: keyof CreatePortfolioItemRequest, value: any) => {
+  const handleUpdateItem = <TField extends keyof CreatePortfolioItemRequest>(
+    index: number,
+    field: TField,
+    value: CreatePortfolioItemRequest[TField],
+  ) => {
     const updatedItems = [...items];
-    (updatedItems[index] as any)[field] = value;
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
     setItems(updatedItems);
   };
 

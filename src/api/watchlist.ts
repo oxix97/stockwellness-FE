@@ -9,7 +9,7 @@ import {
 export const watchlistKeys = {
   all: ['watchlist'] as const,
   groups: () => [...watchlistKeys.all, 'groups'] as const,
-  items: (groupId: number) =>
+  items: (groupId: number | null) =>
     [...watchlistKeys.all, 'items', groupId] as const,
 };
 
@@ -18,8 +18,8 @@ export const watchlistApi = {
    * 사용자의 관심 종목 그룹 목록을 가져옵니다.
    */
   getGroups: async (): Promise<WatchlistGroup[]> => {
-    const data = await apiClient.get("/v1/watchlist/groups");
-    return data as unknown as WatchlistGroup[];
+    const data = await apiClient.get<WatchlistGroup[]>("/v1/watchlist/groups");
+    return data;
   },
 
   /**
@@ -27,13 +27,13 @@ export const watchlistApi = {
    * @param groupId 그룹 ID
    */
   getItems: async (groupId: number): Promise<WatchlistItemListResponse> => {
-    const data = await apiClient.get(`/v1/watchlist/groups/${groupId}/items`);
-    return data as unknown as WatchlistItemListResponse;
+    const data = await apiClient.get<WatchlistItemListResponse>(`/v1/watchlist/groups/${groupId}/items`);
+    return data;
   },
 
   createGroup: async (name: string): Promise<number> => {
-    const data = await apiClient.post("/v1/watchlist/groups", { name });
-    return data as unknown as number;
+    const data = await apiClient.post<number>("/v1/watchlist/groups", { name });
+    return data;
   },
 
   addItem: async (groupId: number, body: AddWatchlistItemRequest): Promise<void> => {

@@ -16,6 +16,8 @@ import {
   AnalysisSummaryResponse,
   AdviceResponse,
   CorrelationMatrix,
+  PortfolioItemResponse,
+  PortfolioResponse,
   PortfolioValuationResponse,
 } from "@/types/api";
 
@@ -40,18 +42,7 @@ export function useCreatePortfolio() {
 
   return useMutation({
     mutationFn: (body: CreatePortfolioRequest) => portfolioApi.create(body),
-    onMutate: async (newPortfolio) => {
-      return applyOptimisticQueryUpdate<any[]>(
-        queryClient,
-        portfolioKeys.list(),
-        (old) => [
-          ...(old || []),
-          { id: "temp-id", ...newPortfolio, createdAt: new Date().toISOString() },
-        ],
-      );
-    },
-    onError: (_err, _newPortfolio, context) => {
-      rollbackOptimisticQueryUpdate(queryClient, context);
+    onError: () => {
       toast.error("포트폴리오 생성에 실패했습니다.");
     },
     onSuccess: (id: number) => {
@@ -92,14 +83,20 @@ export function useUpdatePortfolio() {
       portfolioApi.updatePortfolio(portfolioId!, body),
 
     onMutate: async (newPortfolio) => {
-      return applyOptimisticQueryUpdate<any>(
+      return applyOptimisticQueryUpdate<PortfolioResponse>(
         queryClient,
         portfolioKeys.detail(portfolioId),
         (old) => {
           if (!old) return old;
-          const updatedItems = newPortfolio.items.map((newItem: any) => {
-            const existingItem = old.items?.find((i: any) => i.symbol === newItem.symbol);
-            return existingItem ? { ...existingItem, ...newItem } : newItem;
+          const updatedItems: PortfolioItemResponse[] = newPortfolio.items.map((newItem) => {
+            const existingItem = old.items.find((item) => item.symbol === newItem.symbol);
+            return existingItem
+              ? { ...existingItem, ...newItem }
+              : {
+                  ...newItem,
+                  name: newItem.symbol,
+                  purchaseAmount: newItem.quantity * newItem.purchasePrice,
+                };
           });
 
           return {
@@ -210,7 +207,7 @@ export function usePortfolioHealth() {
 export function usePortfolioDetails() {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
-  return useQuery({
+  return useQuery<PortfolioResponse>({
     queryKey: portfolioKeys.detail(portfolioId),
     queryFn: () => portfolioApi.getHoldings(portfolioId!),
     enabled: !!portfolioId,

@@ -23,8 +23,8 @@ export const memberKeys = {
 
 export const memberApi = {
   getMe: async (): Promise<MemberProfile> => {
-    const data = await apiClient.get("/v1/members/me");
-    return data as unknown as MemberProfile;
+    const data = await apiClient.get<MemberProfile>("/v1/members/me");
+    return data;
   },
 
   updateProfile: async (nickname: string): Promise<void> => {
@@ -36,8 +36,8 @@ export const memberApi = {
   },
 
   getNotifications: async (): Promise<NotificationSettings> => {
-    const data = await apiClient.get("/v1/members/me/notifications");
-    return data as unknown as NotificationSettings;
+    const data = await apiClient.get<NotificationSettings>("/v1/members/me/notifications");
+    return data;
   },
 
   updateNotifications: async (settings: Partial<NotificationSettings>): Promise<void> => {

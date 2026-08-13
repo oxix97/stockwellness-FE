@@ -7,8 +7,8 @@ import { LoginResponse, ReissueRequest, ReissueResponse } from "@/types/api";
 export const authApi = {
   /** OAuth 콜백의 일회용 코드를 인증 정보로 교환합니다. */
   exchange: async (code: string): Promise<LoginResponse> => {
-    const data = await apiClient.post("/v1/auth/exchange", { code });
-    return data as unknown as LoginResponse;
+    const data = await apiClient.post<LoginResponse>("/v1/auth/exchange", { code });
+    return data;
   },
 
   /** 서버 세션을 종료합니다. 로컬 상태 정리는 useLogout이 담당합니다. */
@@ -22,7 +22,7 @@ export const authApi = {
    * @returns 새 토큰 세트
    */
   reissue: async (params: ReissueRequest): Promise<ReissueResponse> => {
-    const data = await apiClient.post("/v1/auth/reissue", params);
-    return data as unknown as ReissueResponse;
+    const data = await apiClient.post<ReissueResponse>("/v1/auth/reissue", params);
+    return data;
   },
 };

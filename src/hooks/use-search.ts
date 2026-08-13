@@ -3,8 +3,12 @@ import { useState, useEffect } from "react";
 import { stockApi } from "@/api/stock";
 import { StockSearchResponse } from "@/types/api";
 
-const HISTORY_KEY = ["stocks", "search", "history"];
-const POPULAR_KEY = ["stocks", "popular"];
+export const searchKeys = {
+  history: () => ["stocks", "search", "history"] as const,
+  popular: () => ["stocks", "popular"] as const,
+  autocomplete: (keyword: string, sectorCode: string, sectorName: string) =>
+    ["stocks", "search", keyword, sectorCode, sectorName] as const,
+};
 
 /**
  * 종목 검색 기능을 위한 통합 커스텀 훅
@@ -27,7 +31,7 @@ export function useSearch(initialKeyword: string = "", initialSectorCode: string
 
   // 인기 검색 종목 쿼리
   const popular = useQuery<string[]>({
-    queryKey: POPULAR_KEY,
+    queryKey: searchKeys.popular(),
     queryFn: () => stockApi.getPopularSearch().catch(() => []),
     staleTime: 1000 * 60 * 5,
     retry: 2,
@@ -35,7 +39,7 @@ export function useSearch(initialKeyword: string = "", initialSectorCode: string
 
   // 최근 검색어 조회 쿼리
   const history = useQuery<string[]>({
-    queryKey: HISTORY_KEY,
+    queryKey: searchKeys.history(),
     queryFn: () => stockApi.getSearchHistory().catch(() => []),
     staleTime: 0,
   });
@@ -50,7 +54,7 @@ export function useSearch(initialKeyword: string = "", initialSectorCode: string
 
   // 실시간 검색 (무한 스크롤 지원)
   const autocomplete = useInfiniteQuery<StockSearchResponse>({
-    queryKey: ["stocks", "search", debouncedKeyword, sectorCode, sectorName],
+    queryKey: searchKeys.autocomplete(debouncedKeyword, sectorCode, sectorName),
     queryFn: ({ pageParam = 0 }) => stockApi.search(debouncedKeyword, pageParam as number, sectorCode, sectorName),
     initialPageParam: 0,
     getNextPageParam: (lastPage: StockSearchResponse) => (lastPage.hasNext ? lastPage.number + 1 : undefined),
@@ -62,7 +66,7 @@ export function useSearch(initialKeyword: string = "", initialSectorCode: string
   const deleteHistory = useMutation({
     mutationFn: (keyword: string) => stockApi.deleteSearchHistory(keyword),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HISTORY_KEY });
+      queryClient.invalidateQueries({ queryKey: searchKeys.history() });
     },
   });
 
@@ -70,7 +74,7 @@ export function useSearch(initialKeyword: string = "", initialSectorCode: string
   const clearHistory = useMutation({
     mutationFn: () => stockApi.clearSearchHistory(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: HISTORY_KEY });
+      queryClient.invalidateQueries({ queryKey: searchKeys.history() });
     },
   });
 

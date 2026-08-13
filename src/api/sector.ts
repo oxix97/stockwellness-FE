@@ -1,6 +1,14 @@
 import { apiClient } from "./client";
 import { SectorRankingResponse, SectorDetailResponse, SectorSupplyResponse, SectorComparisonResponse } from "@/types/api";
 
+type MaybeNestedData<T> = T | { data: T };
+
+function unwrapMaybeNested<T>(data: MaybeNestedData<T>): T {
+  return typeof data === "object" && data !== null && "data" in data
+    ? data.data
+    : data;
+}
+
 export const sectorKeys = {
   all: ["sectors"] as const,
   ranking: {
@@ -27,9 +35,12 @@ export const sectorApi = {
     marketType?: string; 
     limit?: number 
   }): Promise<SectorRankingResponse> => {
-    const data = await apiClient.get<any>("/v1/sectors/ranking/fluctuation", { params });
+    const data = await apiClient.get<MaybeNestedData<SectorRankingResponse>>(
+      "/v1/sectors/ranking/fluctuation",
+      { params },
+    );
     // SuccessEnvelope.data.data (중첩 엔벨로프) 대응
-    return (data?.data ?? data) as SectorRankingResponse;
+    return unwrapMaybeNested(data);
   },
 
   /**
@@ -43,8 +54,11 @@ export const sectorApi = {
     marketType?: string;
     limit?: number;
   }): Promise<SectorSupplyResponse> => {
-    const data = await apiClient.get<any>("/v1/sectors/ranking/supply", { params });
-    return (data?.data ?? data) as SectorSupplyResponse;
+    const data = await apiClient.get<MaybeNestedData<SectorSupplyResponse>>(
+      "/v1/sectors/ranking/supply",
+      { params },
+    );
+    return unwrapMaybeNested(data);
   },
 
   /**
@@ -54,10 +68,10 @@ export const sectorApi = {
    * @returns 섹터 상세 인사이트, 기술적 지표, 주도주 정보
    */
   getSectorDetail: async (sectorCode: string, date?: string): Promise<SectorDetailResponse> => {
-    const data = await apiClient.get<any>(`/v1/sectors/${sectorCode}/detail`, {
+    const data = await apiClient.get<MaybeNestedData<SectorDetailResponse>>(`/v1/sectors/${sectorCode}/detail`, {
       params: { date } 
     });
-    return (data?.data ?? data) as SectorDetailResponse;
+    return unwrapMaybeNested(data);
   },
 
   /**
@@ -67,9 +81,9 @@ export const sectorApi = {
    * @returns 섹터 vs 시장 비교 데이터
    */
   compareWithMarket: async (sectorCode: string, date?: string): Promise<SectorComparisonResponse> => {
-    const data = await apiClient.get(`/v1/sectors/${sectorCode}/comparison`, {
+    const data = await apiClient.get<SectorComparisonResponse>(`/v1/sectors/${sectorCode}/comparison`, {
       params: { date }
     });
-    return data as unknown as SectorComparisonResponse;
+    return data;
   },
 };
