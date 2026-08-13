@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "motion/react";
+import type { PanInfo } from "motion/react";
 import { WatchlistItemDetail } from "@/types/api";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { useWatchlist } from "@/hooks/use-watchlist";
@@ -89,7 +90,7 @@ export function WatchlistItemCard({
     );
   };
 
-  const handleDragEnd = (_: any, info: { offset: { x: number } }) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (info.offset.x < SWIPE_THRESHOLD) {
       // 삭제 버튼 위치 고정
       animate(dragX, -80, { type: "spring", stiffness: 300, damping: 30 });

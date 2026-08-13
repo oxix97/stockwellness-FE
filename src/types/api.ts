@@ -455,6 +455,14 @@ export interface PortfolioInceptionChartResponse {
 /**
  * 주가 데이터 관련 타입
  */
+export interface StockReturnsResponse {
+  ticker: string;
+  period: string;
+  currency?: "KRW" | "USD";
+  stockReturnRate: number;
+  benchmarkReturnRate: number;
+}
+
 /** 특정 시점의 가격 정보 */
 export type PricePoint = NonNullable<NonNullable<OperationData<"stock-price-history">["prices"]>[number]>;
 

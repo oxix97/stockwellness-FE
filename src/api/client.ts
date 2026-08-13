@@ -1,19 +1,44 @@
-import axios, { AxiosResponse } from "axios";
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
-import { SuccessEnvelope } from "@/types/api";
+import { ErrorEnvelope, ReissueResponse, SuccessEnvelope } from "@/types/api";
 
-export const apiClient = axios.create({
+type UnwrappedApiClient = Omit<AxiosInstance, "get" | "post" | "put" | "patch" | "delete"> & {
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+  patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
+};
+
+const axiosClient = axios.create({
   baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+export const apiClient = axiosClient as UnwrappedApiClient;
+
 /** 401 에러 시 토큰 재발급 중인 상태를 나타내는 플래그 */
 let isReissuing = false;
 /** 재발급 중 도착한 요청들을 저장할 큐 */
-let failedQueue: any[] = [];
+type FailedQueueItem = {
+  resolve: (token: string | null) => void;
+  reject: (error: unknown) => void;
+};
+
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
+let failedQueue: FailedQueueItem[] = [];
 
 /**
  * [테스트용] 내부 상태를 초기화합니다.
@@ -23,7 +48,7 @@ export const _resetInternalState = () => {
   failedQueue = [];
 };
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -35,7 +60,7 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 // 요청 인터셉터: JWT 토큰이 존재하면 헤더에 추가
-apiClient.interceptors.request.use((config) => {
+axiosClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -44,14 +69,17 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // 응답 인터셉터: 토큰 갱신 또는 글로벌 에러 처리
-apiClient.interceptors.response.use(
-  (response: AxiosResponse<SuccessEnvelope<any>>) => {
-    // 서버의 공통 응답 구조(Envelope)에서 실제 데이터만 추출
-    // response.data가 SuccessEnvelope 형태이므로 .data를 추출함
-    return response.data?.data !== undefined ? response.data.data : response.data;
-  },
-  async (error) => {
-    const originalRequest = error.config;
+const unwrapSuccessResponse = (response: AxiosResponse<SuccessEnvelope<unknown>>) =>
+  response.data?.data !== undefined ? response.data.data : response.data;
+
+axiosClient.interceptors.response.use(
+  unwrapSuccessResponse as unknown as (response: AxiosResponse) => AxiosResponse,
+  async (error: AxiosError<ErrorEnvelope>) => {
+    const originalRequest = error.config as RetriableRequestConfig | undefined;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     // 회원가입 필요 에러 처리 (A008)
     if (error.response?.data?.code === "A008") {
@@ -63,12 +91,12 @@ apiClient.interceptors.response.use(
     // 401 에러 처리: 토큰 만료
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isReissuing) {
-        return new Promise((resolve, reject) => {
+        return new Promise<string | null>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
+            return axiosClient(originalRequest);
           })
           .catch((err) => Promise.reject(err));
       }
@@ -80,7 +108,7 @@ apiClient.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          const { data } = await axios.post("/api/v1/auth/reissue", {
+          const { data } = await axios.post<SuccessEnvelope<ReissueResponse>>("/api/v1/auth/reissue", {
             refreshToken,
           });
           const tokens = data.data;
@@ -95,7 +123,7 @@ apiClient.interceptors.response.use(
 
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
           processQueue(null, tokens.accessToken);
-          return apiClient(originalRequest);
+          return axiosClient(originalRequest);
         } catch (refreshError) {
           processQueue(refreshError, null);
           localStorage.clear();

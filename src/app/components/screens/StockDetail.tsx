@@ -11,8 +11,7 @@ import { Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ap
 import { PageHeader, AdUnit } from "@/app/components/shared";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { formatCurrency } from "@/utils/format";
-import { StockReturnsResponse } from "@/api/stock";
-import { ChartPeriod, ChartFrequency } from "@/types/api";
+import { ChartPeriod, ChartFrequency, StockReturnsResponse } from "@/types/api";
 import { toast } from "sonner";
 
 // ── 차트 색상 상수 (한국 관례: 상승=빨강, 하락=파랑) ────────────────────

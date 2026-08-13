@@ -52,7 +52,7 @@ export function SimulationWidget() {
     );
   }
 
-  const chartData = data.dailyResults.map((r: any) => ({
+  const chartData = data.dailyResults.map((r) => ({
     date: r.date,
     portfolio: r.portfolioReturnRate,
     ...r.benchmarkReturnRates,

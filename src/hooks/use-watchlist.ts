@@ -19,7 +19,7 @@ export function useWatchlist() {
   });
 
   const useGroupItems = (groupId: number | null) => useQuery({
-    queryKey: groupId !== null ? watchlistKeys.items(groupId) : ["watchlist", "items", "null"],
+    queryKey: watchlistKeys.items(groupId),
     queryFn: () => watchlistApi.getItems(groupId!),
     enabled: isAuthenticated && groupId !== null,
   });

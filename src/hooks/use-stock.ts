@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { stockApi, StockReturnsResponse } from "@/api/stock";
+import { stockApi } from "@/api/stock";
 import {
   StockPriceHistoryResponse,
   NewListingStock,
@@ -9,6 +9,7 @@ import {
   StockSupplyRankingParams,
   StockSupplyRankingResponse,
   TradeDirection,
+  StockReturnsResponse,
 } from "@/types/api";
 
 export const stockKeys = {

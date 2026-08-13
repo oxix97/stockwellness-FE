@@ -5,6 +5,7 @@ import { HomeCard, HomeCardSkeleton } from "./HomeCard";
 import { HomeBadge } from "./HomeListItem";
 import { getHomeCardTone } from "./home-card-tone";
 import { getSectorIcon } from "./sector-icon";
+import type { SectorRankingItem } from "@/types/api";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -17,7 +18,7 @@ const containerVariants = {
 };
 
 interface SectorRankingSectionProps {
-  onSectorClick: (sector: any) => void;
+  onSectorClick: (sector: SectorRankingItem) => void;
 }
 
 /**
@@ -60,7 +61,7 @@ function RankingCard({
   sector,
   onClick,
 }: {
-  sector: any;
+  sector: SectorRankingItem;
   onClick: () => void;
 }) {
   const isUp = sector.fluctuationRate >= 0;

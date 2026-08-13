@@ -14,6 +14,11 @@ import { useAuthStore } from "@/store/auth";
 
 export type Period = ChartPeriod;
 
+export const backtestKeys = {
+  simulation: (portfolioId: string | null | undefined) =>
+    ["backtest", "simulation", portfolioId] as const,
+};
+
 /** 기간(Period) 문자열에 따라 데이터 배열을 슬라이싱합니다. */
 export function sliceByPeriod<T extends { date: string }>(items: T[] | undefined, period: Period): T[] {
   if (!items || items.length === 0) return [];
@@ -236,7 +241,7 @@ export function usePortfolioSimulation(period: ChartPeriod) {
   const portfolioId = useAuthStore((state) => state.portfolioId);
 
   const query = useQuery<PortfolioInceptionChartResponse>({
-    queryKey: ["backtest", "simulation", portfolioId],
+    queryKey: backtestKeys.simulation(portfolioId),
     queryFn: () => portfolioApi.getInceptionChart(portfolioId!),
     enabled: !!portfolioId,
     staleTime: 1000 * 60 * 10,
