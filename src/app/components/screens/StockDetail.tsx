@@ -48,7 +48,10 @@ interface CandleEntry {
 interface PriceSectionProps {
   ticker: string;
   stockName: string | undefined;
-  latestPrice: number;
+  marketType: string | undefined;
+  currency: string | undefined;
+  latestPrice: number | null;
+  latestDate: string | null;
   dailyRate: number | null;
 }
 
@@ -66,11 +69,13 @@ interface ChartSectionProps {
   data: CandleEntry[];
   periodLabel: string;
   benchmarkName: string | undefined;
+  currencySymbol: "₩" | "$";
 }
 
 interface CandleTooltipProps {
   active?: boolean;
   payload?: Array<{ payload: CandleEntry }>;
+  currencySymbol: "₩" | "$";
 }
 
 interface ReturnEntry {
@@ -115,11 +120,12 @@ export function StockDetail() {
   const { symbol } = useParams();
   const navigate = useNavigate();
   const portfolioId = useAuthStore((s) => s.portfolioId);
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [periodLabel, setPeriodLabel] = useState("일봉");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [quantity, setQuantity] = useState("1");
   const [purchasePrice, setPurchasePrice] = useState("");
-  const { useHistory, useReturns } = useStock();
+  const { useHistory, useReturns, useDetail } = useStock();
   const { holdings } = usePortfolio();
   const updatePortfolio = useUpdatePortfolio();
   const { groups, addItem, removeItem, createGroup, useIsTickerInWatchlist } = useWatchlist();
@@ -130,7 +136,7 @@ export function StockDetail() {
   const { isInWatchlist, containedGroups, isLoading: isWatchlistLoading } = useIsTickerInWatchlist(ticker);
 
   const handleFavoriteToggle = async () => {
-    if (!useAuthStore.getState().accessToken) {
+    if (!accessToken) {
       toast.info("로그인 후 관심 종목을 추가해보세요.");
       navigate("/login");
       return;
@@ -169,6 +175,7 @@ export function StockDetail() {
   const { period: apiPeriod, frequency: apiFrequency } = PERIOD_CONFIG[periodLabel] || PERIOD_CONFIG["일봉"];
 
   const history = useHistory(ticker, apiPeriod, apiFrequency);
+  const stockDetail = useDetail(ticker);
   // 어제 대비 오늘 계산용 — 항상 최근 일봉 2개 필요
   const dailyHistory = useHistory(ticker, "1M", "DAILY");
 
@@ -180,6 +187,12 @@ export function StockDetail() {
 
   const stockName = history.data?.stockName;
   const benchmarkName = history.data?.benchmarkName;
+  const currencySymbol = getCurrencySymbol(
+    ticker,
+    stockDetail.data?.marketType ?? benchmarkName,
+    history.data?.currency,
+  );
+  const isForeignKnown = Boolean(stockDetail.data?.marketType && currencySymbol !== "₩");
 
   const dailyRate = useMemo(() => {
     const prices = dailyHistory.data?.prices || [];
@@ -195,10 +208,10 @@ export function StockDetail() {
     return computeRsi(closes);
   }, [dailyHistory.data]);
 
-  const { candleData, latestPrice } = useMemo(() => {
+  const { candleData, latestPrice, latestDate } = useMemo(() => {
     const prices = history.data?.prices || [];
     const benchmarks = history.data?.benchmarks || [];
-    if (prices.length === 0) return { candleData: [], latestPrice: 0 };
+    if (prices.length === 0) return { candleData: [], latestPrice: null, latestDate: null };
 
     const first = prices[0].close;
     const latest = prices[prices.length - 1].close;
@@ -243,10 +256,27 @@ export function StockDetail() {
         };
       }),
       latestPrice: latest,
+      latestDate: prices[prices.length - 1].date ?? null,
     };
   }, [history.data]);
 
   const handleAddClick = () => {
+    if (!accessToken) {
+      toast.info("로그인 후 포트폴리오에 담을 수 있어요.");
+      navigate("/login");
+      return;
+    }
+
+    if (latestPrice == null) {
+      toast.info("가격 정보를 확인할 수 없습니다.");
+      return;
+    }
+
+    if (currencySymbol !== "₩") {
+      toast.info("환율 지원 전에는 원화 종목만 포트폴리오에 담을 수 있습니다.");
+      return;
+    }
+
     if (!portfolioId) {
       toast.info("포트폴리오를 먼저 만들어보세요.");
       navigate("/portfolio");
@@ -326,7 +356,10 @@ export function StockDetail() {
       <PriceSection
         ticker={ticker}
         stockName={stockName}
+        marketType={stockDetail.data?.marketType ?? history.data?.benchmarkName}
+        currency={history.data?.currency}
         latestPrice={latestPrice}
+        latestDate={latestDate}
         dailyRate={dailyRate}
       />
 
@@ -344,7 +377,7 @@ export function StockDetail() {
         ))}
       </div>
 
-      <ChartSection data={candleData} periodLabel={periodLabel} benchmarkName={benchmarkName} />
+      <ChartSection data={candleData} periodLabel={periodLabel} benchmarkName={benchmarkName} currencySymbol={currencySymbol} />
 
       <AdUnit type="detail-in-article" className="px-6 my-4" />
 
@@ -360,9 +393,15 @@ export function StockDetail() {
       />
 
       <div className="px-6 pb-12 pt-2">
+        {!stockDetail.isLoading && isForeignKnown && (
+          <p id="foreign-stock-portfolio-notice" className="mb-3 text-center text-sm text-muted-foreground">
+            환율 지원 전에는 포트폴리오에 담을 수 없습니다
+          </p>
+        )}
         <button
           onClick={handleAddClick}
-          disabled={updatePortfolio.isPending}
+          disabled={updatePortfolio.isPending || stockDetail.isLoading || isForeignKnown}
+          aria-describedby={!stockDetail.isLoading && isForeignKnown ? "foreign-stock-portfolio-notice" : undefined}
           className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-lg transition-transform active:scale-95 disabled:opacity-50 min-[408px]:py-5"
         >
           {updatePortfolio.isPending ? "추가 중..." : "내 포트폴리오에 담기"}
@@ -386,7 +425,7 @@ export function StockDetail() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-foreground">매입단가 (₩)</label>
+                <label className="text-sm font-semibold text-foreground">매입단가 ({currencySymbol})</label>
               <input
                 type="number"
                 value={purchasePrice}
@@ -416,7 +455,30 @@ function findClosestDate(dates: string[], targetDate: string) {
   return undefined;
 }
 
-function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectionProps) {
+const KRW_MARKETS = new Set(["KOSPI", "KOSDAQ"]);
+const USD_MARKETS = new Set(["NASDAQ", "NYSE", "NYSEARCA", "AMEX"]);
+
+/**
+ * Prefer an explicit history currency, then the market/index label when it is
+ * available. Older responses fall back to the ticker shape: six-digit Korean
+ * tickers are KRW, while alphabetic tickers are shown in USD. This labels the
+ * value only; it never performs an exchange-rate conversion.
+ */
+export function getCurrencySymbol(ticker: string, marketType?: string, currency?: string): "₩" | "$" {
+  const explicitCurrency = currency?.trim().toUpperCase();
+  if (explicitCurrency === "KRW") return "₩";
+  if (explicitCurrency === "USD") return "$";
+
+  const market = marketType?.trim().toUpperCase();
+  if (market && KRW_MARKETS.has(market)) return "₩";
+  if (market && USD_MARKETS.has(market)) return "$";
+  if (/^\d{6}$/.test(ticker.trim())) return "₩";
+  if (/^[A-Z][A-Z0-9.-]*$/i.test(ticker.trim())) return "$";
+  return "₩";
+}
+
+function PriceSection({ ticker, stockName, marketType, currency, latestPrice, latestDate, dailyRate }: PriceSectionProps) {
+  const currencySymbol = getCurrencySymbol(ticker, marketType, currency);
   return (
     <section className="page-shell page-content py-6">
       <div className="overflow-hidden rounded-[32px] border border-border bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary)_10%,var(--color-card)),var(--color-card))] px-5 py-6 shadow-[0_22px_56px_-42px_rgba(15,23,42,0.38)]">
@@ -426,10 +488,17 @@ function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectio
         </div>
         <div className="mt-4 mb-1 text-sm font-medium text-muted-foreground">{ticker}</div>
         {stockName && <div className="mb-2 text-lg font-bold text-foreground">{stockName}</div>}
-        <div className="mb-2 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">₩{formatCurrency(latestPrice)}</div>
+        {latestPrice == null ? (
+          <div className="mb-2 text-base font-semibold text-muted-foreground">가격 정보를 확인할 수 없습니다</div>
+        ) : (
+          <>
+            <div className="mb-1 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">{currencySymbol}{formatCurrency(latestPrice)}</div>
+            {latestDate && <div className="mb-2 text-xs font-semibold text-muted-foreground">{formatEodDate(latestDate)} 종가</div>}
+          </>
+        )}
         {dailyRate != null && (
           <div className="text-lg font-bold">
-            어제보다 <SignedValueLabel value={dailyRate} format="percent" ariaLabelPrefix={`${stockName || ticker} 일간 등락률`} />
+            직전 영업일 대비 <SignedValueLabel value={dailyRate} format="percent" ariaLabelPrefix={`${stockName || ticker} 일간 등락률`} />
           </div>
         )}
         <div className="mt-5 rounded-[24px] border border-border/70 bg-card/80 px-4 py-4">
@@ -446,6 +515,12 @@ function PriceSection({ ticker, stockName, latestPrice, dailyRate }: PriceSectio
       </div>
     </section>
   );
+}
+
+function formatEodDate(date: string) {
+  const [year, month, day] = date.split("-");
+  if (!year || !month || !day) return date;
+  return `${year}.${month}.${day}`;
 }
 
 /** 캔들 wick(꼬리) 렌더링 — Customized로 high~low 선을 직접 그림 */
@@ -482,7 +557,7 @@ function CandleWicks({ data, xAxisMap, yAxisMap }: CandleWicksProps) {
   );
 }
 
-function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
+function ChartSection({ data, periodLabel, benchmarkName, currencySymbol }: ChartSectionProps) {
   if (data.length === 0) {
     return (
       <div className="bg-card px-6 py-10 h-[320px] flex items-center justify-center text-muted-foreground font-medium">
@@ -538,7 +613,7 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
             />
             <YAxis hide domain={["auto", "auto"]} />
             <Tooltip
-              content={<CandleTooltip />}
+              content={<CandleTooltip currencySymbol={currencySymbol} />}
               cursor={{ stroke: CHART_COLORS.cursor, strokeWidth: 1, strokeDasharray: "4 4" }}
             />
 
@@ -591,7 +666,7 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
             <XAxis dataKey="date" hide />
             <YAxis hide domain={[0, maxVolume * 1.2]} />
             <Tooltip
-              content={<CandleTooltip />}
+              content={<CandleTooltip currencySymbol={currencySymbol} />}
               cursor={{ stroke: CHART_COLORS.cursor, strokeWidth: 1, strokeDasharray: "4 4" }}
             />
             <Bar dataKey="volume" isAnimationActive={false} maxBarSize={10} radius={[1, 1, 0, 0]}>
@@ -607,7 +682,7 @@ function ChartSection({ data, periodLabel, benchmarkName }: ChartSectionProps) {
   );
 }
 
-function CandleTooltip({ active, payload }: CandleTooltipProps) {
+function CandleTooltip({ active, payload, currencySymbol }: CandleTooltipProps) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
@@ -615,14 +690,14 @@ function CandleTooltip({ active, payload }: CandleTooltipProps) {
       <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">{d.date}</div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-bold">
         <span className="text-muted-foreground">시가</span>
-        <span className="text-foreground text-right">₩{d.open?.toLocaleString()}</span>
+        <span className="text-foreground text-right">{currencySymbol}{d.open?.toLocaleString()}</span>
         <span className="text-muted-foreground">고가</span>
-        <span className="text-right" style={{ color: CHART_COLORS.up }}>₩{d.high?.toLocaleString()}</span>
+        <span className="text-right" style={{ color: CHART_COLORS.up }}>{currencySymbol}{d.high?.toLocaleString()}</span>
         <span className="text-muted-foreground">저가</span>
-        <span className="text-right" style={{ color: CHART_COLORS.down }}>₩{d.low?.toLocaleString()}</span>
+        <span className="text-right" style={{ color: CHART_COLORS.down }}>{currencySymbol}{d.low?.toLocaleString()}</span>
         <span className="text-muted-foreground">종가</span>
         <span className="text-right font-bold" style={{ color: d.isUp ? CHART_COLORS.up : CHART_COLORS.down }}>
-          ₩{d.close?.toLocaleString()}
+          {currencySymbol}{d.close?.toLocaleString()}
         </span>
       </div>
       {d.volume != null && (

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { waitFor, act } from "@testing-library/react";
-import { renderHookWithQuery } from "@/test/test-utils";
+import { clearAuthState, renderHookWithQuery, setAuthState } from "@/test/test-utils";
 import { makeWatchlistGroup, makeWatchlistItems } from "@/test/fixtures";
 import { useWatchlist } from "../use-watchlist";
 
@@ -37,6 +37,22 @@ const mockApi = watchlistApi as {
 describe("useWatchlist", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setAuthState();
+  });
+
+  it("미인증 상태에서는 그룹과 그룹 종목을 조회하지 않는다", () => {
+    clearAuthState();
+
+    const { result } = renderHookWithQuery(() => {
+      const watchlist = useWatchlist();
+      const items = watchlist.useGroupItems(1);
+      return { watchlist, items };
+    });
+
+    expect(result.current.watchlist.groups.fetchStatus).toBe("idle");
+    expect(result.current.items.fetchStatus).toBe("idle");
+    expect(mockApi.getGroups).not.toHaveBeenCalled();
+    expect(mockApi.getItems).not.toHaveBeenCalled();
   });
 
   it("그룹 목록 정상 조회", async () => {
@@ -172,7 +188,16 @@ describe("useWatchlist", () => {
     const groupId = 1;
     const ticker = "005930";
     mockApi.getGroups.mockResolvedValue([makeWatchlistGroup({ id: groupId })]);
-    const before = makeWatchlistItems({ items: [{ ticker, name: "삼성전자" }] });
+    const before = makeWatchlistItems({ items: [{
+      ticker,
+      name: "삼성전자",
+      currentPrice: null,
+      fluctuationRate: null,
+      note: "",
+      rsi: null,
+      rsiStatus: "UNKNOWN",
+      aiInsight: "",
+    }] });
     const after = makeWatchlistItems({ items: [] });
     mockApi.getItems.mockResolvedValueOnce(before).mockResolvedValueOnce(after);
     mockApi.removeItem.mockResolvedValue(undefined);
@@ -199,8 +224,26 @@ describe("useWatchlist", () => {
     const groups = [makeWatchlistGroup({ id: 1 }), makeWatchlistGroup({ id: 2, name: "그룹2" })];
     mockApi.getGroups.mockResolvedValue(groups);
     
-    const items1 = makeWatchlistItems({ items: [{ ticker: "005930", name: "삼성전자", currentPrice: 70000, fluctuationRate: 1.0, fluctuationAmount: 700, marketType: "KOSPI" }] });
-    const items2 = makeWatchlistItems({ items: [{ ticker: "000660", name: "SK하이닉스", currentPrice: 150000, fluctuationRate: 2.0, fluctuationAmount: 3000, marketType: "KOSPI" }] });
+    const items1 = makeWatchlistItems({ items: [{
+      ticker: "005930",
+      name: "삼성전자",
+      currentPrice: 70000,
+      fluctuationRate: 1.0,
+      note: "",
+      rsi: null,
+      rsiStatus: "UNKNOWN",
+      aiInsight: "",
+    }] });
+    const items2 = makeWatchlistItems({ items: [{
+      ticker: "000660",
+      name: "SK하이닉스",
+      currentPrice: 150000,
+      fluctuationRate: 2.0,
+      note: "",
+      rsi: null,
+      rsiStatus: "UNKNOWN",
+      aiInsight: "",
+    }] });
     
     mockApi.getItems
       .mockResolvedValueOnce(items1)

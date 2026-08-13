@@ -65,7 +65,7 @@ describe("StockDetail Screen - 주봉 차트 데이터 검증", () => {
     };
 
     mockUseStock.mockReturnValue({
-      useHistory: vi.fn((ticker, period, freq) => {
+      useHistory: vi.fn((_ticker, _period, freq) => {
         if (freq === "WEEKLY") return mockHistory;
         return { isLoading: false, data: { prices: [] } }; // 기본값
       }),
@@ -107,7 +107,7 @@ describe("StockDetail Screen - 주봉 차트 데이터 검증", () => {
     };
 
     mockUseStock.mockReturnValue({
-      useHistory: vi.fn((ticker, period, freq) => {
+      useHistory: vi.fn((_ticker, _period, freq) => {
         if (freq === "WEEKLY") return mockHistoryMismatch;
         return { isLoading: false, data: { prices: [] } };
       }),
@@ -143,7 +143,7 @@ describe("StockDetail Screen - 주봉 차트 데이터 검증", () => {
     };
 
     mockUseStock.mockReturnValue({
-      useHistory: vi.fn((ticker, period, freq) => {
+      useHistory: vi.fn((_ticker, _period, freq) => {
         if (freq === "WEEKLY") return mockHistoryNearMatch;
         return { isLoading: false, data: { prices: [] } };
       }),
@@ -174,7 +174,7 @@ describe("StockDetail Screen - 주봉 차트 데이터 검증", () => {
     };
 
     mockUseStock.mockReturnValue({
-      useHistory: vi.fn((ticker, period, freq) => {
+      useHistory: vi.fn((_ticker, _period, freq) => {
         if (freq === "WEEKLY") return mockHistorySingle;
         return { isLoading: false, data: { prices: [] } };
       }),
@@ -190,5 +190,29 @@ describe("StockDetail Screen - 주봉 차트 데이터 검증", () => {
       expect(labels.length).toBeGreaterThan(0);
       expect(screen.getByText(/78,000/)).toBeDefined();
     });
+  });
+
+  it("해외 종목은 조회할 수 있지만 포트폴리오 추가는 차단한다", async () => {
+    mockUseStock.mockReturnValue({
+      useHistory: () => ({
+        isLoading: false,
+        data: {
+          ticker: "AAPL",
+          stockName: "Apple",
+          prices: [
+            { date: "2026-08-07", open: 200, close: 210, high: 212, low: 198, volume: 1000 },
+          ],
+          benchmarks: [],
+        },
+      }),
+      useReturns: () => ({ isLoading: false, data: null }),
+      useDetail: () => ({ isLoading: false, data: { marketType: "NASDAQ" } }),
+    });
+
+    renderWithQuery(<StockDetail />);
+
+    expect(screen.getByText("Apple")).toBeInTheDocument();
+    expect(screen.getByText("환율 지원 전에는 포트폴리오에 담을 수 없습니다")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "내 포트폴리오에 담기" })).toBeDisabled();
   });
 });

@@ -60,6 +60,11 @@ export function PortfolioEditSheet({ isOpen, onClose }: PortfolioEditSheetProps)
       return;
     }
 
+    if (stock.marketType !== "KOSPI" && stock.marketType !== "KOSDAQ") {
+      toast.info("환율 지원 전에는 포트폴리오에 담을 수 없습니다");
+      return;
+    }
+
     const newItem: CreatePortfolioItemRequest = {
       symbol: stock.ticker,
       quantity: 0,

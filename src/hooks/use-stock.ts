@@ -1,7 +1,6 @@
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { stockApi, StockReturnsResponse } from "@/api/stock";
 import {
-  StockSearchResponse,
   StockPriceHistoryResponse,
   NewListingStock,
   ChartPeriod,

@@ -8,8 +8,9 @@
     "test:e2e": "playwright test",
     "predev": "npm run sync-api || true",
     "dev": "vite",
-    "sync-api": "openapi-typescript http://localhost:8080/docs/openapi3.yaml -o src/types/schema.d.ts",
-    "build": "(npm run sync-api || echo 'API sync failed, using cached schema') && vite build"
+    "sync-api": "node scripts/sync-api.mjs",
+    "typecheck": "tsc --noEmit --incremental false",
+    "build": "npm run sync-api && npm run typecheck && vite build"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "1.1.6",
