@@ -1,6 +1,6 @@
 ---
 name: frontend-ui-qa
-description: stockwellness-front의 화면, 반응형 레이아웃, 컴포넌트, 상호작용, 사용자 흐름, 시각적 변경, 접근성 또는 프론트엔드 출시 후보를 검증할 때 사용한다.
+description: Use when validating stockwellness-front screens, responsive layouts, interactions, accessibility, or UI release candidates.
 ---
 
 # 프론트엔드 UI 품질 검증
@@ -11,7 +11,7 @@ description: stockwellness-front의 화면, 반응형 레이아웃, 컴포넌트
 
 ## 검증 절차
 
-1. `AGENTS.md`, 기준 화면 설계, 인수 조건, API 매핑과 정확한 후보 빌드 또는 diff를 읽는다.
+1. `AGENTS.md`, 정확한 후보 빌드 또는 diff와 관련 구현·테스트를 읽는다. 반응형 기준은 `docs/responsive-ui.md`, 버전·명령은 `package.json`에서 확인한다. 존재할 때만 `../docs/design/`, `../docs/specs/`의 화면 계약을 읽고, 없으면 추측하지 않고 검증 공백으로 기록한다.
 2. 테스트한 라우트, 계정 상태, 데이터 조건, 뷰포트, 브라우저와 빌드 식별자를 명시한다. 후보를 식별할 수 없으면 출시 판정을 내리지 않는다.
 3. 다음 상태 매트릭스를 확인한다.
    - 로딩과 지연 응답
@@ -53,10 +53,6 @@ description: stockwellness-front의 화면, 반응형 레이아웃, 컴포넌트
 | 금융 값 | 0, 음수, 누락 값, 단위·날짜 의미 |
 | 상호작용 | 진입 동작부터 최종 결과까지 |
 | 접근성 | 키보드, 포커스, 이름·레이블, 색상 외 단서 |
-
-## 예시
-
-포트폴리오 화면 QA에서는 데스크톱 성공 화면을 평가하기 전에 빈 포트폴리오, 0원 보유 자산, 음수 수익률, 건강 진단 요청 실패, 긴 자산명, 하단 내비게이션과 상세 시트를 360px 너비에서 확인한다.
 
 ## 흔한 실수
 

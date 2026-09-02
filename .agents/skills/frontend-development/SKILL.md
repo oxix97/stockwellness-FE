@@ -1,6 +1,6 @@
 ---
 name: frontend-development
-description: stockwellness-front 저장소에서 React, TypeScript, Vite, 라우팅, API 연동, TanStack Query, Zustand, 폼, 차트 또는 반응형 UI를 구현하거나 변경할 때 사용한다.
+description: Use when implementing React, TypeScript, routing, API, state, form, chart, or responsive UI changes in stockwellness-front.
 ---
 
 # 프론트엔드 개발
@@ -11,7 +11,12 @@ description: stockwellness-front 저장소에서 React, TypeScript, Vite, 라우
 
 ## 작업 절차
 
-1. `AGENTS.md`, 기준 화면·기능 명세와 주변 구현·테스트를 읽는다.
+1. `AGENTS.md`, 기준 화면·기능 명세와 주변 구현·테스트를 읽는다. 필요한 자료만 조건부로 읽는다.
+   - API·타입: `docs/api-layer.md`, `docs/api-spec.md`; 실제 코드와 생성 타입을 우선한다.
+   - 인증·오류: `docs/auth.md`, `docs/error-handling.md`
+   - 테스트·반응형: `docs/testing.md`, `docs/responsive-ui.md`
+   - 제품·화면 계약: 존재할 때만 `../docs/specs/`, `../docs/design/`; 없으면 추측하지 않고 검증 공백으로 보고한다.
+   - 버전·명령: `package.json`과 lockfile을 진실 공급원으로 사용한다.
 2. `git status`를 확인하고 관련 없는 사용자 변경을 보호한다. 요청한 동작으로 수정 범위를 제한한다.
 3. 코드를 작성하기 전에 사용자에게 보이는 동작과 계약을 정의한다.
    - 필드명, 단위, 정밀도, null 허용 여부, 날짜 의미와 백엔드 오류를 확인한다.
@@ -19,11 +24,11 @@ description: stockwellness-front 저장소에서 React, TypeScript, Vite, 라우
    - 관련되는 경우 0, 음수, 누락 값과 금융 경계값을 포함한다.
 4. 다음 데이터 흐름을 유지한다.
 
-   `컴포넌트 -> src/hooks/use-*.ts -> src/api/[domain].ts -> src/api/client.ts -> 백엔드`
+   `컴포넌트 -> src/hooks/use-*.ts -> src/api/<domain>.ts -> src/api/client.ts -> 백엔드`
 
    컴포넌트에서 API 모듈을 직접 호출하지 않는다. 서버 데이터는 TanStack Query에, 인증 식별 정보는 Zustand에 둔다.
-5. 하나의 동작에 집중한 Vitest 또는 컴포넌트 실패 테스트를 작성한다. 화면 간 핵심 사용자 흐름이라면 Playwright 테스트를 먼저 작성하거나 수정한다.
-6. 동작이 없기 때문에 테스트가 실패하는지 확인한다.
+5. 하나의 동작에 집중한 Vitest 또는 컴포넌트 실패 테스트를 먼저 작성하고 실행한다. 화면 간 핵심 사용자 흐름이라면 Playwright 테스트를 먼저 작성하거나 수정한다.
+6. 설정 오류가 아니라 동작 부재 때문에 실패하는지 확인한 뒤에만 운영 코드를 작성한다.
 7. 타입을 지키는 최소 변경을 구현한다. `any`, 하드코딩한 Query Key 문자열, 운영 코드의 `console.log`, 필요성이 증명되지 않은 절대 위치 지정을 사용하지 않는다.
 8. 새 UI 기본 요소를 만들기 전에 기존 공통·Radix 컴포넌트와 디자인 토큰을 사용한다. 금융 의미를 색상에만 의존하지 않고 텍스트나 아이콘으로도 전달한다.
 9. 모바일을 먼저 확인하고 데스크톱을 확인한다. 터치 영역, 넘침, 안전 여백, 키보드 접근, 포커스와 부호가 있는 값의 가독성을 점검한다.
@@ -49,10 +54,6 @@ description: stockwellness-front 저장소에서 React, TypeScript, Vite, 라우
 3. 구현 전에 확인한 실패 테스트
 4. 모바일 증거를 포함한 검증 명령과 결과
 5. 남은 위험 또는 제외 범위
-
-## 예시
-
-“관심 종목 카드에 위험 지표 추가” 작업은 API 단위와 기준일을 확인하고 타입이 지정된 API 필드와 Query Key 경로를 추가한다. 도메인 훅으로 값을 노출하고 카드에 로딩·누락·음수 상태를 표시한 뒤 모바일 넘침을 테스트한다. 카드에서 직접 조회하거나 응답을 `any`로 변환하지 않는다.
 
 ## 흔한 실수
 
