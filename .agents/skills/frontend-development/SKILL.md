@@ -7,7 +7,9 @@ description: Use when implementing React, TypeScript, routing, API, state, form,
 
 ## 개요
 
-컴포넌트에서 훅과 API로 이어지는 저장소 흐름을 지키며 타입 안전한 모바일 우선 사용자 동작을 구현한다. 운영 코드를 작성하기 전에 실패하는 테스트로 변경 동작을 증명한다.
+컴포넌트에서 훅과 API로 이어지는 저장소 흐름을 지키며 타입 안전한 모바일 우선 사용자 동작을 구현한다. 동작 변경과 버그 수정은 운영 코드 작성 전에 의미 있는 실패 테스트로 검증한다.
+
+동작에 영향을 주지 않는 문서·표현·생성물 변경은 적합한 정적·시각·생성 검증을 수행한다. 단순히 파일 종류만으로 동작 변경을 제외하지 않는다. 다음 실패 테스트 절차는 동작 변경·버그 수정에 적용한다. 금융·인증·API 동작과 사용자가 지정한 검증은 생략하지 않는다. 적용되는 스킬에 별도의 명시적 예외 승인이 있으면 AGENTS.md의 기존 승인 재사용 규칙을 따른다.
 
 ## 작업 절차
 
@@ -15,7 +17,7 @@ description: Use when implementing React, TypeScript, routing, API, state, form,
    - API·타입: `docs/api-layer.md`, `docs/api-spec.md`; 실제 코드와 생성 타입을 우선한다.
    - 인증·오류: `docs/auth.md`, `docs/error-handling.md`
    - 테스트·반응형: `docs/testing.md`, `docs/responsive-ui.md`
-   - 제품·화면 계약: 존재할 때만 `../docs/specs/`, `../docs/design/`; 없으면 추측하지 않고 검증 공백으로 보고한다.
+   - 제품·화면 계약: 존재할 때만 `../docs/specs/`, `../docs/design/`; 없으면 관련 코드·테스트를 확인하고 AGENTS.md의 명확화 규칙에 따라 진행한다. 남은 검증 공백은 보고한다.
    - 버전·명령: `package.json`과 lockfile을 진실 공급원으로 사용한다.
 2. `git status`를 확인하고 관련 없는 사용자 변경을 보호한다. 요청한 동작으로 수정 범위를 제한한다.
 3. 코드를 작성하기 전에 사용자에게 보이는 동작과 계약을 정의한다.
@@ -31,7 +33,7 @@ description: Use when implementing React, TypeScript, routing, API, state, form,
 6. 설정 오류가 아니라 동작 부재 때문에 실패하는지 확인한 뒤에만 운영 코드를 작성한다.
 7. 타입을 지키는 최소 변경을 구현한다. `any`, 하드코딩한 Query Key 문자열, 운영 코드의 `console.log`, 필요성이 증명되지 않은 절대 위치 지정을 사용하지 않는다.
 8. 새 UI 기본 요소를 만들기 전에 기존 공통·Radix 컴포넌트와 디자인 토큰을 사용한다. 금융 의미를 색상에만 의존하지 않고 텍스트나 아이콘으로도 전달한다.
-9. 모바일을 먼저 확인하고 데스크톱을 확인한다. 터치 영역, 넘침, 안전 여백, 키보드 접근, 포커스와 부호가 있는 값의 가독성을 점검한다.
+9. UI에 영향을 주는 변경은 모바일을 먼저 확인하고 데스크톱을 확인한다. 터치 영역, 넘침, 안전 여백, 키보드 접근, 포커스와 부호가 있는 값의 가독성을 점검한다.
 10. 대상 테스트, 영향받은 테스트 묶음, 타입·빌드 검증과 변경 흐름에 필요한 Playwright 범위를 실행한다.
 
 ## 검증 단계
@@ -41,7 +43,7 @@ description: Use when implementing React, TypeScript, routing, API, state, form,
 | 유틸리티·API·훅 | `npx vitest run <exact-test-file>` |
 | 컴포넌트·화면 | `npx vitest run <exact-test-file>`와 `npm run build` |
 | 핵심 사용자 흐름 | `npx playwright test <exact-spec>` |
-| 저장소 최종 확인 | `npm test`와 `npm run build` |
+| 저장소 전체 영향 또는 출시 검증 | `npm test`와 `npm run build` |
 
 저장소의 정확한 경로를 사용하고 자리표시자 명령을 그대로 실행하지 않는다.
 
@@ -51,7 +53,7 @@ description: Use when implementing React, TypeScript, routing, API, state, form,
 
 1. 구현한 사용자 동작과 영향받은 라우트·컴포넌트
 2. API, 상태와 금융 정보 표시 결정
-3. 구현 전에 확인한 실패 테스트
+3. 동작 변경의 실패 테스트 또는 비동작 변경에 선택한 검증과 근거
 4. 모바일 증거를 포함한 검증 명령과 결과
 5. 남은 위험 또는 제외 범위
 
