@@ -1,5 +1,5 @@
 # Track local_get_verify_20260413 Context
 
 - [Specification](./spec.md)
-- [Implementation Plan](./plan.md)
+- [Verification Report](./verification_report.md)
 - [Metadata](./metadata.json)
