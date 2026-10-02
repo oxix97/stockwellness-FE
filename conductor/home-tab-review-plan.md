@@ -7,7 +7,7 @@
 - **Screens**: `src/app/components/screens/Home.tsx`
 - **Home Components**: `src/app/components/home/` (NewListingsSection, MarketIndexCard, SupplyDemandSection 등)
 - **Hooks**: `src/hooks/use-sector.ts`, `src/hooks/use-stock.ts`, `src/hooks/use-market-index.ts`
-- **History**: `conductor/archive/home_tab_fixes_20260401/` (최근 수정 내역)
+- **History**: 2026-04-01 완료 요구사항은 현재 홈 구현과 디자인 기준에 반영됨. 현재 진행 중인 검토 항목은 이 계획의 체크리스트에서 관리한다.
 
 ## Review Items
 
