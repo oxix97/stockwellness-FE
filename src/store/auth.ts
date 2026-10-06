@@ -7,6 +7,8 @@ import {persist} from "zustand/middleware";
 interface UserState {
     /** 사용자 ID (PK) */
     memberId: number | null;
+    /** 로그인 세션 경계를 구분해 오래된 응답을 폐기합니다. */
+    sessionEpoch: number;
     /** 이메일 */
     email: string | null;
     /** 사용자 닉네임 */
@@ -55,6 +57,7 @@ export const useAuthStore = create<UserState>()(
     persist(
         (set) => ({
             memberId: null,
+            sessionEpoch: 0,
             email: null,
             nickname: null,
             portfolioId: null,
@@ -62,14 +65,16 @@ export const useAuthStore = create<UserState>()(
             refreshToken: null,
             joinedDate: null,
             setAuth: (data) => {
-                set({
+                set((state) => ({
                     memberId: data.memberId,
+                    sessionEpoch: state.memberId === data.memberId ? state.sessionEpoch : state.sessionEpoch + 1,
                     email: data.email,
                     nickname: data.nickname,
+                    portfolioId: state.memberId === data.memberId ? state.portfolioId : null,
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken,
                     joinedDate: data.joinedDate ?? null,
-                });
+                }));
                 // Axios 인터셉터 등 React 외부 코드 접근용으로 유지하되, persist가 이미 관리함
                 localStorage.setItem("accessToken", data.accessToken);
                 localStorage.setItem("refreshToken", data.refreshToken);
@@ -82,7 +87,8 @@ export const useAuthStore = create<UserState>()(
             },
             setNickname: (nickname) => set({ nickname }),
             logout: () => {
-                set({
+                set((state) => ({
+                    sessionEpoch: state.sessionEpoch + 1,
                     memberId: null,
                     email: null,
                     nickname: null,
@@ -90,8 +96,9 @@ export const useAuthStore = create<UserState>()(
                     accessToken: null,
                     refreshToken: null,
                     joinedDate: null,
-                });
-                localStorage.clear();
+                }));
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
             },
         }),
         {

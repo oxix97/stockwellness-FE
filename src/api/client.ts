@@ -36,6 +36,8 @@ type FailedQueueItem = {
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
+  _memberId?: number | null;
+  _sessionEpoch?: number;
 };
 
 let failedQueue: FailedQueueItem[] = [];
@@ -61,7 +63,10 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 // 요청 인터셉터: JWT 토큰이 존재하면 헤더에 추가
 axiosClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
+  const state = useAuthStore.getState();
+  const token = state.accessToken;
+  (config as RetriableRequestConfig)._memberId = state.memberId ?? null;
+  (config as RetriableRequestConfig)._sessionEpoch = state.sessionEpoch ?? 0;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -80,6 +85,15 @@ axiosClient.interceptors.response.use(
     if (!originalRequest) {
       return Promise.reject(error);
     }
+
+    const requestMemberId = originalRequest._memberId;
+    const requestEpoch = originalRequest._sessionEpoch;
+    const currentSession = () => {
+      const state = useAuthStore.getState();
+      return requestMemberId == null || (state.memberId === requestMemberId && (state.sessionEpoch ?? 0) === requestEpoch);
+    };
+    // A response from a previous member/session must never refresh or clear the new session.
+    if (!currentSession()) return Promise.reject(error);
 
     // 회원가입 필요 에러 처리 (A008)
     if (error.response?.data?.code === "A008") {
@@ -104,7 +118,7 @@ axiosClient.interceptors.response.use(
       originalRequest._retry = true;
       isReissuing = true;
 
-      const refreshToken = localStorage.getItem("refreshToken");
+      const refreshToken = useAuthStore.getState().refreshToken ?? localStorage.getItem("refreshToken");
 
       if (refreshToken) {
         try {
@@ -112,6 +126,11 @@ axiosClient.interceptors.response.use(
             refreshToken,
           });
           const tokens = data.data;
+
+          if (!currentSession()) {
+            processQueue(error, null);
+            return Promise.reject(error);
+          }
 
           // Zustand store와 localStorage를 같은 토큰 세트로 유지
           useAuthStore.getState().updateTokens({
@@ -125,8 +144,11 @@ axiosClient.interceptors.response.use(
           processQueue(null, tokens.accessToken);
           return axiosClient(originalRequest);
         } catch (refreshError) {
+          if (!currentSession()) {
+            processQueue(refreshError, null);
+            return Promise.reject(refreshError);
+          }
           processQueue(refreshError, null);
-          localStorage.clear();
           useAuthStore.getState().logout();
           window.location.href = "/login";
           return Promise.reject(refreshError);
@@ -134,7 +156,7 @@ axiosClient.interceptors.response.use(
           isReissuing = false;
         }
       } else {
-        localStorage.clear();
+        if (!currentSession()) return Promise.reject(error);
         useAuthStore.getState().logout();
         window.location.href = "/login";
         return Promise.reject(error); // 에러를 거부해야 테스트에서 감지 가능

@@ -7,6 +7,7 @@ import {
   rollbackOptimisticQueryUpdate,
 } from "@/hooks/query-cache";
 import { useAuthStore } from "@/store/auth";
+import { useInvestmentSelection } from "@/store/investment-selection";
 import {
   CreatePortfolioRequest,
   CreateSimulatedPortfolioRequest,
@@ -38,6 +39,7 @@ function simulatedPortfolioErrorMessage(error: unknown): string {
 
 export function useCreatePortfolio() {
   const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
+  const memberId = useAuthStore((state) => state.memberId);
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -47,6 +49,7 @@ export function useCreatePortfolio() {
     },
     onSuccess: (id: number) => {
       setPortfolioId(String(id));
+      if (memberId) useInvestmentSelection.getState().select(memberId, { type: "SIMULATION", id: String(id) });
       toast.success("새로운 포트폴리오가 생성되었습니다!");
     },
     onSettled: () => {
@@ -57,6 +60,7 @@ export function useCreatePortfolio() {
 
 export function useCreateSimulatedPortfolio() {
   const setPortfolioId = useAuthStore((state) => state.setPortfolioId);
+  const memberId = useAuthStore((state) => state.memberId);
   const queryClient = useQueryClient();
 
   return useMutation<CreateSimulatedPortfolioResponse, unknown, CreateSimulatedPortfolioRequest>({
@@ -66,6 +70,7 @@ export function useCreateSimulatedPortfolio() {
     },
     onSuccess: ({ portfolioId }) => {
       setPortfolioId(String(portfolioId));
+      if (memberId) useInvestmentSelection.getState().select(memberId, { type: "SIMULATION", id: String(portfolioId) });
       toast.success("가상 포트폴리오가 생성되었습니다.");
     },
     onSettled: () => {

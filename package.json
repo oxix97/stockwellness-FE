@@ -6,11 +6,13 @@
   "scripts": {
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:actual-mock": "playwright test --config=playwright.actual-mock.config.ts",
     "predev": "npm run sync-api || true",
     "dev": "vite",
     "sync-api": "node scripts/sync-api.mjs",
+    "sync-actual-api": "node scripts/sync-actual-api.mjs",
     "typecheck": "tsc --noEmit --incremental false",
-    "build": "npm run sync-api && npm run typecheck && vite build"
+    "build": "npm run sync-api && npm run sync-actual-api && npm run typecheck && vite build"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "1.1.6",

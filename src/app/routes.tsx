@@ -4,7 +4,7 @@ import { Layout } from "@/app/components/Layout";
 import { ProtectedRoute } from "@/app/components/shared/ProtectedRoute";
 
 const Home = lazy(() => import("@/app/components/screens/Home").then(m => ({ default: m.Home })));
-const Portfolio = lazy(() => import("@/app/components/screens/Portfolio").then(m => ({ default: m.Portfolio })));
+const Investment = lazy(() => import("@/app/components/screens/Investment").then(m => ({ default: m.Investment })));
 const Watchlist = lazy(() => import("@/app/components/screens/Watchlist").then(m => ({ default: m.Watchlist })));
 const Search = lazy(() => import("@/app/components/screens/Search").then(m => ({ default: m.Search })));
 const More = lazy(() => import("@/app/components/screens/More").then(m => ({ default: m.More })));
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
         path: "portfolio",
         element: (
           <ProtectedRoute>
-            <Portfolio />
+            <Investment />
           </ProtectedRoute>
         ),
       },

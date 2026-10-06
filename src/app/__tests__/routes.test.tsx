@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 vi.mock("@/store/auth");
 vi.mock("@/app/components/screens/Home", () => ({ Home: () => <div>Home Screen</div> }));
 vi.mock("@/app/components/screens/Portfolio", () => ({ Portfolio: () => <div>Portfolio Screen</div> }));
+vi.mock("@/app/components/screens/Investment", () => ({ Investment: () => <div>Investment Screen</div> }));
 vi.mock("@/app/components/screens/Watchlist", () => ({ Watchlist: () => <div>Watchlist Screen</div> }));
 vi.mock("@/app/components/screens/StockDetail", () => ({ StockDetail: () => <div>Stock Detail Screen</div> }));
 vi.mock("@/app/components/screens/Login", () => ({ Login: () => <div>Login Screen</div> }));
@@ -117,7 +118,7 @@ describe("Router Access Control", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Portfolio Screen")).toBeInTheDocument();
+      expect(screen.getByText("Investment Screen")).toBeInTheDocument();
     });
   });
 });
