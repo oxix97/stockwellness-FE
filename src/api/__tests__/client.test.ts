@@ -155,6 +155,22 @@ describe("apiClient 응답 인터셉터 — 401 + refreshToken 없음", () => {
   });
 });
 
+describe("apiClient ignores a stale 401 from another member session", () => {
+  it("does not refresh, logout, or redirect after the active member changed", async () => {
+    const updateTokens = vi.fn();
+    const logout = vi.fn();
+    mockGetState.mockReturnValue({ memberId: 2, sessionEpoch: 9, accessToken: "new-session", refreshToken: "new-refresh", updateTokens, logout });
+    const errorInterceptor = (apiClient.interceptors.response as any).handlers[0].rejected;
+    const error = {
+      response: { status: 401 },
+      config: { _retry: false, _memberId: 1, _sessionEpoch: 8, headers: {} },
+    };
+    await expect(errorInterceptor(error)).rejects.toBe(error);
+    expect(updateTokens).not.toHaveBeenCalled();
+    expect(logout).not.toHaveBeenCalled();
+  });
+});
+
 describe("apiClient 응답 인터셉터 — 회원가입 필요 (A008)", () => {
   let originalLocation: Location;
 
