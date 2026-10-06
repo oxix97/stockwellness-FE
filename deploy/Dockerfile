@@ -9,12 +9,12 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_APP_NAME=$VITE_APP_NAME
 
 # 의존성 설치
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # 소스 복사 및 빌드
 COPY . .
-RUN yarn build
+RUN npm run build
 
 # Stage 2: Serve
 FROM nginx:stable-alpine

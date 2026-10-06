@@ -10,13 +10,41 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/stockwellness-front
 
 jobs:
+  verify-ci:
+    name: Verify CI for deployment commit
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Require a successful CI run for this SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          runs=$(gh api "repos/${REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${DEPLOY_SHA}&per_page=100")
+          echo "$runs" | jq -e --arg sha "$DEPLOY_SHA" '
+            [.workflow_runs[]
+              | select(.head_sha == $sha)
+              | select(.event != "pull_request")
+              | select(.status == "completed" and .conclusion == "success")]
+            | length > 0
+          ' >/dev/null || {
+            echo "No successful CI run found for ${DEPLOY_SHA}; refusing deployment."
+            exit 1
+          }
+
   # 1단계: 도커 이미지 빌드 및 GHCR 푸시
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    needs: verify-ci
     permissions:
       contents: read
       packages: write
+    outputs:
+      image_name_lower: ${{ steps.image_name.outputs.image_name_lower }}
 
     steps:
       - name: Checkout repository
@@ -30,9 +58,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lowercase image name
-        id: string
+        id: image_name
         run: |
-          echo "IMAGE_NAME_LOWER=${IMAGE_NAME,,}" >> $GITHUB_ENV
+          echo "image_name_lower=${IMAGE_NAME,,}" >> $GITHUB_OUTPUT
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
 
@@ -40,7 +68,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
+          images: ${{ env.REGISTRY }}/${{ steps.image_name.outputs.image_name_lower }}
           tags: |
             type=sha,prefix=,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -61,7 +89,7 @@ jobs:
   # 2단계: Tailscale 접속 및 n8n 웹훅 트리거
   trigger-deploy:
     name: Trigger n8n Deployment
-    needs: build-and-push
+    needs: [verify-ci, build-and-push]
     runs-on: ubuntu-latest
 
     steps:
@@ -79,7 +107,7 @@ jobs:
           SHA_SHORT="${GITHUB_SHA:0:7}"
           
           JSON_DATA=$(jq -n \
-            --arg img "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}" \
+            --arg img "${{ env.REGISTRY }}/${{ needs['build-and-push'].outputs.image_name_lower }}" \
             --arg tag "$SHA_SHORT" \
             --arg commit "${{ github.sha }}" \
             --arg msg "$MSG" \
@@ -107,4 +135,4 @@ jobs:
           fi
 
       - name: Done
-        run: echo "✅ Front-End 배포 완료 → ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${GITHUB_SHA:0:7}"
+        run: echo "✅ Front-End 배포 요청 완료 → ${{ env.REGISTRY }}/${{ needs['build-and-push'].outputs.image_name_lower }}:${GITHUB_SHA:0:7}"
