@@ -77,41 +77,6 @@ export default defineConfig(({ mode }) => {
     },
     // 빌드 프로세스에 포함할 에셋 확장자 지정
     assetsInclude: ['**/*.svg', '**/*.csv'],
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) {
-              return;
-            }
-
-            if (id.includes('recharts')) {
-              return 'vendor-recharts';
-            }
-
-            if (
-              id.includes('@tanstack/react-query') ||
-              id.includes('@tanstack/query-core') ||
-              id.includes('@tanstack/react-query-devtools')
-            ) {
-              return 'vendor-query';
-            }
-
-            if (
-              id.includes('@radix-ui') ||
-              id.includes('cmdk') ||
-              id.includes('vaul')
-            ) {
-              return 'vendor-ui';
-            }
-
-            if (id.includes('sonner')) {
-              return 'vendor-sonner';
-            }
-          },
-        },
-      },
-    },
     test: {
       globals: true,
       environment: 'jsdom',

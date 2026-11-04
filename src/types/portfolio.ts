@@ -16,9 +16,9 @@ import type {
 export type Portfolio = PortfolioResponse;
 export type PortfolioItem = PortfolioResponse["items"][number];
 export type PortfolioValuation = PortfolioValuationResponse;
-export type Ratio = PortfolioDiversificationResponse["assetRatios"][number];
+export type Ratio = NonNullable<PortfolioDiversificationResponse["assetRatios"]>[number];
 export type Diversification = PortfolioDiversificationResponse;
-export type RebalancingItem = PortfolioRebalancingResponse["items"][number];
+export type RebalancingItem = NonNullable<PortfolioRebalancingResponse["items"]>[number];
 export type RebalancingGuide = PortfolioRebalancingResponse;
 export type PortfolioSummary = {
   valuation: PortfolioValuationResponse;

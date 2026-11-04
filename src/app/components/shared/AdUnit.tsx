@@ -3,7 +3,7 @@ import { ADSENSE_CONFIG } from '@/config/adsense';
 
 declare global {
   interface Window {
-    adsbygoogle: any[];
+    adsbygoogle: unknown[];
   }
 }
 

@@ -106,11 +106,38 @@ describe("portfolioApi", () => {
     expect(id).toBe(42);
   });
 
+  it("createSimulated — 수량·매입가·통화 없이 simulated 계약만 전송", async () => {
+    const response = { portfolioId: 42, asOfDate: "2026-08-07" };
+    mockClient.post.mockResolvedValue(response);
+
+    const result = await portfolioApi.createSimulated({
+      name: "가상 포트폴리오",
+      description: "장기 투자",
+      totalAmount: 10_000_000,
+      items: [{ symbol: "005930", targetWeight: 100 }],
+    });
+
+    expect(mockClient.post).toHaveBeenCalledWith("/v1/portfolios/simulated", {
+      name: "가상 포트폴리오",
+      description: "장기 투자",
+      totalAmount: 10_000_000,
+      items: [{ symbol: "005930", targetWeight: 100 }],
+    });
+    expect(result).toEqual(response);
+  });
+
   it("runBacktest — POST /v1/portfolios/:id/analysis/backtest 호출", async () => {
     const backtest = { dailyResults: [] };
     mockClient.post.mockResolvedValue(backtest);
 
-    const params = { strategy: "DCA" as const, amount: 1_000_000, benchmarkTicker: "SPY", rebalancingPeriod: "NONE" as const };
+    const params = {
+      strategy: "DCA" as const,
+      amount: 1_000_000,
+      primaryBenchmark: "KOSPI" as const,
+      period: "1Y" as const,
+      rebalancingPeriod: "NONE" as const,
+      dividendReinvested: true,
+    };
     const result = await portfolioApi.runBacktest("1", params);
 
     expect(mockClient.post).toHaveBeenCalledWith("/v1/portfolios/1/analysis/backtest", params);

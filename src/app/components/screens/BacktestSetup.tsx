@@ -6,20 +6,28 @@ import { useAuthStore } from "@/store/auth";
 import { Skeleton, Slider, Switch, Label } from "@/app/components/ui";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { PageHeader } from "@/app/components/shared";
+import type { BacktestPeriod, BacktestRouteState, BacktestStrategy, BenchmarkCode, RebalancingPeriod } from "@/types/api";
 
-const periods = [
+const periods: ReadonlyArray<{ id: BacktestPeriod; label: string }> = [
+  { id: "1W", label: "최근 1주" },
   { id: "1M", label: "최근 1개월" },
   { id: "3M", label: "최근 3개월" },
   { id: "6M", label: "최근 6개월" },
   { id: "1Y", label: "최근 1년" },
 ];
 
-const strategies = [
+const strategies: ReadonlyArray<{ id: BacktestStrategy; label: string; description: string }> = [
   { id: "DCA", label: "적립식 (DCA)", description: "매달 일정 금액을 추가 투자" },
   { id: "LUMP_SUM", label: "거치식 (Lump Sum)", description: "한 번에 전액 투자" },
 ];
 
-const rebalancing = [
+const benchmarks: ReadonlyArray<{ id: BenchmarkCode; label: string; description: string }> = [
+  { id: "KOSPI", label: "KOSPI", description: "국내 대형주 시장" },
+  { id: "KOSDAQ", label: "KOSDAQ", description: "국내 성장주 시장" },
+  { id: "SP500", label: "S&P500", description: "미국 대표 500개 기업" },
+];
+
+const rebalancing: ReadonlyArray<{ id: RebalancingPeriod; label: string }> = [
   { id: "NONE", label: "안 함" },
   { id: "MONTHLY", label: "매월" },
   { id: "QUARTERLY", label: "매 분기" },
@@ -34,12 +42,20 @@ export function BacktestSetup() {
   const { holdings, isLoading } = usePortfolio();
 
   // ── 훅은 조건부 return 이전에 모두 선언 ──────────────────
-  const [initialAmount, setInitialAmount] = useState(10_000_000);
-  const [selectedStrategy, setSelectedStrategy] = useState<"DCA" | "LUMP_SUM">("LUMP_SUM");
-  const [selectedPeriod, setSelectedPeriod] = useState("1y");
-  const [selectedRebalancing, setSelectedRebalancing] = useState("NONE");
+  const [amountInput, setAmountInput] = useState("10000000");
+  const [selectedStrategy, setSelectedStrategy] = useState<BacktestStrategy>("LUMP_SUM");
+  const [selectedPeriod, setSelectedPeriod] = useState<BacktestPeriod>("1Y");
+  const [selectedBenchmark, setSelectedBenchmark] = useState<BenchmarkCode>("KOSPI");
+  const [selectedRebalancing, setSelectedRebalancing] = useState<RebalancingPeriod>("NONE");
   const [dividendReinvested, setDividendReinvested] = useState(true);
   const [weights, setWeights] = useState<Record<string, number>>({});
+
+  const parsedAmount = Number(amountInput);
+  const amountError = amountInput.trim() === "" || !Number.isFinite(parsedAmount) || parsedAmount <= 0
+    ? "투자 금액은 1원 이상 입력해주세요."
+    : !Number.isInteger(parsedAmount)
+      ? "투자 금액은 정수로 입력해주세요."
+      : null;
 
   // 포트폴리오 로드 완료 후 초기 비중 설정
   const portfolioItems = holdings?.items ?? [];
@@ -50,7 +66,7 @@ export function BacktestSetup() {
 
   const activeWeights = Object.keys(weights).length > 0 ? weights : initializedWeights;
   const totalWeight = Math.round(Object.values(activeWeights).reduce((s, v) => s + v, 0) * 10) / 10;
-  const canStart = portfolioItems.length > 0 && Math.abs(totalWeight - 100) < 0.5;
+  const canStart = portfolioItems.length > 0 && Math.abs(totalWeight - 100) < 0.5 && amountError === null;
 
   const handleWeightChange = (symbol: string, value: number) => {
     // 5% 단위로 올림/내림 처리 (value가 이미 step=5로 오지만 보장 차원)
@@ -85,18 +101,18 @@ export function BacktestSetup() {
 
   const handleStartBacktest = () => {
     if (!canStart) return;
-    
-    const params = new URLSearchParams({
+
+    const routeState: BacktestRouteState = {
       strategy: selectedStrategy,
-      amount: initialAmount.toString(),
-      benchmarkTicker: "SPY",
+      amount: parsedAmount,
+      primaryBenchmark: selectedBenchmark,
       period: selectedPeriod,
       rebalancingPeriod: selectedRebalancing,
-      dividendReinvested: dividendReinvested.toString(),
-      weights: JSON.stringify(activeWeights)
-    });
+      dividendReinvested,
+      weights: activeWeights,
+    };
 
-    navigate(`/backtest/result?${params.toString()}`);
+    navigate("/backtest/result", { state: routeState });
   };
 
   return (
@@ -125,8 +141,10 @@ export function BacktestSetup() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {strategies.map((strategy) => (
                 <button
+                  type="button"
                   key={strategy.id}
-                  onClick={() => setSelectedStrategy(strategy.id as "DCA" | "LUMP_SUM")}
+                  aria-pressed={selectedStrategy === strategy.id}
+                  onClick={() => setSelectedStrategy(strategy.id)}
                   className={`rounded-3xl border-2 p-5 text-left transition-all ${
                     selectedStrategy === strategy.id ? "border-primary bg-primary/5 shadow-md" : "border-border bg-background"
                   }`}
@@ -141,19 +159,24 @@ export function BacktestSetup() {
           </div>
 
           <div className="border-b border-border px-5 py-5">
-            <div className="text-foreground mb-4 font-bold text-xl">
+            <Label htmlFor="backtest-amount" className="text-foreground mb-4 block font-bold text-xl">
               {selectedStrategy === "DCA" ? "월 투자금액" : "초기 투자금액"}
-            </div>
+            </Label>
             <div className="rounded-3xl bg-secondary/50 p-8 text-right">
               <input
+                id="backtest-amount"
                 type="number"
                 min="1"
-                value={initialAmount}
-                onChange={(e) => setInitialAmount(Math.max(1, Number(e.target.value)))}
+                step="1"
+                inputMode="numeric"
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value)}
+                aria-invalid={amountError !== null}
                 className="w-full bg-transparent text-right text-[length:var(--mobile-number-xl)] font-bold text-foreground outline-none md:text-4xl"
               />
               <div className="mt-2 font-bold text-muted-foreground">원</div>
             </div>
+            {amountError && <p className="mt-2 text-sm font-medium text-destructive" role="alert">{amountError}</p>}
           </div>
 
           <div className="border-b border-border px-5 py-5">
@@ -161,13 +184,40 @@ export function BacktestSetup() {
             <div className="grid grid-cols-2 gap-3">
               {periods.map((period) => (
                 <button
+                  type="button"
                   key={period.id}
+                  aria-pressed={selectedPeriod === period.id}
                   onClick={() => setSelectedPeriod(period.id)}
                   className={`rounded-2xl py-4 text-base font-semibold transition-all ${
                     selectedPeriod === period.id ? "bg-primary text-primary-foreground shadow-lg" : "border border-border bg-background text-foreground"
                   }`}
                 >
                   {period.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-b border-border px-5 py-5">
+            <div className="mb-4 text-foreground font-bold text-[18px]">벤치마크</div>
+            <div className="grid grid-cols-1 gap-3 min-[421px]:grid-cols-3" role="group" aria-label="벤치마크">
+              {benchmarks.map((benchmark) => (
+                <button
+                  type="button"
+                  key={benchmark.id}
+                  aria-label={benchmark.label}
+                  aria-pressed={selectedBenchmark === benchmark.id}
+                  onClick={() => setSelectedBenchmark(benchmark.id)}
+                  className={`rounded-2xl border-2 p-4 text-left transition-all ${
+                    selectedBenchmark === benchmark.id
+                      ? "border-primary bg-primary/5 shadow-md"
+                      : "border-border bg-background"
+                  }`}
+                >
+                  <div className={`font-bold ${selectedBenchmark === benchmark.id ? "text-primary" : "text-foreground"}`}>
+                    {benchmark.label}
+                  </div>
+                  <div className="mt-1 text-xs leading-tight text-muted-foreground">{benchmark.description}</div>
                 </button>
               ))}
             </div>
@@ -222,7 +272,7 @@ export function BacktestSetup() {
                         </div>
                         <span className="w-12 text-right text-sm font-bold tabular-nums text-primary">{w}%</span>
                       </div>
-                      <Slider value={[w]} onValueChange={([v]) => handleWeightChange(item.symbol, v)} min={0} max={100} step={5} className="w-full" />
+                      <Slider aria-label={`${displayName} 비중`} value={[w]} onValueChange={([v]) => handleWeightChange(item.symbol, v)} min={0} max={100} step={5} className="w-full" />
                     </div>
                   );
                 })}
@@ -249,7 +299,9 @@ export function BacktestSetup() {
             <div className="grid grid-cols-2 gap-3">
               {rebalancing.map((option) => (
                 <button
+                  type="button"
                   key={option.id}
+                  aria-pressed={selectedRebalancing === option.id}
                   onClick={() => setSelectedRebalancing(option.id)}
                   className={`rounded-2xl py-3 font-semibold transition-all ${
                     selectedRebalancing === option.id ? "bg-primary text-primary-foreground" : "border border-border bg-background text-foreground"
@@ -264,6 +316,7 @@ export function BacktestSetup() {
 
         <div className="rounded-[28px] border border-border bg-card px-5 py-5 shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
           <button
+            type="button"
             onClick={handleStartBacktest}
             disabled={!canStart}
             className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-base font-bold transition-transform ${
@@ -276,6 +329,9 @@ export function BacktestSetup() {
           {!canStart && (
             <p className="mt-3 text-center text-xs text-muted-foreground">비중 합계를 100%에 맞춰야 백테스트를 시작할 수 있습니다.</p>
           )}
+          <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
+            EOD 종가 기준 참고 결과이며 실제 거래의 수수료·세금과 차이가 날 수 있습니다.
+          </p>
         </div>
       </div>
 

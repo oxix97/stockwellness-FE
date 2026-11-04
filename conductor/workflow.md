@@ -1,5 +1,15 @@
 # Project Workflow
 
+## Applicability and authority
+
+This workflow applies only when performing a Conductor phase completion workflow. Ordinary tasks follow AGENTS.md and the repository skills. AGENTS.md takes precedence over every instruction and command example below.
+
+Implementation is complete when the requested changes and relevant verification are complete. Commits, git notes, PRs, merges, issue closure and deployment are separate statuses, not automatic requirements. Perform them only within the explicitly requested scope. Every commit, including plan and checkpoint commits, requires approval of its exact message and included files under AGENTS.md. Design or acceptance feedback does not substitute for commit approval. Never stage unrelated user changes. Deployment, restore, secret rotation and notifications in the examples below require explicit authorization for the relevant action; the examples do not grant it.
+
+Commit-dependent steps (reading the just-created SHA, attaching git notes, recording checkpoint SHAs, and committing plan updates) run only if the required commit was actually created for this task and the dependent action is requested and approved where required. Otherwise skip those steps and report their status; never substitute an unrelated HEAD commit.
+
+Apply checks to affected behavior and record justified N/A separately from missing evidence. For changes without behavioral impact, use the repository skill's appropriate static, visual or generation checks instead of manufacturing failing tests. Do not skip financial, authentication or API behavior checks or user-specified verification.
+
 ## Guiding Principles
 
 1. **The Plan is the Source of Truth:** All work must be tracked in `plan.md`
@@ -11,7 +21,7 @@
 
 ## Task Workflow
 
-All tasks follow a strict lifecycle:
+Conductor phase tasks follow this lifecycle within the applicability and approval rules above:
 
 ### Standard Task Workflow
 
@@ -73,8 +83,8 @@ All tasks follow a strict lifecycle:
 1.  **Announce Protocol Start:** Inform the user that the phase is complete and the verification and checkpointing protocol has begun.
 
 2.  **Ensure Test Coverage for Phase Changes:**
-    -   **Step 2.1: Determine Phase Scope:** To identify the files changed in this phase, you must first find the starting point. Read `plan.md` to find the Git commit SHA of the *previous* phase's checkpoint. If no previous checkpoint exists, the scope is all changes since the first commit.
-    -   **Step 2.2: List Changed Files:** Execute `git diff --name-only <previous_checkpoint_sha> HEAD` to get a precise list of all files modified during this phase.
+    -   **Step 2.1: Determine Phase Scope:** Identify the phase starting revision and the requested task scope from `plan.md` and current work. Use the previous checkpoint when it is the correct phase baseline; otherwise establish the baseline from the current task context. If it is ambiguous, ask only about that baseline and continue checks on the known task changes. Do not expand the scope to the entire repository history.
+    -   **Step 2.2: List Changed Files:** Inspect committed changes since the phase baseline, staged and unstaged changes, and relevant untracked files. Use `git diff --name-only <phase_start_sha> HEAD`, `git diff --name-only --cached`, `git diff --name-only`, and `git ls-files --others --exclude-standard` with the verified baseline and task paths. Compare against the initial user-change inventory to exclude unrelated changes. Verification must include this task's uncommitted implementation even when no commit was requested.
     -   **Step 2.3: Verify and Create Tests:** For each file in the list:
         -   **CRITICAL:** First, check its extension. Exclude non-code files (e.g., `.json`, `.md`, `.yaml`).
         -   For each remaining code file, verify a corresponding test file exists.
@@ -84,7 +94,7 @@ All tasks follow a strict lifecycle:
     -   Before execution, you **must** announce the exact shell command you will use to run the tests.
     -   **Example Announcement:** "I will now run the automated test suite to verify the phase. **Command:** `CI=true npm test`"
     -   Execute the announced command.
-    -   If tests fail, you **must** inform the user and begin debugging. You may attempt to propose a fix a **maximum of two times**. If the tests still fail after your second proposed fix, you **must stop**, report the persistent failure, and ask the user for guidance.
+    -   If tests fail, you **must** inform the user and begin debugging. You may attempt to propose a fix a **maximum of two times**. If the tests still fail after your second proposed fix, you **must stop that repair attempt**, report the persistent failure, and ask the user for guidance. Keep gathering independent evidence and continue other authorized work; do not proceed with the blocked repair without guidance.
 
 4.  **Propose a Detailed, Actionable Manual Verification Plan:**
     -   **CRITICAL:** To generate the plan, first analyze `product.md`, `product-guidelines.md`, and `plan.md` to determine the user-facing goals of the completed phase.
@@ -113,10 +123,10 @@ All tasks follow a strict lifecycle:
 
 5.  **Await Explicit User Feedback:**
     -   After presenting the detailed plan, ask the user for confirmation: "**Does this meet your expectations? Please confirm with yes or provide feedback on what needs to be changed.**"
-    -   **PAUSE** and await the user's response. Do not proceed without an explicit yes or confirmation.
+    -   **PAUSE this phase acceptance gate** and await the user's response. Do not pass this gate without explicit confirmation; an existing confirmation of the same candidate and criteria need not be requested again. Complete agent-executable verification before requesting feedback, and continue independent authorized work. This confirmation is not approval of any commit.
 
 6.  **Create Checkpoint Commit:**
-    -   Stage all changes. If no changes occurred in this step, proceed with an empty commit.
+    -   Only when a checkpoint commit is requested, present its exact message and files for approval. Stage only those approved files. An empty checkpoint commit also requires approval.
     -   Perform the commit with a clear and concise message (e.g., `conductor(checkpoint): Checkpoint end of Phase X`).
 
 7.  **Attach Auditable Verification Report using Git Notes:**
@@ -132,11 +142,11 @@ All tasks follow a strict lifecycle:
     - **Action:** Stage the modified `plan.md` file.
     - **Action:** Commit this change with a descriptive message following the format `conductor(plan): Mark phase '<PHASE NAME>' as complete`.
 
-10.  **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report attached as a git note.
+10.  **Announce Status:** Report the phase verification result and acceptance status. Report checkpoint and git note completion only if those requested and approved operations actually succeeded; otherwise identify them as pending or not requested.
 
 ### Quality Gates
 
-Before marking any task complete, verify:
+Before marking the implementation complete, verify the applicable checks:
 
 - [ ] All tests pass
 - [ ] Code coverage meets requirements (>80%)
@@ -271,8 +281,8 @@ A task is complete when:
 5. Code passes all configured linting and static analysis checks
 6. Works beautifully on mobile (if applicable)
 7. Implementation notes added to `plan.md`
-8. Changes committed with proper message
-9. Git note with task summary attached to the commit
+8. Report implementation and verification status, including gaps
+9. Report requested commit, git note and integration steps separately; do not claim the overall request is complete while requested steps remain
 
 ## Emergency Procedures
 

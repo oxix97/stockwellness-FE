@@ -83,6 +83,7 @@ describe("Portfolio widgets", () => {
     mockUsePortfolioSimulation.mockReturnValue({
       data: {
         portfolioInceptionDate: "2026-01-01",
+        daysElapsed: 1,
         dailyResults: [
           {
             date: "2026-01-01",
@@ -100,7 +101,7 @@ describe("Portfolio widgets", () => {
       },
       isLoading: false,
       isError: false,
-    } as ReturnType<typeof usePortfolioSimulation>);
+    } as unknown as ReturnType<typeof usePortfolioSimulation>);
     mockComputeMetrics.mockReturnValue({
       totalReturn: 1.2,
       benchmarkReturn: 0.9,
@@ -108,8 +109,10 @@ describe("Portfolio widgets", () => {
       finalValue: 11200000,
       mdd: 0.5,
       sharpeRatio: 1.1,
+      sortinoRatio: 0.8,
       cagr: 1.2,
       beta: 1.0,
+      recoveryPeriod: 0,
     });
 
     renderWithQuery(<SimulationWidget />);

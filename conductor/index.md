@@ -14,7 +14,6 @@
 - [Home Tab Review Plan](./home-tab-review-plan.md)
 - [Search Tab Review Plan](./search-tab-review-plan.md)
 - [Watchlist Tab Review Plan](./watchlist-tab-review-plan.md)
-- [Portfolio & Backtest Review Plan](./portfolio-backtest-review-plan.md)
 - [My Page Review Plan](./mypage-review-plan.md)
 
 ## Management

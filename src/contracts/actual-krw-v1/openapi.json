@@ -1,0 +1,3386 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Stockwellness Actual KRW V1 — contract review candidate",
+    "version": "1.0.0",
+    "description": "제품정책 ACTUAL_KRW_V1 승인. PO 전달용 기술 계약 후보; BE/FE 소유자 수락 및 런타임 검증 미완료."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/investment-accounts": {
+      "get": {
+        "operationId": "listActualAccounts",
+        "summary": "listActualAccounts — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountListEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createActualAccount",
+        "summary": "createActualAccount — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountCreate"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ]
+      }
+    },
+    "/investment-accounts/{accountId}": {
+      "get": {
+        "operationId": "getActualAccount",
+        "summary": "getActualAccount — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "renameActualAccount",
+        "summary": "renameActualAccount — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$",
+              "maxLength": 18
+            },
+            "description": "quoted accountVersion optimistic concurrency token; numeric value <= 9007199254740991; weak/wildcard/list/leading zero disallowed"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountRename"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investment-accounts/{accountId}/ledger": {
+      "get": {
+        "operationId": "listActualLedger",
+        "summary": "listActualLedger — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerPageEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "maximum": 2147483647
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "ALL"
+              ],
+              "default": "ACTIVE"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createActualLedgerEntry",
+        "summary": "createActualLedgerEntry — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationReceiptEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$",
+              "maxLength": 18
+            },
+            "description": "quoted accountVersion optimistic concurrency token; numeric value <= 9007199254740991; weak/wildcard/list/leading zero disallowed"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LedgerInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investment-accounts/{accountId}/ledger/{entryId}/corrections": {
+      "post": {
+        "operationId": "correctActualLedgerEntry",
+        "summary": "correctActualLedgerEntry — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationReceiptEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$",
+              "maxLength": 18
+            },
+            "description": "quoted accountVersion optimistic concurrency token; numeric value <= 9007199254740991; weak/wildcard/list/leading zero disallowed"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Correction"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investment-accounts/{accountId}/ledger/{entryId}/cancellations": {
+      "post": {
+        "operationId": "cancelActualLedgerEntry",
+        "summary": "cancelActualLedgerEntry — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationReceiptEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"(0|[1-9][0-9]*)\"$",
+              "maxLength": 18
+            },
+            "description": "quoted accountVersion optimistic concurrency token; numeric value <= 9007199254740991; weak/wildcard/list/leading zero disallowed"
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cancellation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investment-accounts/{accountId}/summary": {
+      "get": {
+        "operationId": "getActualSummary",
+        "summary": "getActualSummary — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        ]
+      }
+    },
+    "/investment-accounts/{accountId}/holdings": {
+      "get": {
+        "operationId": "getActualHoldings",
+        "summary": "getActualHoldings — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldingsEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        ]
+      }
+    },
+    "/comparison-targets": {
+      "get": {
+        "operationId": "listActualComparisonTargets",
+        "summary": "listActualComparisonTargets — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/investment-accounts/{accountId}/comparisons": {
+      "post": {
+        "operationId": "compareActualAccount",
+        "summary": "compareActualAccount — 기술 소유자 검토용 후보",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonEnvelope"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Personal account data must not be cached"
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComparisonRequest"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "IntegerDecimal": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]{0,12})$",
+        "maxLength": 13,
+        "description": "정수 원 입력 후보 상한 9,999,999,999,999. 비음수; 필드별 >0 조건 별도."
+      },
+      "QuantityDecimal": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]{0,8})$",
+        "maxLength": 9
+      },
+      "PositiveAmount": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IntegerDecimal"
+          },
+          {
+            "not": {
+              "const": "0"
+            }
+          }
+        ]
+      },
+      "PositiveQuantity": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/QuantityDecimal"
+          },
+          {
+            "not": {
+              "const": "0"
+            }
+          }
+        ]
+      },
+      "FixedDecimal": {
+        "type": "string",
+        "pattern": "^-?(0|[1-9][0-9]{0,12})\\.[0-9]{6}$",
+        "maxLength": 21,
+        "not": {
+          "const": "-0.000000"
+        },
+        "description": "소수6 HALF_EVEN. 금액/비율/배수/성과지수. 정수부13자리 후보; 범위 초과 null+reason."
+      },
+      "Reason": {
+        "type": "string",
+        "enum": [
+          "NO_HISTORY",
+          "ZERO_COST_BASIS",
+          "INSUFFICIENT_OBSERVATIONS",
+          "PERIOD_LESS_THAN_ONE_YEAR",
+          "ZERO_VARIANCE",
+          "NON_POSITIVE_FLOW_ADJUSTED_BASE",
+          "ZERO_NAV_SEGMENT_BREAK",
+          "MISSING_PRICE",
+          "MISSING_BENCHMARK",
+          "RECALCULATING",
+          "UNSUPPORTED_CORPORATE_ACTION",
+          "CORPORATE_ACTION_COVERAGE_UNVERIFIED",
+          "LEDGER_INVARIANT_VIOLATION",
+          "NUMERIC_RANGE_EXCEEDED",
+          "UNAVAILABLE_PERIOD"
+        ]
+      },
+      "FinancialValue": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "$ref": "#/components/schemas/FixedDecimal"
+              },
+              "reason": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "value",
+              "reason"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "reason": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            },
+            "required": [
+              "value",
+              "reason"
+            ]
+          }
+        ]
+      },
+      "QuantityValue": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "$ref": "#/components/schemas/QuantityDecimal"
+              },
+              "reason": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "value",
+              "reason"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "reason": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            },
+            "required": [
+              "value",
+              "reason"
+            ]
+          }
+        ]
+      },
+      "Symbol": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 32
+      },
+      "LedgerStatus": {
+        "type": "string",
+        "enum": [
+          "VALID",
+          "RECALCULATING",
+          "REVIEW_REQUIRED",
+          "INVALID"
+        ]
+      },
+      "ValuationStatus": {
+        "type": "string",
+        "enum": [
+          "COMPLETE",
+          "PARTIAL",
+          "UNAVAILABLE"
+        ]
+      },
+      "Issue": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/Reason"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Symbol"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effectiveFrom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effectiveTo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "affectedFields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        },
+        "required": [
+          "reason",
+          "symbol",
+          "effectiveFrom",
+          "effectiveTo",
+          "affectedFields"
+        ]
+      },
+      "ReadMeta": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "ledgerVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "calculationVersion": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "policyVersion": {
+            "const": "ACTUAL_KRW_V1"
+          },
+          "currency": {
+            "const": "KRW"
+          },
+          "ledgerStatus": {
+            "$ref": "#/components/schemas/LedgerStatus"
+          },
+          "valuationStatus": {
+            "$ref": "#/components/schemas/ValuationStatus"
+          },
+          "ledgerIssues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            }
+          },
+          "asOfDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missingSymbols": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Symbol"
+            }
+          },
+          "marketDataVersion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "시장 데이터 불변 snapshot 버전. 가격/기업행위 입력 정정 시 변경; 계산완료 요약/보유는 동일값."
+          }
+        },
+        "required": [
+          "accountId",
+          "accountVersion",
+          "ledgerVersion",
+          "calculationVersion",
+          "policyVersion",
+          "currency",
+          "ledgerStatus",
+          "valuationStatus",
+          "ledgerIssues",
+          "asOfDate",
+          "missingSymbols",
+          "marketDataVersion"
+        ]
+      },
+      "Account": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountType": {
+            "const": "ACTUAL"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "brokerLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "baseCurrency": {
+            "const": "KRW"
+          },
+          "accountVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "ledgerVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "accountId",
+          "accountType",
+          "name",
+          "brokerLabel",
+          "baseCurrency",
+          "accountVersion",
+          "ledgerVersion"
+        ]
+      },
+      "AccountCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "baseCurrency": {
+            "const": "KRW"
+          },
+          "brokerLabel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "baseCurrency"
+        ]
+      },
+      "AccountRename": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "BUYInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "currency": {
+            "const": "KRW"
+          },
+          "type": {
+            "const": "BUY"
+          },
+          "symbol": {
+            "$ref": "#/components/schemas/Symbol"
+          },
+          "marketCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "description": "동일 ticker가 여러 시장에 있을 때 필수; 유일 ticker는 생략 가능"
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/PositiveQuantity"
+          },
+          "price": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          },
+          "fee": {
+            "$ref": "#/components/schemas/IntegerDecimal"
+          },
+          "tax": {
+            "$ref": "#/components/schemas/IntegerDecimal"
+          }
+        },
+        "required": [
+          "occurredOn",
+          "sequence",
+          "currency",
+          "type",
+          "symbol",
+          "quantity",
+          "price",
+          "fee",
+          "tax"
+        ]
+      },
+      "SELLInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "currency": {
+            "const": "KRW"
+          },
+          "type": {
+            "const": "SELL"
+          },
+          "symbol": {
+            "$ref": "#/components/schemas/Symbol"
+          },
+          "marketCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "description": "동일 ticker가 여러 시장에 있을 때 필수; 유일 ticker는 생략 가능"
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/PositiveQuantity"
+          },
+          "price": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          },
+          "fee": {
+            "$ref": "#/components/schemas/IntegerDecimal"
+          },
+          "tax": {
+            "$ref": "#/components/schemas/IntegerDecimal"
+          }
+        },
+        "required": [
+          "occurredOn",
+          "sequence",
+          "currency",
+          "type",
+          "symbol",
+          "quantity",
+          "price",
+          "fee",
+          "tax"
+        ]
+      },
+      "DEPOSITInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "currency": {
+            "const": "KRW"
+          },
+          "type": {
+            "const": "DEPOSIT"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          }
+        },
+        "required": [
+          "occurredOn",
+          "sequence",
+          "currency",
+          "type",
+          "amount"
+        ]
+      },
+      "WITHDRAWInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "currency": {
+            "const": "KRW"
+          },
+          "type": {
+            "const": "WITHDRAW"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          }
+        },
+        "required": [
+          "occurredOn",
+          "sequence",
+          "currency",
+          "type",
+          "amount"
+        ]
+      },
+      "DIVIDENDInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "occurredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "currency": {
+            "const": "KRW"
+          },
+          "type": {
+            "const": "DIVIDEND"
+          },
+          "symbol": {
+            "$ref": "#/components/schemas/Symbol"
+          },
+          "marketCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16,
+            "description": "동일 ticker가 여러 시장에 있을 때 필수; 유일 ticker는 생략 가능"
+          },
+          "grossAmount": {
+            "$ref": "#/components/schemas/PositiveAmount"
+          },
+          "fee": {
+            "$ref": "#/components/schemas/IntegerDecimal"
+          },
+          "tax": {
+            "$ref": "#/components/schemas/IntegerDecimal"
+          }
+        },
+        "required": [
+          "occurredOn",
+          "sequence",
+          "currency",
+          "type",
+          "symbol",
+          "grossAmount",
+          "fee",
+          "tax"
+        ]
+      },
+      "LedgerInput": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/BUYInput"
+          },
+          {
+            "$ref": "#/components/schemas/SELLInput"
+          },
+          {
+            "$ref": "#/components/schemas/DEPOSITInput"
+          },
+          {
+            "$ref": "#/components/schemas/WITHDRAWInput"
+          },
+          {
+            "$ref": "#/components/schemas/DIVIDENDInput"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "BUY": "#/components/schemas/BUYInput",
+            "SELL": "#/components/schemas/SELLInput",
+            "DEPOSIT": "#/components/schemas/DEPOSITInput",
+            "WITHDRAW": "#/components/schemas/WITHDRAWInput",
+            "DIVIDEND": "#/components/schemas/DIVIDENDInput"
+          }
+        }
+      },
+      "Correction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "replacement": {
+            "$ref": "#/components/schemas/LedgerInput"
+          }
+        },
+        "required": [
+          "reason",
+          "replacement"
+        ]
+      },
+      "Cancellation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "LedgerEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entryId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "recordStatus": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUPERSEDED",
+              "CANCELLED"
+            ]
+          },
+          "input": {
+            "$ref": "#/components/schemas/LedgerInput"
+          },
+          "replacesEntryId": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "supersededByEntryId": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "changeReason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastChangedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastChangeType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "CORRECTION",
+                  "CANCELLATION"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "entryId",
+          "recordStatus",
+          "input",
+          "replacesEntryId",
+          "supersededByEntryId",
+          "changeReason",
+          "createdAt",
+          "lastChangedAt",
+          "lastChangeType"
+        ]
+      },
+      "MutationReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "ledgerVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "entryId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "replacementEntryId": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ledgerStatus": {
+            "$ref": "#/components/schemas/LedgerStatus"
+          },
+          "policyVersion": {
+            "const": "ACTUAL_KRW_V1"
+          }
+        },
+        "required": [
+          "accountId",
+          "accountVersion",
+          "ledgerVersion",
+          "entryId",
+          "replacementEntryId",
+          "ledgerStatus",
+          "policyVersion"
+        ]
+      },
+      "LedgerPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accountVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "ledgerVersion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LedgerEntry"
+            },
+            "maxItems": 100
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accountId",
+          "accountVersion",
+          "ledgerVersion",
+          "content",
+          "page",
+          "size",
+          "hasNext"
+        ]
+      },
+      "Summary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/ReadMeta"
+          },
+          "cashBalance": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "netDeposits": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "cumulativeBuyAmount": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "remainingCostBasis": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "stockMarketValue": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "netAssetValue": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "realizedPnl": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "unrealizedPnl": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "netDividendIncome": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "totalPnl": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "holdingReturnRatePct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          }
+        },
+        "required": [
+          "meta",
+          "cashBalance",
+          "netDeposits",
+          "cumulativeBuyAmount",
+          "remainingCostBasis",
+          "stockMarketValue",
+          "netAssetValue",
+          "realizedPnl",
+          "unrealizedPnl",
+          "netDividendIncome",
+          "totalPnl",
+          "holdingReturnRatePct"
+        ]
+      },
+      "Holding": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "symbol": {
+            "$ref": "#/components/schemas/Symbol"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/QuantityValue"
+          },
+          "averagePrice": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "costBasis": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "closePrice": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "marketValue": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "unrealizedPnl": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "holdingReturnRatePct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "allocationRatePct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "priceAsOfDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priceStatus": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "MISSING",
+              "NOT_REQUIRED"
+            ]
+          }
+        },
+        "required": [
+          "symbol",
+          "name",
+          "quantity",
+          "averagePrice",
+          "costBasis",
+          "closePrice",
+          "marketValue",
+          "unrealizedPnl",
+          "holdingReturnRatePct",
+          "allocationRatePct",
+          "priceAsOfDate",
+          "priceStatus"
+        ]
+      },
+      "Holdings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/ReadMeta"
+          },
+          "cashBalance": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "cashAllocationRatePct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Holding"
+            }
+          }
+        },
+        "required": [
+          "meta",
+          "cashBalance",
+          "cashAllocationRatePct",
+          "items"
+        ]
+      },
+      "Target": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "KOSPI",
+              "KOSDAQ"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "kind": {
+            "const": "INDEX"
+          },
+          "unit": {
+            "const": "POINTS"
+          },
+          "comparisonCurrency": {
+            "const": "KRW"
+          },
+          "returnBasis": {
+            "const": "TOTAL_RETURN"
+          },
+          "costBasis": {
+            "const": "GROSS_NO_FEES_OR_TAXES"
+          },
+          "dividendPolicy": {
+            "const": "REINVESTED"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seriesId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availableFrom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availableTo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "BLOCKED"
+            ]
+          },
+          "unavailableReason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "DATA_RIGHTS_UNVERIFIED",
+                  "TR_DATA_UNVERIFIED",
+                  "NO_DATA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "kind",
+          "unit",
+          "comparisonCurrency",
+          "returnBasis",
+          "costBasis",
+          "dividendPolicy",
+          "provider",
+          "seriesId",
+          "availableFrom",
+          "availableTo",
+          "status",
+          "unavailableReason"
+        ]
+      },
+      "Catalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policyVersion": {
+            "const": "ACTUAL_KRW_V1"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Target"
+            },
+            "maxItems": 2
+          }
+        },
+        "required": [
+          "policyVersion",
+          "targets"
+        ]
+      },
+      "ComparisonRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "type": "string",
+            "enum": [
+              "1M",
+              "3M",
+              "6M",
+              "1Y",
+              "ALL"
+            ]
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "KOSPI",
+                "KOSDAQ"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "period",
+          "targets"
+        ]
+      },
+      "Range": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ]
+      },
+      "ComparisonMetadata": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policyVersion": {
+            "const": "ACTUAL_KRW_V1"
+          },
+          "requestedRange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Range"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effectiveRange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Range"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rangeAdjustmentReasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ACCOUNT_HISTORY_START",
+                "BENCHMARK_HISTORY_START",
+                "SEGMENT_START",
+                "NO_COMMON_PERIOD"
+              ]
+            }
+          },
+          "comparisonCurrency": {
+            "const": "KRW"
+          },
+          "returnBasis": {
+            "const": "TOTAL_RETURN"
+          },
+          "flowTimingAssumption": {
+            "const": "BEGINNING_OF_DAY"
+          },
+          "annualizationTradingDays": {
+            "const": 252
+          },
+          "cagrCalendarDaysPerYear": {
+            "const": 365
+          },
+          "riskFreeRateAnnualPct": {
+            "$ref": "#/components/schemas/FixedDecimal"
+          },
+          "accountCostBasis": {
+            "const": "NET_OF_RECORDED_FEES_AND_TAXES"
+          },
+          "accountDividendPolicy": {
+            "const": "NET_CASH_NO_AUTOMATIC_REINVESTMENT"
+          },
+          "benchmarkCostBasis": {
+            "const": "GROSS_NO_FEES_OR_TAXES"
+          },
+          "benchmarkDividendPolicy": {
+            "const": "REINVESTED"
+          },
+          "returnMethod": {
+            "const": "ESTIMATED_DAILY_TWR"
+          }
+        },
+        "required": [
+          "policyVersion",
+          "requestedRange",
+          "effectiveRange",
+          "rangeAdjustmentReasons",
+          "comparisonCurrency",
+          "returnBasis",
+          "returnMethod",
+          "flowTimingAssumption",
+          "annualizationTradingDays",
+          "cagrCalendarDaysPerYear",
+          "riskFreeRateAnnualPct",
+          "accountCostBasis",
+          "accountDividendPolicy",
+          "benchmarkCostBasis",
+          "benchmarkDividendPolicy"
+        ]
+      },
+      "Metrics": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "returnRatePct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "cagrPct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "volatilityPct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "mddPct": {
+            "$ref": "#/components/schemas/FinancialValue"
+          },
+          "sharpeRatio": {
+            "$ref": "#/components/schemas/FinancialValue"
+          }
+        },
+        "required": [
+          "returnRatePct",
+          "cagrPct",
+          "volatilityPct",
+          "mddPct",
+          "sharpeRatio"
+        ]
+      },
+      "Point": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "cumulativeReturnRatePct": {
+            "$ref": "#/components/schemas/FixedDecimal"
+          }
+        },
+        "required": [
+          "date",
+          "cumulativeReturnRatePct"
+        ]
+      },
+      "Series": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "ACCOUNT",
+              "KOSPI",
+              "KOSDAQ"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Reason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Point"
+            }
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/Metrics"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "reason",
+          "points",
+          "metrics"
+        ]
+      },
+      "Comparison": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/ReadMeta"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ComparisonMetadata"
+          },
+          "account": {
+            "$ref": "#/components/schemas/Series"
+          },
+          "benchmarks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Series"
+            },
+            "maxItems": 2
+          }
+        },
+        "required": [
+          "meta",
+          "metadata",
+          "account",
+          "benchmarks"
+        ]
+      },
+      "FieldError": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "field",
+          "value",
+          "reason"
+        ]
+      },
+      "AccountEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              200,
+              201
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "S000",
+              "S001"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "$ref": "#/components/schemas/Account"
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "LedgerPageEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              200,
+              201
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "S000",
+              "S001"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "$ref": "#/components/schemas/LedgerPage"
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "MutationReceiptEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              200,
+              201
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "S000",
+              "S001"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "$ref": "#/components/schemas/MutationReceipt"
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "SummaryEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              200,
+              201
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "S000",
+              "S001"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "HoldingsEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              200,
+              201
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "S000",
+              "S001"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "$ref": "#/components/schemas/Holdings"
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "CatalogEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              200,
+              201
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "S000",
+              "S001"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "$ref": "#/components/schemas/Catalog"
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "ComparisonEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              200,
+              201
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "S000",
+              "S001"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "$ref": "#/components/schemas/Comparison"
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "AccountListEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "status": {
+            "const": 200
+          },
+          "code": {
+            "const": "S000"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "data",
+          "timestamp",
+          "errors"
+        ]
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "success": {
+            "const": false
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              400,
+              401,
+              404,
+              409,
+              500
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "G001",
+              "G003",
+              "G004",
+              "A001",
+              "A003",
+              "A004",
+              "I001",
+              "I002",
+              "I003",
+              "I004",
+              "I005",
+              "I006",
+              "I007",
+              "I008",
+              "I009"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "traceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          },
+          "data": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "success",
+          "status",
+          "code",
+          "message",
+          "timestamp",
+          "errors"
+        ]
+      }
+    }
+  }
+}

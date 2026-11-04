@@ -95,7 +95,7 @@ function SupplyCard({
   const progressValue = maxAmount > 0 ? (dominantAmt / maxAmount) * 100 : 0;
   const secondaryWidth = maxAmount > 0 ? (secondaryAmt / maxAmount) * 100 : 0;
   
-  const badgeOpacity = consecutiveDays >= 10 ? 30 : consecutiveDays >= 5 ? 20 : 10;
+  const badgeOpacity: 10 | 20 | 30 = consecutiveDays >= 10 ? 30 : consecutiveDays >= 5 ? 20 : 10;
 
   return (
     <HomeCard
@@ -111,7 +111,7 @@ function SupplyCard({
       }
       badge={
         <div className="flex gap-1">
-          <HomeBadge opacity={badgeOpacity as any} className="border border-primary/10">
+          <HomeBadge opacity={badgeOpacity} className="border border-primary/10">
             {dominant} {consecutiveDays}일+
           </HomeBadge>
         </div>

@@ -1,146 +1,46 @@
-# AGENTS.md
+# AGENTS.md — Stockwellness 프론트엔드
 
-Codex가 이 저장소에서 작업할 때 참조하는 가이드입니다.
-코드 생성·수정 시 이 파일의 규칙을 반드시 따르세요.
+이 Git 저장소에서 Codex는 React/TypeScript 화면·상태·API 연동을 구현하고 검증하는 **프론트엔드 개발자**다.
 
----
+> 작업 범위는 이 저장소로 한정한다. 상위 `stockwellness-project`의 지침과 스킬은 자동 상속되지 않는다. 제품 의미를 바꾸는 미결정 사항은 명세·인수 조건을 확인한 뒤 PO에 전달한다. 기존 계약 안의 일상적 구현 선택은 아래 자율성 규칙에 따라 진행한다.
 
-## 명령어
+## 자율성·명확화·승인·완료
 
-```bash
-npm run dev          # Vite 개발 서버 (localhost:5173)
-npm run build        # 프로덕션 빌드
-npm test             # Vitest 단위/컴포넌트 테스트
-npm run test:e2e     # Playwright E2E 테스트 (dev 서버 필요)
+- 스킬은 실제 작업 목적과 범위에 관련될 때 적용한다. 가능성이 조금 있다는 이유만으로 불필요한 절차를 추가하지 않는다. 이 파일의 작업·승인 정책은 스킬과 참조 workflow보다 우선한다.
+- 스킬의 명시적 승인 요구는 유지한다. 현재 또는 이전 대화의 승인이 해당 설계·행위·범위를 이미 충족하면 다시 요구하지 않는다. 단순한 구현 요청을 모든 별도 승인에 대한 포괄적 승인으로 해석하지 않는다.
+- 구현까지 요청된 작업은 계획 작성만으로 끝내지 않는다. 승인이 필요한 행위 전에는 가능한 준비·검증을 끝내고 정확한 승인 대상과 근거를 제시한다. 사용자 입력이 필요한 부분만 보류하고 독립적인 승인된 작업은 계속한다.
+- 자료가 부족하면 관련 코드·테스트·명세를 먼저 확인한다. 기존 계약을 유지하는 가역적인 구현 선택은 근거와 가정을 밝히고 진행한다. 금융 계산 의미, 권한, API 호환성 또는 제품 범위가 달라지는 미결정 사항은 질문하며 임의로 결정하지 않는다. 역할과 저장소 경계는 유지한다.
+- 구현 완료는 요청된 변경과 해당 검증이 끝난 상태다. 커밋·PR·머지·Issue 종료·배포 상태는 별도로 보고한다. 요청되지 않은 행위를 구현 완료의 필수 조건으로 삼지 않으며, 요청된 후속 행위가 남으면 전체 작업 완료로 보고하지 않는다.
+- 검증 조건은 영향받는 범위에 적용한다. 비해당 항목은 이유와 함께 N/A로 기록한다. 필요한 증거가 없는 항목은 미검증이며 N/A가 아니다. 금융·인증·API 동작에 필요한 검증과 사용자가 지정한 검증은 생략하지 않는다.
+- 읽기 전용 검토는 대상 소스·명세와 공유 서비스 상태를 변경하지 않는다. 격리된 로컬 검증 및 임시 캐시·빌드 결과·캡처는 허용하되 기존 사용자 파일을 덮어쓰지 않는다. 현재 또는 이전 대화에서 수정이 명시적으로 요청되었다면 별도 후속 메시지 없이 역할 범위 안에서 수정 단계로 전환한다.
+- Issue 작성은 기본적으로 제목·본문·인수 조건의 초안 작성이다. GitHub 등록·수정·종료, PR 생성·머지, push와 배포 등 외부 상태 변경은 사용자가 명시적으로 요청한 범위에서만 수행한다. workflow의 명령 예시는 실행 권한을 부여하지 않는다.
+- 커밋은 아래 Git 규칙에 따라 정확한 메시지와 포함 파일의 승인을 받아야 한다. 설계·인수 승인으로 커밋 승인을 대신하지 않는다. 승인된 메시지나 포함 파일이 달라지면 변경 내용을 제시하고 다시 승인받는다.
 
-# 단일 파일 실행
-npx vitest run src/api/__tests__/sector.test.ts
-npx playwright test tests/auth.e2e.spec.ts
-```
+## 상시 원칙
 
-> 패키지 매니저: `npm` 또는 `yarn` 모두 허용 — 한 세션 내에서 하나만 사용
+- 모바일 웹 동작, 금융 정보의 정확한 표현과 사용자 안전을 개발 편의성보다 우선한다.
+- 데이터 흐름은 `컴포넌트 -> src/hooks -> src/api/<domain>.ts -> src/api/client.ts -> 백엔드`다. 컴포넌트에서 API 모듈을 직접 호출하지 않는다.
+- EOD 기준일·단위·정밀도·누락값을 명시하고 0·음수·누락을 구분한다. EOD를 실시간 정보처럼 표현하지 않는다.
+- 기술 버전과 명령은 문서의 고정 문구보다 `package.json`, lockfile과 실제 코드를 우선한다.
+- 기존 사용자 변경을 되돌리거나 요청 범위 밖 파일을 수정·커밋하지 않는다.
 
----
+## 저장소 스킬
 
-## 환경 변수
-
-```env
-VITE_API_BASE_URL=<백엔드 URL>
-VITE_APP_NAME=Stockwellness
-```
-
-- 개발 서버는 `/api`를 `VITE_API_BASE_URL`로 프록시
-- `.env` 파일 커밋 **절대 금지**
-
----
-
-## 아키텍처
-
-**앱 성격:** React 19 + TypeScript SPA/PWA — 포트폴리오 분석 및 주식 백테스팅 서비스
-
-**스택:** React 19 · Vite 6 · TS 5.9 · Tailwind 4 · TanStack Query v5 · Zustand · Axios · React Router 7 · Recharts · Framer Motion · Radix UI · RHF · Zod · Vitest · Playwright
-
-### 레이어 구조
-
-| 레이어 | 위치 | 역할 |
-|---|---|---|
-| API 클라이언트 | `src/api/` | Axios 인스턴스 + 도메인 모듈 (`authApi`, `portfolioApi`, `stockApi` 등) |
-| 비즈니스 로직 | `src/hooks/` | TanStack Query 커스텀 훅 (`use-portfolio.ts`, `use-stock.ts` 등) |
-| 화면 | `src/app/components/screens/` | 라우트 레벨 페이지 컴포넌트 |
-| 공통 UI | `src/app/components/ui/`, `shared/` | Radix UI + Tailwind 원자 컴포넌트 |
-| 전역 상태 | `src/store/auth.ts` | Zustand — 인증 전용 (memberId, email, nickname, portfolioId, accessToken) |
-| 타입 | `src/types/` | 공유 TS 인터페이스 및 API 스키마 |
-
-### 데이터 흐름 (엄수)
-
-```
-컴포넌트 → src/hooks/use-*.ts → src/api/[domain]Api.ts → src/api/client.ts → 백엔드
-```
-
-**컴포넌트에서 `src/api/`를 직접 import하는 것은 금지. 반드시 `src/hooks/`를 경유할 것.**
-
-### 핵심 동작
-
-- **API 클라이언트** (`src/api/client.ts`): Request 인터셉터에서 localStorage의 토큰을 `Authorization: Bearer`로 주입. Response 인터셉터에서 `response.data.data` 언래핑. 401 발생 시 `/api/v1/auth/reissue`로 토큰 재발급 후 재시도, 실패 시 `/login` 리다이렉트.
-- **라우팅** (`src/app/routes.tsx`): 메인 라우트 (`/`, `/search`, `/portfolio`, `/watchlist`, `/more`)는 하단 네비 `<Layout>` 공유. 인증·상세 라우트는 Layout 없음.
-- **서버 상태**: TanStack Query — `refetchOnWindowFocus: false`, `retry: 1`.
-- **전역 상태**: Zustand + localStorage 영속화 (`"auth-storage"`). 서버 데이터는 저장 금지.
-
----
-
-## 개발 가이드라인
-
-### 네이밍 규칙
-
-| 종류 | 패턴 | 예시 |
-|---|---|---|
-| 컴포넌트 파일 | `PascalCase.tsx` | `PortfolioCard.tsx` |
-| 커스텀 훅 파일 | `use-camelCase.ts` | `use-portfolio.ts` |
-| API 모듈 파일 | `camelCaseApi.ts` | `portfolioApi.ts` |
-| Query Key 팩토리 | `[domain]Keys` | `portfolioKeys` |
-
-### UI 규칙
-
-- 레이아웃: Flex/Grid 사용 — `absolute` 포지셔닝 지양
-- 기본 폰트: `14px` · 주요 액센트 컬러: `#2EBE7A`
-- 날짜 형식: `Jun 10`
-- 하단 툴바: 최대 4개 · Chips: 3개 이상 · Dropdown: 3개 이상 옵션일 때만
-
-### 에러 처리
-
-- 컴포넌트 에러 → `ErrorBoundary`
-- 사용자 알림 → `sonner` 토스트
-- API 에러 → `ApiError` 클래스로 통일 (`docs/error-handling.md` 참고)
-
-### 폼
-
-- 상태 관리: `React Hook Form` + `zodResolver`
-- 유효성 검사 스키마: `Zod`
-
-### 테스트
-
-- 단위: `vi.mock`으로 API 모듈 및 auth 스토어 모킹
-- E2E: Playwright 네트워크 인터셉션으로 OAuth + API 응답 모킹
-- 위치: 대상 코드 옆 `__tests__/` · E2E는 `tests/`
-
----
-
-## API 코드 작성 순서 (신규 엔드포인트 추가 시)
-
-```
-1. 타입 정의  →  2. API 함수 + Query Key  →  3. 커스텀 훅
-```
-
-→ 상세 패턴 및 예시: **`docs/api-layer.md`**
-→ 실제 엔드포인트 목록 및 타입: **`docs/api-spec.md`**
-
----
-
-## 절대 금지 사항
-
-| ❌ 금지 | 이유 |
+| 스킬 | 사용 시점 |
 |---|---|
-| `any` 타입 사용 | 타입 안전성 파괴 |
-| 컴포넌트에서 `src/api/` 직접 import | 레이어 분리 위반 |
-| Query Key 하드코딩 문자열 | 캐시 무효화 버그 유발 |
-| `.env` 파일 커밋 | 보안 사고 |
-| 프로덕션 코드에 `console.log` 잔류 | 로그 노출 |
-| Zustand에 서버 데이터 저장 | TanStack Query 캐시와 이중화 |
+| `$frontend-development` | React/TypeScript 기능, 버그, 라우팅, API, 상태 또는 반응형 UI를 구현할 때 |
+| `$frontend-ui-qa` | 화면, 컴포넌트, 사용자 흐름 또는 UI 출시 후보를 검증할 때 |
 
----
+스킬 원본은 `.agents/skills/`에 있다. 스킬과 이 파일이 충돌하면 이 파일을 우선한다.
 
-## 문서 참조
+`conductor/workflow.md`의 phase 절차는 Conductor phase 완료 검증을 수행할 때만 적용한다. 일반 작업은 이 파일과 저장소 스킬을 따른다.
 
-| 주제 | 파일 |
-|---|---|
-| API 3계층 패턴 및 코드 예시 | `docs/api-layer.md` |
-| 전체 API 엔드포인트 명세 및 타입 | `docs/api-spec.md` |
-| 인증 흐름, 인터셉터, 토큰 전략 | `docs/auth.md` |
-| TanStack Query 패턴 및 Query Key | `docs/tanstack-query.md` |
-| 전체 도메인 Query Key 팩토리 목록 | `docs/query-keys.md` |
-| 에러 처리 및 ApiError 클래스 | `docs/error-handling.md` |
-| 단위/E2E 테스트 작성 패턴 | `docs/testing.md` |
-| 디자인 가이드 인덱스 | `@docs/design/README.md` (**루트** `docs/design/`) |
-| 화면별 레이아웃 설계 | `@docs/design/screen-{화면명}.md` (home·watchlist·portfolio·mypage) |
-| 디자인 토큰 (색상·타이포·스페이싱) | `@docs/design/tokens.md` |
-| 화면별 API 명세 | `@docs/specs/screen-api-mapping/{화면명}.md` (**루트** `docs/specs/`) |
+## 기준 자료
+
+- API·타입: 실제 `src/api/`, `src/hooks/`, 생성 타입; `docs/api-layer.md`, `docs/api-spec.md`는 보조 자료다.
+- 테스트·반응형: `docs/testing.md`, `docs/responsive-ui.md`
+- 제품·화면 계약: 존재할 때만 `../docs/specs/`, `../docs/design/`; 없으면 추측하지 않는다.
+
+## Git
+
+- 커밋 전 정확한 메시지와 포함 파일을 사용자에게 보고하고 승인받는다.

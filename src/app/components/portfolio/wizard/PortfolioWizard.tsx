@@ -1,4 +1,4 @@
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -6,14 +6,13 @@ import { Phase1Goal } from "./Phase1Goal";
 import { Phase2Assets } from "./Phase2Assets";
 import { Phase3Allocation } from "./Phase3Allocation";
 import { Phase4Result } from "./Phase4Result";
-import { portfolioApi } from "@/api/portfolio";
-import { useAuthStore } from "@/store/auth";
-import { toast } from "sonner";
+import { useCreateSimulatedPortfolio } from "@/hooks/use-portfolio";
 
 // ── 위저드 상태 타입 ─────────────────────────────────────
 export interface AssetItem {
   ticker: string;
   name: string;
+  marketType: string;
   targetWeight: number; // 0~100
 }
 
@@ -26,10 +25,10 @@ export interface WizardState {
   // Phase 2
   assets: AssetItem[];
   // Phase 3
-  mode: "simulation" | "actual";
   totalAmount: number;
   // Phase 4
   createdPortfolioId: string | null;
+  createdAsOfDate: string | null;
 }
 
 export type WizardAction =
@@ -38,10 +37,9 @@ export type WizardAction =
   | { type: "SET_NAME"; payload: string }
   | { type: "TOGGLE_GOAL"; payload: string }
   | { type: "SET_ASSETS"; payload: AssetItem[] }
-  | { type: "SET_MODE"; payload: "simulation" | "actual" }
   | { type: "SET_AMOUNT"; payload: number }
   | { type: "SET_WEIGHT"; payload: { ticker: string; weight: number } }
-  | { type: "SET_CREATED_ID"; payload: string };
+  | { type: "SET_CREATED_RESULT"; payload: { portfolioId: string; asOfDate: string } };
 
 const initialState: WizardState = {
   step: 1,
@@ -49,10 +47,16 @@ const initialState: WizardState = {
   portfolioName: "",
   goals: [],
   assets: [],
-  mode: "simulation",
   totalAmount: 10_000_000,
   createdPortfolioId: null,
+  createdAsOfDate: null,
 };
+
+const SUPPORTED_MARKETS = new Set(["KOSPI", "KOSDAQ"]);
+
+export function isKrwMarket(marketType: string | undefined): boolean {
+  return marketType !== undefined && SUPPORTED_MARKETS.has(marketType);
+}
 
 function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   switch (action.type) {
@@ -71,8 +75,6 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       };
     case "SET_ASSETS":
       return { ...state, assets: action.payload };
-    case "SET_MODE":
-      return { ...state, mode: action.payload };
     case "SET_AMOUNT":
       return { ...state, totalAmount: action.payload };
     case "SET_WEIGHT":
@@ -82,20 +84,32 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
           a.ticker === action.payload.ticker ? { ...a, targetWeight: action.payload.weight } : a
         ),
       };
-    case "SET_CREATED_ID":
-      return { ...state, createdPortfolioId: action.payload };
+    case "SET_CREATED_RESULT":
+      return {
+        ...state,
+        createdPortfolioId: action.payload.portfolioId,
+        createdAsOfDate: action.payload.asOfDate,
+      };
     default:
       return state;
   }
 }
 
 // ── 단계별 다음 버튼 활성 조건 ───────────────────────────
-function canProceed(state: WizardState): boolean {
+export function canProceed(state: WizardState): boolean {
   if (state.step === 1) return state.portfolioName.trim().length > 0;
-  if (state.step === 2) return state.assets.length > 0;
+  if (state.step === 2) {
+    return state.assets.length > 0 && state.assets.every((asset) => isKrwMarket(asset.marketType));
+  }
   if (state.step === 3) {
     const total = state.assets.reduce((s, a) => s + a.targetWeight, 0);
-    return total === 100;
+    return (
+      state.totalAmount > 0 &&
+      Number.isFinite(state.totalAmount) &&
+      total === 100 &&
+      state.assets.length > 0 &&
+      state.assets.every((asset) => isKrwMarket(asset.marketType))
+    );
   }
   return true;
 }
@@ -107,36 +121,43 @@ const STEP_LABELS = ["목표 설정", "자산 담기", "비중 설정", "완료"
  */
 export function PortfolioWizard({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
-  const setPortfolioId = useAuthStore((s) => s.setPortfolioId);
   const [state, dispatch] = useReducer(wizardReducer, initialState);
+  const createSimulatedPortfolio = useCreateSimulatedPortfolio();
+  const isSubmittingRef = useRef(false);
 
   const handleNext = useCallback(async () => {
     if (state.step === 3) {
-      // 포트폴리오 생성 API 호출
+      if (!canProceed(state)) return;
+      if (createSimulatedPortfolio.isPending || isSubmittingRef.current) return;
+
+      isSubmittingRef.current = true;
       try {
-        const items = state.assets.map((a) => ({
-          symbol: a.ticker,
-          quantity: 0,
-          purchasePrice: 0,
-          currency: "KRW",
-          assetType: "STOCK" as const,
-          targetWeight: a.targetWeight,
-        }));
-        const newId = await portfolioApi.create({
+        const created = await createSimulatedPortfolio.mutateAsync({
           name: state.portfolioName,
           description: state.goals.join(", "),
-          items,
+          totalAmount: state.totalAmount,
+          items: state.assets.map((asset) => ({
+            symbol: asset.ticker,
+            targetWeight: asset.targetWeight,
+          })),
         });
-        setPortfolioId(String(newId));
-        dispatch({ type: "SET_CREATED_ID", payload: String(newId) });
+        dispatch({
+          type: "SET_CREATED_RESULT",
+          payload: {
+            portfolioId: String(created.portfolioId),
+            asOfDate: created.asOfDate,
+          },
+        });
         dispatch({ type: "NEXT" });
       } catch {
-        toast.error("포트폴리오 생성에 실패했습니다.");
+        // 오류 문구는 mutation의 P006/S002 매핑에서 처리한다.
+      } finally {
+        isSubmittingRef.current = false;
       }
     } else {
       dispatch({ type: "NEXT" });
     }
-  }, [state, setPortfolioId]);
+  }, [createSimulatedPortfolio, state]);
 
   return (
     <div className="fixed inset-0 z-[60] bg-background flex flex-col">
@@ -149,7 +170,7 @@ export function PortfolioWizard({ onClose }: { onClose: () => void }) {
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <span className="text-foreground font-semibold text-sm flex-1">포트폴리오 만들기</span>
+        <span className="text-foreground font-semibold text-sm flex-1">가상 포트폴리오 만들기</span>
         <span className="text-muted-foreground text-xs">{state.step}/3</span>
       </div>
 
@@ -197,6 +218,7 @@ export function PortfolioWizard({ onClose }: { onClose: () => void }) {
             {state.step === 4 && (
               <Phase4Result
                 portfolioId={state.createdPortfolioId}
+                asOfDate={state.createdAsOfDate}
                 onComplete={() => { onClose(); navigate("/portfolio"); }}
               />
             )}
@@ -217,10 +239,14 @@ export function PortfolioWizard({ onClose }: { onClose: () => void }) {
           )}
           <button
             onClick={handleNext}
-            disabled={!canProceed(state)}
+            disabled={!canProceed(state) || (state.step === 3 && createSimulatedPortfolio.isPending)}
             className="flex-1 py-3.5 rounded-xl bg-primary text-white font-semibold text-sm disabled:opacity-40"
           >
-            {state.step === 3 ? "포트폴리오 생성" : "다음 →"}
+            {state.step === 3
+              ? createSimulatedPortfolio.isPending
+                ? "가상 포트폴리오 생성 중..."
+                : "가상 포트폴리오 생성"
+              : "다음 →"}
           </button>
         </div>
       )}

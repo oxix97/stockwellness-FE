@@ -11,6 +11,6 @@ export const marketApi = {
    */
   getMarketIndexes: async (): Promise<MarketDashboardResult> => {
     const data = await apiClient.get<MarketDashboardResult>("/v1/market/indexes");
-    return data as unknown as MarketDashboardResult;
+    return data;
   },
 };

@@ -8,19 +8,8 @@ import {
   StockDetailResult,
   StockSupplyRankingParams,
   StockSupplyRankingResponse,
+  StockReturnsResponse,
 } from "@/types/api";
-
-/** 종목 수익률 응답 타입 */
-export interface StockReturnsResponse {
-  /** 종목 티커 */
-  ticker: string;
-  /** 조회 기간 */
-  period: string;
-  /** 종목 수익률 (%) */
-  stockReturnRate: number;
-  /** 벤치마크 수익률 (%) */
-  benchmarkReturnRate: number;
-}
 
 /**
  * 주식 종목 관련 API 호출 객체
@@ -33,7 +22,7 @@ export const stockApi = {
    */
   getStockDetail: async (ticker: string): Promise<StockDetailResult> => {
     const data = await apiClient.get<StockDetailResult>(`/v1/stocks/${ticker}`);
-    return data as unknown as StockDetailResult;
+    return data;
   },
 
   /**
@@ -42,7 +31,7 @@ export const stockApi = {
    */
   getPopularSearch: async (): Promise<string[]> => {
     const data = await apiClient.get<string[]>("/v1/stocks/popular-search");
-    return data as unknown as string[];
+    return data;
   },
 
   /**
@@ -57,7 +46,7 @@ export const stockApi = {
     const data = await apiClient.get<StockSearchResponse>("/v1/stocks/search", {
       params: { keyword, page, sectorCode, sectorName, size: 20 },
     });
-    return data as unknown as StockSearchResponse;
+    return data;
   },
 
   /**
@@ -65,8 +54,8 @@ export const stockApi = {
    * @returns 신규 상장 종목 리스트
    */
   getNewListings: async (): Promise<NewListingStock[]> => {
-    const data = await apiClient.get("/v1/stocks/new-listings");
-    return data as unknown as NewListingStock[];
+    const data = await apiClient.get<NewListingStock[]>("/v1/stocks/new-listings");
+    return data;
   },
 
   /**
@@ -77,8 +66,8 @@ export const stockApi = {
   getSupplyRanking: async (
     params?: StockSupplyRankingParams
   ): Promise<StockSupplyRankingResponse> => {
-    const data = await apiClient.get("/v1/stocks/ranking/supply", { params });
-    return data as unknown as StockSupplyRankingResponse;
+    const data = await apiClient.get<StockSupplyRankingResponse>("/v1/stocks/ranking/supply", { params });
+    return data;
   },
 
   /**
@@ -86,8 +75,8 @@ export const stockApi = {
    * @returns 최근 검색어 리스트
    */
   getSearchHistory: async (): Promise<string[]> => {
-    const data = await apiClient.get("/v1/stocks/search/history");
-    return data as unknown as string[];
+    const data = await apiClient.get<string[]>("/v1/stocks/search/history");
+    return data;
   },
 
   /**
@@ -114,10 +103,10 @@ export const stockApi = {
    * @returns 일별 주가 이력 및 벤치마크 데이터
    */
   getPriceHistory: async (ticker: string, period: ChartPeriod = "1Y", frequency: ChartFrequency = "DAILY"): Promise<StockPriceHistoryResponse> => {
-    const data = await apiClient.get(`/v1/stocks/${ticker}/prices/history`, {
+    const data = await apiClient.get<StockPriceHistoryResponse>(`/v1/stocks/${ticker}/prices/history`, {
       params: { period, frequency, includeBenchmark: true },
     });
-    return data as unknown as StockPriceHistoryResponse;
+    return data;
   },
 
   /**
@@ -127,9 +116,9 @@ export const stockApi = {
    * @returns 해당 기간 내 종목 수익률 정보
    */
   getReturns: async (ticker: string, period = "1Y"): Promise<StockReturnsResponse> => {
-    const data = await apiClient.get(`/v1/stocks/${ticker}/returns`, {
+    const data = await apiClient.get<StockReturnsResponse>(`/v1/stocks/${ticker}/returns`, {
       params: { period },
     });
-    return data as unknown as StockReturnsResponse;
+    return data;
   },
 };

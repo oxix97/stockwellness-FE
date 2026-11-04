@@ -13,7 +13,7 @@ import {
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, Skeleton } from "@/app/components/ui";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
-import { LeadingStock, TechnicalIndicators, SectorComparisonResponse } from "@/types/api";
+import { LeadingStock, TechnicalIndicators, SectorComparisonPoint, SectorComparisonResponse } from "@/types/api";
 import { formatCurrency, formatSignedCurrency } from "@/utils/format";
 import { getTrendClassName } from "@/utils/trend";
 import { useSectorDetail, useSector } from "@/hooks/use-sector";
@@ -265,7 +265,13 @@ function SheetBody({
   );
 }
 
-function CustomTooltip({ active, payload }: any) {
+function CustomTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: Partial<SectorComparisonPoint> }>;
+}) {
   if (!active || !payload?.length) return null;
   const data = payload[0].payload;
   const rate = data.sectorRate ?? 0;
@@ -346,7 +352,7 @@ function getSectorIcon(name: string) {
   return "🏢";
 }
 
-function getStats(data?: any[]) {
+function getStats(data?: SectorComparisonPoint[]) {
   if (!data || data.length === 0) return { max: "-", min: "-", change: "0", isUp: true };
   const values = data.map(d => d.indexValue).filter(v => typeof v === 'number');
   if (values.length === 0) return { max: "-", min: "-", change: "0", isUp: true };

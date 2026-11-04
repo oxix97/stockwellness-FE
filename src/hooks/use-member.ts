@@ -4,34 +4,37 @@ import { useAuthStore } from "@/store/auth";
 
 export function useMe() {
   const accessToken = useAuthStore((s) => s.accessToken);
+  const memberId = useAuthStore((s) => s.memberId);
 
   return useQuery({
-    queryKey: memberKeys.me(),
+    queryKey: memberKeys.me(memberId),
     queryFn: () => memberApi.getMe(),
-    enabled: !!accessToken,
+    enabled: !!accessToken && memberId !== null,
     staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useNotificationSettings() {
   const accessToken = useAuthStore((s) => s.accessToken);
+  const memberId = useAuthStore((s) => s.memberId);
 
   return useQuery({
-    queryKey: memberKeys.notifications(),
+    queryKey: memberKeys.notifications(memberId),
     queryFn: () => memberApi.getNotifications(),
-    enabled: !!accessToken,
+    enabled: !!accessToken && memberId !== null,
     staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useUpdateNotifications() {
   const queryClient = useQueryClient();
+  const memberId = useAuthStore((s) => s.memberId);
 
   return useMutation({
     mutationFn: (settings: Partial<NotificationSettings>) =>
       memberApi.updateNotifications(settings),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: memberKeys.notifications() });
+      queryClient.invalidateQueries({ queryKey: memberKeys.notifications(memberId) });
     },
   });
 }

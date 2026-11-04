@@ -48,15 +48,24 @@ export function PortfolioEditSheet({ isOpen, onClose }: PortfolioEditSheetProps)
   const totalWeight = items.reduce((sum, item) => sum + item.targetWeight, 0);
   const isWeightValid = Math.abs(totalWeight - 100) < 0.1 || items.length === 0;
 
-  const handleUpdateItem = (index: number, field: keyof CreatePortfolioItemRequest, value: any) => {
+  const handleUpdateItem = <TField extends keyof CreatePortfolioItemRequest>(
+    index: number,
+    field: TField,
+    value: CreatePortfolioItemRequest[TField],
+  ) => {
     const updatedItems = [...items];
-    (updatedItems[index] as any)[field] = value;
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
     setItems(updatedItems);
   };
 
   const handleAddItem = (stock: StockSearchResult) => {
     if (items.some((item) => item.symbol === stock.ticker)) {
       toast.error("이미 추가된 종목입니다.");
+      return;
+    }
+
+    if (stock.marketType !== "KOSPI" && stock.marketType !== "KOSDAQ") {
+      toast.info("환율 지원 전에는 포트폴리오에 담을 수 없습니다");
       return;
     }
 

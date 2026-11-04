@@ -27,7 +27,7 @@ import { PortfolioWizard } from "@/app/components/portfolio/wizard/PortfolioWiza
 import { usePortfolioAdvice, usePortfolioDetails, usePortfolioHealth, usePortfolioSummary } from "@/hooks/use-portfolio";
 import { usePortfolioSimulation } from "@/hooks/use-backtest";
 import { useAuthStore } from "@/store/auth";
-import { PortfolioItemResponse, RebalancingItem } from "@/types/api";
+import { PortfolioItemResponse, PortfolioValuationResponse, RebalancingItem, ValuationStatus } from "@/types/api";
 import { calculateHealthBadge, calculateInvestorType } from "@/utils/calculate";
 import { formatCurrency, formatDate } from "@/utils/format";
 
@@ -63,7 +63,7 @@ export function Portfolio() {
   if (!portfolioId) {
     return (
       <>
-        <div className="page-shell page-content min-h-full flex flex-col items-center justify-center px-6 pb-20 pt-10 text-center">
+        <div data-testid="portfolio-screen" className="page-shell page-content min-h-full flex flex-col items-center justify-center overflow-x-hidden px-6 pb-20 pt-10 text-center">
           <div className="text-6xl mb-6">📊</div>
           <p className="text-foreground font-bold text-xl mb-2">
             나만의 자산 배분 포트폴리오를
@@ -87,9 +87,38 @@ export function Portfolio() {
     );
   }
 
+  const hasRequiredQueryError = summary.isError || healthQuery.isError || details.isError;
+  if (hasRequiredQueryError) {
+    return (
+      <div data-testid="portfolio-screen" className="page-shell page-content flex min-h-full items-center justify-center overflow-x-hidden px-4 pb-20 pt-10">
+        <div role="alert" aria-live="assertive" className="w-full max-w-md rounded-3xl border border-destructive/30 bg-card p-6 text-center shadow-sm">
+          <p className="text-base font-bold text-foreground">포트폴리오 정보를 불러오지 못했습니다</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            평가액과 보유 종목을 확인하려면 다시 시도해 주세요. 서버 오류의 원문은 표시하지 않습니다.
+          </p>
+          <Button
+            type="button"
+            className="mt-5 min-h-11 w-full"
+            onClick={() => {
+              void Promise.all([summary.refetch(), details.refetch(), healthQuery.refetch()]);
+            }}
+          >
+            다시 시도
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (summary.isLoading || healthQuery.isLoading || details.isLoading) {
     return (
-      <div className="page-shell page-content space-y-4 pt-4 md:pt-6">
+      <div
+        role="status"
+        aria-label="포트폴리오 불러오는 중"
+        aria-busy="true"
+        data-testid="portfolio-screen"
+        className="page-shell page-content space-y-4 overflow-x-hidden pt-4 md:pt-6"
+      >
         <Skeleton className="h-52 w-full rounded-[28px]" />
         <Skeleton className="h-36 w-full rounded-3xl" />
         <Skeleton className="h-64 w-full rounded-3xl" />
@@ -102,8 +131,13 @@ export function Portfolio() {
   const rebalancingItems = summary.rebalancing?.items ?? [];
   const holdings = details.data?.items ?? [];
   const score = healthQuery.data?.overallScore;
-  const healthBadge = calculateHealthBadge(score ?? 0);
+  const healthBadge = score === undefined
+    ? { label: "진단 확인 불가", color: "bg-muted text-muted-foreground" }
+    : calculateHealthBadge(score);
   const investorType = calculateInvestorType(score);
+  const valuationStatus = getValuationStatus(valuation);
+  const valuationUnavailable = valuationStatus !== "COMPLETE" || valuation?.currentTotalValue == null;
+  const asOfDateLabel = formatEodDate(valuation?.asOfDate);
   const topHoldings = [...holdings]
     .sort((a, b) => (b.currentValue ?? 0) - (a.currentValue ?? 0))
     .slice(0, 4);
@@ -137,11 +171,17 @@ export function Portfolio() {
   const inceptionDate = simulation.data?.portfolioInceptionDate;
   const dPlusDays = simulation.data?.daysElapsed ?? 0;
   const lastResult = simulation.data?.dailyResults?.[simulation.data.dailyResults.length - 1];
-  const myTotalReturn = lastResult?.portfolioReturnRate ?? 0;
+  const myTotalReturn = lastResult?.portfolioReturnRate ?? null;
   const comparisons = simulation.data?.comparisons ?? [];
+  const maxAbsReturn = Math.max(
+    0,
+    ...[myTotalReturn, ...comparisons.map((comparison) => comparison.totalReturn)].filter(
+      (value): value is number => value !== null,
+    ).map((value) => Math.abs(value)),
+  );
 
   return (
-    <div className="min-h-full pb-10">
+    <div data-testid="portfolio-screen" className="min-h-full overflow-x-hidden pb-10">
       <section className="page-shell page-content pt-4 md:pt-6">
         <div className="relative overflow-hidden rounded-[var(--mobile-card-radius)] border border-primary/15 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-primary)_18%,transparent),color-mix(in_srgb,var(--color-card)_96%,transparent)_42%,color-mix(in_srgb,var(--color-accent)_88%,transparent)_100%)] p-[var(--mobile-header-padding-x)] shadow-[0_18px_50px_-32px_color-mix(in_srgb,var(--color-primary)_38%,transparent)] dark:border-primary/20 dark:bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-primary)_20%,transparent),color-mix(in_srgb,var(--color-card)_94%,transparent)_42%,color-mix(in_srgb,var(--color-accent)_60%,transparent)_100%)] md:rounded-[28px] md:p-6 xl:p-7">
           <div className="pointer-events-none absolute inset-0">
@@ -167,35 +207,22 @@ export function Portfolio() {
             <div>
               <p className="text-muted-foreground text-xs mb-1">총 자산</p>
               <p className="text-foreground font-bold text-[length:var(--mobile-number-xl)] leading-none tracking-tight tabular-nums md:text-[36px]">
-                ₩{formatCurrency(valuation?.currentTotalValue ?? 0)}
+                {valuationUnavailable ? "평가할 수 없음" : `₩${formatCurrency(valuation.currentTotalValue)}`}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {asOfDateLabel ? `${asOfDateLabel} 종가 기준` : "평가 기준일 확인 불가"}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="text-sm font-semibold tabular-nums">
-                  <SignedValueLabel
-                    value={valuation?.totalProfitLoss ?? 0}
-                    format="currency"
-                    ariaLabelPrefix="누적 평가손익"
-                  />{" "}
-                  <SignedValueLabel
-                    value={valuation?.totalReturnRate ?? 0}
-                    format="percent"
-                    ariaLabelPrefix="누적 수익률"
-                  />
+                  <NullableSignedValue value={valuation?.totalProfitLoss} format="currency" ariaLabelPrefix="누적 평가손익" />{" "}
+                  <NullableSignedValue value={valuation?.totalReturnRate} format="percent" ariaLabelPrefix="누적 수익률" />
                 </span>
                 <span className="text-muted-foreground text-xs">누적</span>
                 <span className="text-border">•</span>
                 <span className="text-xs tabular-nums">
-                  오늘{" "}
-                  <SignedValueLabel
-                    value={valuation?.dailyProfitLoss ?? 0}
-                    format="currency"
-                    ariaLabelPrefix="오늘 평가손익"
-                  />{" "}
-                  <SignedValueLabel
-                    value={valuation?.dailyReturnRate ?? 0}
-                    format="percent"
-                    ariaLabelPrefix="오늘 수익률"
-                  />
+                  직전 영업일 대비{" "}
+                  <NullableSignedValue value={valuation?.dailyProfitLoss} format="currency" ariaLabelPrefix="직전 영업일 대비 평가손익" />{" "}
+                  <NullableSignedValue value={valuation?.dailyReturnRate} format="percent" ariaLabelPrefix="직전 영업일 대비 수익률" />
                 </span>
               </div>
             </div>
@@ -205,10 +232,16 @@ export function Portfolio() {
           </div>
 
           <div className="relative z-10 mt-4 grid grid-cols-2 gap-2.5 min-[408px]:grid-cols-3 min-[408px]:[&>*:last-child]:col-span-1 xl:max-w-xl [&>*:last-child]:col-span-2">
-            <HeroMetric label="건강 점수" value={score !== undefined ? `${score.toFixed(0)}점` : "-"} accent />
-            <HeroMetric label="Sharpe" value={(valuation?.sharpeRatio ?? 0).toFixed(2)} />
-            <HeroMetric label="MDD" value={`${(valuation?.mdd ?? 0).toFixed(1)}%`} />
+            <HeroMetric label="건강 점수" value={score !== undefined ? `${score.toFixed(0)}점` : "—"} accent />
+            <HeroMetric label="Sharpe" value={formatNullableNumber(valuation?.sharpeRatio, 2)} />
+            <HeroMetric label="MDD" value={formatNullablePercent(valuation?.mdd, 1)} />
           </div>
+
+          <ValuationStatusNotice
+            status={valuationStatus}
+            asOfDate={asOfDateLabel}
+            missingSymbols={valuation?.missingSymbols ?? []}
+          />
 
           <div className="relative z-10 mt-4 flex items-center gap-2 rounded-[calc(var(--mobile-card-radius)-2px)] border border-border/60 bg-card/70 px-3 py-2.5 backdrop-blur-sm md:rounded-2xl md:py-3">
             <ShieldCheck className={`h-4 w-4 shrink-0 ${investorType.color}`} />
@@ -248,7 +281,7 @@ export function Portfolio() {
               label="내 포트폴리오" 
               value={myTotalReturn} 
               isPortfolio 
-              maxAbsValue={Math.max(Math.abs(myTotalReturn), ...comparisons.map(c => Math.abs(c.totalReturn)))}
+              maxAbsValue={maxAbsReturn}
             />
             
             <div className="pt-2 space-y-4 border-t border-border/50">
@@ -257,7 +290,7 @@ export function Portfolio() {
                   key={comp.ticker}
                   label={BENCHMARK_LABELS[comp.ticker] || comp.indexName} 
                   value={comp.totalReturn} 
-                  maxAbsValue={Math.max(Math.abs(myTotalReturn), ...comparisons.map(c => Math.abs(c.totalReturn)))}
+                  maxAbsValue={maxAbsReturn}
                 />
               ))}
               {comparisons.length === 0 && (
@@ -271,7 +304,9 @@ export function Portfolio() {
               <div className="mt-6 rounded-2xl bg-primary/5 p-4 border border-primary/10">
                 <p className="text-xs sm:text-sm text-foreground leading-relaxed">
                   <span className="font-bold text-primary">
-                    {(() => {
+                    {myTotalReturn == null
+                      ? "성과 기준일 데이터를 확인할 수 없습니다."
+                      : (() => {
                       const betterThan = comparisons.filter(c => myTotalReturn > c.totalReturn);
                       if (betterThan.length === comparisons.length) {
                         return "모든 주요 지수보다 높은 성과를 내고 있습니다! ✨";
@@ -351,12 +386,13 @@ export function Portfolio() {
             {topHoldings.length > 0 ? (
               <div className="divide-y divide-border">
                 {topHoldings.map((item) => (
-                  <HoldingRow
-                    key={item.symbol}
-                    item={item}
-                    contribution={summary.itemContributions?.[item.symbol]}
-                    rebalancingNote={getRebalancingNote(item.symbol, rebalancingItems)}
-                  />
+                    <HoldingRow
+                      key={item.symbol}
+                      item={item}
+                      contribution={summary.itemContributions?.[item.symbol]}
+                      rebalancingNote={getRebalancingNote(item.symbol, rebalancingItems)}
+                      fallbackAsOfDate={asOfDateLabel}
+                    />
                 ))}
               </div>
             ) : (
@@ -408,6 +444,70 @@ export function Portfolio() {
   );
 }
 
+function getValuationStatus(valuation: PortfolioValuationResponse | undefined): ValuationStatus {
+  if (valuation?.valuationStatus) return valuation.valuationStatus;
+  if (!valuation) return "UNAVAILABLE";
+  if ((valuation.missingSymbols?.length ?? 0) > 0) return "PARTIAL";
+  if (valuation.currentTotalValue == null || valuation.totalReturnRate == null) return "UNAVAILABLE";
+  return "COMPLETE";
+}
+
+function formatEodDate(date: string | null | undefined): string | null {
+  if (!date) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  return match ? `${match[1]}.${match[2]}.${match[3]}` : date.replace(/-/g, ".");
+}
+
+function formatNullableNumber(value: number | null | undefined, fractionDigits: number): string {
+  return value == null ? "—" : value.toFixed(fractionDigits);
+}
+
+function formatNullablePercent(value: number | null | undefined, fractionDigits: number): string {
+  return value == null ? "—" : `${value.toFixed(fractionDigits)}%`;
+}
+
+function NullableSignedValue({
+  value,
+  format,
+  ariaLabelPrefix,
+}: {
+  value: number | null | undefined;
+  format: "currency" | "percent";
+  ariaLabelPrefix: string;
+}) {
+  if (value == null) {
+    return <span className="text-muted-foreground tabular-nums" aria-label={`${ariaLabelPrefix} 평가할 수 없음`}>—</span>;
+  }
+  return <SignedValueLabel value={value} format={format} ariaLabelPrefix={ariaLabelPrefix} />;
+}
+
+function ValuationStatusNotice({
+  status,
+  asOfDate,
+  missingSymbols,
+}: {
+  status: ValuationStatus;
+  asOfDate: string | null;
+  missingSymbols: string[];
+}) {
+  if (status === "COMPLETE") {
+    return null;
+  }
+
+  const title = status === "PARTIAL" ? "일부 종목의 가격을 확인할 수 없습니다" : "포트폴리오를 평가할 수 없습니다";
+  const description = status === "PARTIAL"
+    ? `${missingSymbols.length > 0 ? missingSymbols.join(", ") : "일부 종목"}의 EOD 가격이 없어 합계 금융 수치를 계산하지 않았습니다.`
+    : "기준일 종가가 없어 평가액·손익·수익률을 계산하지 않았습니다.";
+
+  return (
+    <div className="relative z-10 mt-3 rounded-2xl border border-amber-300/50 bg-amber-50/70 px-3 py-2.5 text-xs text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-100">
+      <p className="font-semibold">{title}</p>
+      <p className="mt-1 leading-relaxed">{description}</p>
+      {asOfDate && <p className="mt-1 text-[11px] opacity-80">확인 기준: {asOfDate} 종가</p>}
+    </div>
+  );
+}
+
 function HeroMetric({
   label,
   value,
@@ -432,10 +532,24 @@ function PerformanceBar({
   maxAbsValue 
 }: { 
   label: string; 
-  value: number; 
+  value: number | null;
   isPortfolio?: boolean; 
   maxAbsValue: number;
 }) {
+  if (value == null) {
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className={cn("font-medium", isPortfolio ? "text-foreground font-bold" : "text-muted-foreground")}>
+            {label}
+          </span>
+          <span className="font-bold text-muted-foreground" aria-label={`${label} 수익률 평가할 수 없음`}>—</span>
+        </div>
+        <div className="h-2 w-full rounded-full bg-secondary/30" aria-hidden="true" />
+      </div>
+    );
+  }
+
   const percentage = maxAbsValue > 0 ? (Math.abs(value) / maxAbsValue) * 100 : 0;
   const isPositive = value > 0;
   const isZero = value === 0;
@@ -477,11 +591,24 @@ function HoldingRow({
   item,
   contribution,
   rebalancingNote,
+  fallbackAsOfDate,
 }: {
   item: PortfolioItemResponse;
   contribution?: number;
   rebalancingNote: string;
+  fallbackAsOfDate: string | null;
 }) {
+  const itemDate = formatEodDate(item.priceAsOfDate) ?? fallbackAsOfDate;
+  const priceMessage = item.priceStatus === "MISSING"
+    ? `${item.symbol} · 가격 정보를 확인할 수 없습니다`
+    : item.priceStatus === "STALE"
+      ? itemDate
+        ? `${itemDate} 종가 · 기준일보다 이전 영업일`
+        : "이전 영업일 종가"
+    : itemDate
+      ? `${itemDate} 종가`
+      : "종가 기준일 확인 불가";
+
   return (
     <div className="px-4 py-4">
       <div className="flex items-start justify-between gap-3">
@@ -493,13 +620,17 @@ function HoldingRow({
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold text-foreground tabular-nums">
-            ₩{formatCurrency(item.currentValue ?? 0)}
+            {item.currentValue == null ? "—" : `₩${formatCurrency(item.currentValue)}`}
           </p>
           <p className="text-xs">
-            <SignedValueLabel value={item.returnRate ?? 0} format="percent" ariaLabelPrefix={`${item.name || item.symbol} 수익률`} />
+            <NullableSignedValue value={item.returnRate} format="percent" ariaLabelPrefix={`${item.name || item.symbol} 수익률`} />
           </p>
         </div>
       </div>
+
+      <p className={cn("mt-2 text-[11px]", item.priceStatus === "MISSING" ? "text-amber-700 dark:text-amber-300" : "text-muted-foreground")}>
+        {priceMessage}
+      </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <InlineChip label="목표 비중" value={`${item.targetWeight}%`} />

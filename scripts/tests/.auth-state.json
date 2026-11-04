@@ -1,9 +1,0 @@
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwibmlja25hbWUiOiJUZXN0ZXIiLCJsb2dpblR5cGUiOiJHT09HTEUiLCJyb2xlIjoiVVNFUiIsImNyZWF0ZWRBdCI6IjIwMjYtMDQtMTRUMTY6Mjc6NDQuOTc5MTc2IiwiaWF0IjoxNzc2MTUxNzA5LCJleHAiOjE3Nzg3NDM3MDl9.qCoWlS0OgY7I7XORg3Gx9kL79gJSzWK6d_MpFK4FpjM",
-  "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwiaWF0IjoxNzc2MTUxNzA5LCJleHAiOjE3Nzg3NDM3MDl9.S-kNa3yLDHG0lUMe9oX3UzqeSQ5346mKJSa2u0cbxmY",
-  "memberId": 3,
-  "email": "test@example.com",
-  "nickname": "Tester",
-  "portfolioId": null,
-  "backendUrl": "http://localhost:8080"
-}

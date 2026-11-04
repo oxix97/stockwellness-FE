@@ -12,6 +12,7 @@
 *.BACKUP.*
 *.BASE.*
 *.LOCAL.*
+!playwright.local.config.ts
 *.REMOTE.*
 *_BACKUP_*.txt
 *_BASE_*.txt
@@ -235,6 +236,10 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+
+# Playwright real-API credentials and runtime state
+tests/.auth*
+scripts/tests/.auth*
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

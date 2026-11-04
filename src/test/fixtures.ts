@@ -23,11 +23,20 @@ export function makeValuation(overrides?: Partial<PortfolioValuationResponse>): 
     totalReturnRate: 10.0,
     dailyProfitLoss: 50_000,
     dailyReturnRate: 0.5,
+    cagr: 10.0,
+    volatility: 12.0,
     mdd: -5.0,
     sharpeRatio: 1.5,
     beta: 0.9,
+    alpha: 1.2,
+    totalInstitutionalNetBuying: 0,
+    totalForeignNetBuying: 0,
+    totalPersonNetBuying: 0,
+    valuationStatus: "COMPLETE",
+    asOfDate: "2026-03-23",
+    missingSymbols: [],
     ...overrides,
-  };
+  } as PortfolioValuationResponse;
 }
 
 export function makeDiversification(overrides?: Partial<PortfolioDiversificationResponse>): PortfolioDiversificationResponse {
@@ -84,6 +93,8 @@ export function makePortfolio(overrides?: Partial<PortfolioResponse>): Portfolio
     name: "테스트 포트폴리오",
     description: "테스트용",
     totalPurchaseAmount: 10_000_000,
+    currentTotalValue: 11_000_000,
+    totalReturnRate: 10.0,
     items: [
       {
         symbol: "005930",
