@@ -370,3 +370,21 @@ $RECYCLE.BIN/
 /apidoc.md
 .worktrees/
 /recruit/
+
+# 프론트엔드 기준 문서
+!/docs/
+/docs/*
+!/docs/README.md
+!/docs/agent-rules.md
+!/docs/architecture.md
+!/docs/api-integration.md
+!/docs/api-layer.md
+!/docs/api-spec.md
+!/docs/auth.md
+!/docs/error-handling.md
+!/docs/query-keys.md
+!/docs/responsive-ui.md
+!/docs/testing.md
+!/docs/tanstack-query.md
+!/docs/autonomy.md
+!/docs/stock-supply-ranking.md

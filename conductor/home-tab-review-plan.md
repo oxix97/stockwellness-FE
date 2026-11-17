@@ -22,7 +22,7 @@
 - [ ] **로딩 상태 (Skeleton)**: 데이터 로딩 시 Skeleton UI가 실제 콘텐츠와 유사한 레이아웃을 유지하여 CLS(Cumulative Layout Shift)를 방지하는지 확인.
 
 ### 3. 코드 품질 및 아키텍처 (Code Quality)
-- [ ] **계층 분리**: 컴포넌트에서 API 모듈을 직접 참조하지 않고 커스텀 훅을 통해 데이터를 가져오는지 확인 (GEMINI.md 준수).
+- [ ] **계층 분리**: 컴포넌트에서 API 모듈을 직접 참조하지 않고 커스텀 훅을 통해 데이터를 가져오는지 확인 (docs/agent-rules.md 준수).
 - [ ] **상태 관리**: TanStack Query의 Query Key 팩토리 사용 및 `staleTime` 설정의 적절성.
 - [ ] **불필요한 리렌더링**: Framer Motion 애니메이션이나 인라인 함수가 성능에 미치는 영향 평가.
 
