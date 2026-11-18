@@ -45,6 +45,9 @@ export function useSector(limit = 10) {
     return {
       ...item,
       fluctuationRate: item.fluctuationRate ?? 0,
+      baseDate: detailData?.baseDate ?? null,
+      isOverheated: detailData?.isOverheated ?? item.isOverheated,
+      aiOpinion: isDetailError ? null : detailData?.aiOpinion ?? null,
       diagnosisMessage: isDetailError
         ? "진단 정보를 불러오지 못했습니다."
         : detailData?.diagnosisMessage ?? "",

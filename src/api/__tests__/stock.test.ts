@@ -84,19 +84,19 @@ describe("stockApi", () => {
     expect(result).toEqual(mockData);
   });
 
-  it("getPriceHistory — GET /v1/stocks/:ticker/prices/history (DAILY) 호출", async () => {
+  it("getPriceHistory — GET /v1/stocks/:ticker/prices/history (DAILY, 기본 includeBenchmark=false) 호출", async () => {
     const mockData = { ticker: "005930", prices: [] };
     mockClient.get.mockResolvedValue(mockData);
 
     const result = await stockApi.getPriceHistory("005930", "1Y", "DAILY");
 
     expect(mockClient.get).toHaveBeenCalledWith("/v1/stocks/005930/prices/history", {
-      params: { period: "1Y", frequency: "DAILY", includeBenchmark: true },
+      params: { period: "1Y", frequency: "DAILY", includeBenchmark: false },
     });
     expect(result).toEqual(mockData);
   });
 
-  it("getPriceHistory — GET /v1/stocks/:ticker/prices/history (WEEKLY) 호출", async () => {
+  it("getPriceHistory — GET /v1/stocks/:ticker/prices/history (WEEKLY, includeBenchmark=true) 호출", async () => {
     const mockData = { 
       ticker: "005930", 
       prices: [
@@ -107,7 +107,7 @@ describe("stockApi", () => {
     };
     mockClient.get.mockResolvedValue(mockData);
 
-    const result = await stockApi.getPriceHistory("005930", "6M", "WEEKLY");
+    const result = await stockApi.getPriceHistory("005930", "6M", "WEEKLY", true);
 
     expect(mockClient.get).toHaveBeenCalledWith("/v1/stocks/005930/prices/history", {
       params: { period: "6M", frequency: "WEEKLY", includeBenchmark: true },
@@ -115,7 +115,7 @@ describe("stockApi", () => {
     expect(result).toEqual(mockData);
   });
 
-  it("getPriceHistory — GET /v1/stocks/:ticker/prices/history (MONTHLY) 호출", async () => {
+  it("getPriceHistory — GET /v1/stocks/:ticker/prices/history (MONTHLY, includeBenchmark=false) 호출", async () => {
     const mockData = { 
       ticker: "005930", 
       prices: [
@@ -126,10 +126,10 @@ describe("stockApi", () => {
     };
     mockClient.get.mockResolvedValue(mockData);
 
-    const result = await stockApi.getPriceHistory("005930", "ALL", "MONTHLY");
+    const result = await stockApi.getPriceHistory("005930", "ALL", "MONTHLY", false);
 
     expect(mockClient.get).toHaveBeenCalledWith("/v1/stocks/005930/prices/history", {
-      params: { period: "ALL", frequency: "MONTHLY", includeBenchmark: true },
+      params: { period: "ALL", frequency: "MONTHLY", includeBenchmark: false },
     });
     expect(result).toEqual(mockData);
   });

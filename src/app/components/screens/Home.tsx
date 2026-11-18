@@ -1,19 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { isAxiosError } from "axios";
 import { Bell, Sprout, TrendingUp } from "lucide-react";
 import { GardenEmptyState, Section, AdUnit } from "@/app/components/shared";
-import { useMarketIndex } from "@/hooks/use-market-index";
+import { useMarketIndex, useMarketWeather } from "@/hooks/use-market-index";
 import { MarketIndexSection } from "@/app/components/home/MarketIndexCard";
 import { MarketWeatherWidget } from "@/app/components/home/MarketWeatherWidget";
 import { StockSupplyRankingSection } from "@/app/components/home/StockSupplyRankingSection";
 import { SectorRankingSection } from "@/app/components/home/SectorRankingSection";
 import { NewListingsSection } from "@/app/components/home/NewListingsSection";
 import { SectorBottomSheet, SectorData } from "@/app/components/home/SectorBottomSheet";
+import type { ErrorEnvelope, MarketWeatherMarketType } from "@/types/api";
 
 export function Home() {
   const navigate = useNavigate();
-  const { data: marketDashboard, isLoading, isError } = useMarketIndex();
+  const [marketType, setMarketType] = useState<MarketWeatherMarketType>("KOSPI");
+  const { data: marketDashboard, isLoading, isError, error, refetch } = useMarketIndex();
+  const weatherQuery = useMarketWeather(marketType);
   const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
+  const isMarketDataNotReady = isAxiosError<ErrorEnvelope>(error) && error.response?.data?.code === "S002";
+  const hasMarketIndexes = Boolean(marketDashboard?.indexes?.length);
+  const showMarketUnavailable = !isLoading && !hasMarketIndexes;
 
   return (
     <div className="min-h-full pb-6">
@@ -21,15 +28,19 @@ export function Home() {
         <button
           onClick={() => navigate("/more/notifications")}
           className="rounded-full border border-border/70 bg-card/80 p-2 text-muted-foreground transition-colors hover:bg-card"
+          aria-label="알림 설정"
         >
           <Bell className="h-5 w-5" />
         </button>
       </div>
 
-      <MarketWeatherWidget 
-        weather={marketDashboard?.weather} 
-        isLoading={isLoading} 
-        isError={isError} 
+      <MarketWeatherWidget
+        latestWeather={weatherQuery?.data}
+        marketType={marketType}
+        onMarketTypeChange={setMarketType}
+        isLoading={weatherQuery ? weatherQuery.isLoading || (weatherQuery.isError && weatherQuery.isFetching) : isLoading}
+        isError={weatherQuery ? weatherQuery.isError : isError}
+        onRetry={weatherQuery ? () => { void weatherQuery.refetch(); } : undefined}
       />
 
       <div className="mt-6">
@@ -60,14 +71,26 @@ export function Home() {
         <NewListingsSection />
       </Section>
 
-      {!isLoading && !isError && !marketDashboard?.indexes?.length && (
+      {showMarketUnavailable && (
         <div className="page-shell page-content">
-          <GardenEmptyState
-            title="오늘의 시장 데이터를 준비하고 있어요"
-            description="잠시 후 다시 확인하면 시장 현황과 수급 흐름을 함께 볼 수 있습니다."
-            actionLabel="검색으로 이동"
-            onAction={() => navigate("/search")}
-          />
+          <div role={isError && !isMarketDataNotReady ? "alert" : "status"} aria-live="polite">
+            <GardenEmptyState
+              title={isError
+                ? isMarketDataNotReady
+                  ? "확정된 EOD 시장 데이터가 아직 없습니다"
+                  : "시장 데이터를 불러오지 못했어요"
+                : "오늘의 시장 데이터를 준비하고 있어요"}
+              description={isError
+                ? isMarketDataNotReady
+                  ? "확정된 EOD 데이터가 없어 지수와 기상도를 표시할 수 없습니다. 데이터가 확정되면 기준일과 함께 보여드릴게요."
+                  : "연결 상태를 확인한 뒤 다시 시도해 주세요."
+                : "잠시 후 다시 확인하면 시장 현황과 수급 흐름을 함께 볼 수 있습니다."}
+              actionLabel={isError && !isMarketDataNotReady ? "다시 시도" : "검색으로 이동"}
+              onAction={isError && !isMarketDataNotReady
+                ? () => { void refetch(); }
+                : () => navigate("/search")}
+            />
+          </div>
         </div>
       )}
 

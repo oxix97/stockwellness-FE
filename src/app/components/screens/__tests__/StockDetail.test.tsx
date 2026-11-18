@@ -64,16 +64,21 @@ describe("StockDetail Screen - 주봉 차트 데이터 검증", () => {
       }
     };
 
+    const useHistoryMock = vi.fn((_ticker, _period, freq) => {
+      if (freq === "WEEKLY") return mockHistory;
+      return { isLoading: false, data: { prices: [] } }; // 기본값
+    });
+
     mockUseStock.mockReturnValue({
-      useHistory: vi.fn((_ticker, _period, freq) => {
-        if (freq === "WEEKLY") return mockHistory;
-        return { isLoading: false, data: { prices: [] } }; // 기본값
-      }),
+      useHistory: useHistoryMock,
       useReturns: () => ({ isLoading: false, data: null }),
       useDetail: () => ({ isLoading: false, data: null }),
     });
 
     renderWithQuery(<StockDetail />);
+    expect(screen.getByRole("button", { name: "뒤로 가기" })).toBeInTheDocument();
+    expect(useHistoryMock).toHaveBeenCalledWith("005930", "3M", "DAILY", true);
+    expect(useHistoryMock).toHaveBeenCalledWith("005930", "1M", "DAILY", false);
 
     // '주봉' 탭 클릭
     const weeklyTab = screen.getByRole("button", { name: "주봉" });
@@ -214,5 +219,176 @@ describe("StockDetail Screen - 주봉 차트 데이터 검증", () => {
     expect(screen.getByText("Apple")).toBeInTheDocument();
     expect(screen.getByText("환율 지원 전에는 포트폴리오에 담을 수 없습니다")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "내 포트폴리오에 담기" })).toBeDisabled();
+  });
+
+  it("미등록 종목(404/S001)은 가격 누락이나 서버 오류와 구분해 미등록 안내를 표시한다", () => {
+    mockUseStock.mockReturnValue({
+      useHistory: () => ({
+        isLoading: false,
+        isError: true,
+        error: { response: { status: 404, data: { code: "S001" } } },
+        data: undefined,
+        refetch: vi.fn(),
+      }),
+      useReturns: () => ({ isLoading: false, isError: false, data: undefined, refetch: vi.fn() }),
+      useDetail: () => ({
+        isLoading: false,
+        isError: true,
+        error: { response: { status: 404, data: { code: "S001" } } },
+        data: undefined,
+        refetch: vi.fn(),
+      }),
+    });
+
+    renderWithQuery(<StockDetail />);
+
+    expect(screen.getByText("존재하지 않는 종목입니다")).toBeInTheDocument();
+    expect(screen.queryByText("가격 정보를 확인할 수 없습니다")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "내 포트폴리오에 담기" })).not.toBeInTheDocument();
+  });
+
+  it("가격 누락 종목(상세 200·섹터 미분류, 차트 404/S002)은 종목명과 가격 누락 안내를 구분 표시한다", () => {
+    mockUseStock.mockReturnValue({
+      useHistory: () => ({
+        isLoading: false,
+        isError: true,
+        error: { response: { status: 404, data: { code: "S002" } } },
+        data: undefined,
+        refetch: vi.fn(),
+      }),
+      useReturns: () => ({
+        isLoading: false,
+        isError: true,
+        error: { response: { status: 404, data: { code: "S002" } } },
+        data: undefined,
+        refetch: vi.fn(),
+      }),
+      useDetail: () => ({
+        isLoading: false,
+        isError: false,
+        data: {
+          ticker: "964004",
+          name: "섹터 미분류 종목",
+          sectorName: "미분류",
+          marketType: "KOSPI",
+          currentPrice: null,
+          baseDate: null,
+        },
+        refetch: vi.fn(),
+      }),
+    });
+
+    renderWithQuery(<StockDetail />);
+
+    expect(screen.getByText("섹터 미분류 종목")).toBeInTheDocument();
+    expect(screen.getByText("005930 · 미분류")).toBeInTheDocument();
+    expect(screen.getByText("가격 정보를 확인할 수 없습니다")).toBeInTheDocument();
+    expect(screen.getByText("확인된 가격 이력 데이터가 없습니다.")).toBeInTheDocument();
+    expect(screen.queryByText("₩0")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "다시 시도" })).not.toBeInTheDocument();
+  });
+
+  it("복구 가능한 상세 오류(500/G004)는 원시 오류 없이 오류 알림과 재시도 버튼을 제공한다", () => {
+    const detailRefetch = vi.fn();
+    const historyRefetch = vi.fn();
+    mockUseStock.mockReturnValue({
+      useHistory: () => ({
+        isLoading: false,
+        isError: true,
+        error: { response: { status: 404, data: { code: "S002" } } },
+        data: undefined,
+        refetch: historyRefetch,
+      }),
+      useReturns: () => ({ isLoading: false, isError: false, data: undefined, refetch: vi.fn() }),
+      useDetail: () => ({
+        isLoading: false,
+        isError: true,
+        error: { response: { status: 500, data: { code: "G004", message: "raw stack trace" } } },
+        data: undefined,
+        refetch: detailRefetch,
+      }),
+    });
+
+    renderWithQuery(<StockDetail />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("종목 정보를 불러오지 못했습니다");
+    expect(screen.queryByText(/raw stack trace/)).not.toBeInTheDocument();
+    expect(screen.queryByText("가격 정보를 확인할 수 없습니다")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+    expect(detailRefetch).toHaveBeenCalledTimes(1);
+    expect(historyRefetch).toHaveBeenCalled();
+  });
+
+  it("차트 이력 조회만 일시 실패(500)한 경우 가격 누락이 아닌 차트 오류와 재시도를 표시한다", () => {
+    const historyRefetch = vi.fn();
+    mockUseStock.mockReturnValue({
+      useHistory: () => ({
+        isLoading: false,
+        isError: true,
+        error: { response: { status: 500, data: { code: "G004" } } },
+        data: undefined,
+        refetch: historyRefetch,
+      }),
+      useReturns: () => ({ isLoading: false, isError: false, data: undefined, refetch: vi.fn() }),
+      useDetail: () => ({
+        isLoading: false,
+        isError: false,
+        data: {
+          ticker: "005930",
+          name: "삼성전자",
+          sectorName: "반도체",
+          marketType: "KOSPI",
+          currentPrice: null,
+          baseDate: null,
+        },
+        refetch: vi.fn(),
+      }),
+    });
+
+    renderWithQuery(<StockDetail />);
+
+    expect(screen.getByText("가격 정보를 불러오지 못했습니다")).toBeInTheDocument();
+    expect(screen.getByText("차트 데이터를 불러오지 못했습니다.")).toBeInTheDocument();
+    expect(screen.queryByText("가격 정보를 확인할 수 없습니다")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+    expect(historyRefetch).toHaveBeenCalled();
+  });
+
+  it("실제 0원 종가 종목은 누락이 아닌 ₩0과 기준일을 표시한다", () => {
+    mockUseStock.mockReturnValue({
+      useHistory: () => ({
+        isLoading: false,
+        isError: false,
+        data: {
+          ticker: "964003",
+          stockName: "격리검증 영원주",
+          prices: [{ date: "2026-11-17", open: 0, close: 0, high: 0, low: 0, volume: 0 }],
+          benchmarks: [],
+        },
+        refetch: vi.fn(),
+      }),
+      useReturns: () => ({ isLoading: false, isError: false, data: undefined, refetch: vi.fn() }),
+      useDetail: () => ({
+        isLoading: false,
+        isError: false,
+        data: {
+          ticker: "964003",
+          name: "격리검증 영원주",
+          sectorName: "금융",
+          marketType: "KOSPI",
+          currentPrice: 0,
+          baseDate: "2026-11-17",
+        },
+        refetch: vi.fn(),
+      }),
+    });
+
+    renderWithQuery(<StockDetail />);
+
+    expect(screen.getByText("₩0")).toBeInTheDocument();
+    expect(screen.getByText("2026.11.17 종가")).toBeInTheDocument();
+    expect(screen.queryByText("가격 정보를 확인할 수 없습니다")).not.toBeInTheDocument();
   });
 });

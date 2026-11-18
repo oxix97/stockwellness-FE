@@ -30,7 +30,7 @@ export function PageHeader({ title, showBack, showNotifications, logo, className
     <header className={cn("sticky top-0 z-30 border-b border-border/70 bg-background/88 backdrop-blur-xl", className)}>
       <div className="page-shell page-content flex min-h-[var(--mobile-page-header-height)] items-center gap-3 py-2.5 md:min-h-[72px] md:py-3">
         {showBack && (
-          <button onClick={() => navigate(-1)} className="rounded-full p-2 -ml-2 transition-colors hover:bg-secondary">
+          <button onClick={() => navigate(-1)} className="rounded-full p-2 -ml-2 transition-colors hover:bg-secondary" aria-label="뒤로 가기">
             <ChevronLeft className="h-6 w-6" />
           </button>
         )}

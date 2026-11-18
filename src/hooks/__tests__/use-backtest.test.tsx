@@ -85,6 +85,44 @@ describe("useBacktest", () => {
     expect(request).not.toHaveProperty("benchmarkTicker");
   });
 
+  it.each([
+    { code: "KOSPI" as const, totalReturn: 3, alpha: 1, beta: 0.1, relativeMdd: -4 },
+    { code: "KOSDAQ" as const, totalReturn: 7, alpha: 3, beta: 0.3, relativeMdd: -8 },
+    { code: "SP500" as const, totalReturn: 12, alpha: 7, beta: 0.9, relativeMdd: -12 },
+  ])("$code primary comparison supplies its own scalar metrics", async (primary) => {
+    const comparisons = [
+      { ticker: "KOSPI", indexName: "KOSPI", totalReturn: 3, alpha: 1, beta: 0.1, relativeMdd: -4 },
+      { ticker: "KOSDAQ", indexName: "KOSDAQ", totalReturn: 7, alpha: 3, beta: 0.3, relativeMdd: -8 },
+      { ticker: "SP500", indexName: "S&P 500", totalReturn: 12, alpha: 7, beta: 0.9, relativeMdd: -12 },
+    ];
+    mockRunBacktest.mockResolvedValue({
+      dailyResults: makeDailyResults(2),
+      primaryBenchmark: primary.code,
+      totalReturnRate: 99,
+      alpha: 98,
+      beta: 97,
+      relativeMdd: 96,
+      comparisons,
+    });
+
+    const { result } = renderHookWithQuery(() => useBacktest());
+    act(() => {
+      result.current.run({ strategy: "LUMP_SUM", amount: 1_000_000, primaryBenchmark: primary.code, dividendReinvested: false });
+    });
+
+    await waitFor(() => expect(result.current.comparison?.ticker).toBe(primary.code));
+    const [, request] = mockRunBacktest.mock.calls[0];
+    expect(request.primaryBenchmark).toBe(primary.code);
+    expect(request.dividendReinvested).toBe(false);
+    expect(result.current.metrics).toMatchObject({
+      benchmarkReturn: primary.totalReturn,
+      outperformance: primary.alpha,
+      alpha: primary.alpha,
+      beta: primary.beta,
+      relativeMdd: primary.relativeMdd,
+    });
+  });
+
   it("getMetrics — dailyResults 비어있으면 null", async () => {
     mockRunBacktest.mockResolvedValue({ dailyResults: [], totalReturnRate: undefined });
 

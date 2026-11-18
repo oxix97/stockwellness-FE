@@ -102,9 +102,14 @@ export const stockApi = {
    * @param period 조회 기간 (기본값: 1Y)
    * @returns 일별 주가 이력 및 벤치마크 데이터
    */
-  getPriceHistory: async (ticker: string, period: ChartPeriod = "1Y", frequency: ChartFrequency = "DAILY"): Promise<StockPriceHistoryResponse> => {
+  getPriceHistory: async (
+    ticker: string,
+    period: ChartPeriod = "1Y",
+    frequency: ChartFrequency = "DAILY",
+    includeBenchmark = false,
+  ): Promise<StockPriceHistoryResponse> => {
     const data = await apiClient.get<StockPriceHistoryResponse>(`/v1/stocks/${ticker}/prices/history`, {
-      params: { period, frequency, includeBenchmark: true },
+      params: { period, frequency, includeBenchmark: Boolean(includeBenchmark) },
     });
     return data;
   },

@@ -22,6 +22,25 @@ test.describe('Home Page Layout', () => {
     // Mock API calls that Home screen makes
     await page.route('**/api/v1/portfolios/summary', route => route.fulfill({ status: 200, body: JSON.stringify({ data: { totalReturnRate: 5.5, totalProfitLoss: 500000, currentTotalValue: 10000000 } }) }));
     
+    await page.route('**/api/v1/market-weather/latest*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        status: 200,
+        code: 'S000',
+        data: {
+          baseDate: '2026-11-16',
+          marketType: 'KOSPI',
+          weatherScore: 48,
+          weatherState: 'CLOUDY',
+          weatherEmoji: '⛅',
+          aiSummary: null,
+          topSectors: [],
+          bottomSectors: [],
+        },
+      }),
+    }));
     await page.route('**/api/v1/market/indexes', route => route.fulfill({
       status: 200,
       body: JSON.stringify({

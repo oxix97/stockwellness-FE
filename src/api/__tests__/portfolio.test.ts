@@ -197,4 +197,98 @@ describe("portfolioApi", () => {
     expect(mockClient.get).toHaveBeenCalledWith("/v1/portfolios/1/analysis/summary");
     expect(result).toEqual(summary);
   });
+
+  it("getValuation·getRebalancing·getAnalysisSummary는 명시적 null과 실제 숫자 0을 변환 없이 그대로 반환한다", async () => {
+    const nullableValuation = makeValuation({
+      cagr: null,
+      volatility: null,
+      alpha: null,
+      mdd: null,
+      sharpeRatio: null,
+      beta: null,
+    });
+    const zeroMetricValuation = makeValuation({
+      currentTotalValue: 0,
+      totalProfitLoss: 0,
+      totalReturnRate: 0,
+      dailyProfitLoss: 0,
+      dailyReturnRate: 0,
+      cagr: 0,
+      volatility: 0,
+      alpha: 0,
+      mdd: 0,
+      sharpeRatio: 0,
+      beta: 0,
+    });
+    const rebalancingWithNullAndZero = makeRebalancing({
+      totalValue: 1_000_000,
+      items: [
+        makeRebalancing({
+          totalValue: 1_000_000,
+        }).items[0],
+        {
+          symbol: "964003",
+          name: "영원종목",
+          currentWeight: 0,
+          targetWeight: 50,
+          diffWeight: 50,
+          currentQuantity: 10,
+          currentPrice: 0,
+          recommendedQuantity: null,
+          expectedTradeAmount: null,
+        },
+        {
+          symbol: "000660",
+          name: "무변동종목",
+          currentWeight: 50,
+          targetWeight: 50,
+          diffWeight: 0,
+          currentQuantity: 10,
+          currentPrice: 75_000,
+          recommendedQuantity: 0,
+          expectedTradeAmount: 0,
+        },
+      ],
+    });
+    const summaryPayload = {
+      valuation: nullableValuation,
+      diversification: makeDiversification({ totalValue: null }),
+      rebalancing: rebalancingWithNullAndZero,
+      itemContributions: {},
+    };
+
+    mockClient.get
+      .mockResolvedValueOnce(nullableValuation)
+      .mockResolvedValueOnce(rebalancingWithNullAndZero)
+      .mockResolvedValueOnce(summaryPayload)
+      .mockResolvedValueOnce(zeroMetricValuation);
+
+    const valuationResult = await portfolioApi.getValuation("1");
+    expect(valuationResult.mdd).toBeNull();
+    expect(valuationResult.sharpeRatio).toBeNull();
+    expect(valuationResult.cagr).toBeNull();
+    expect(valuationResult.volatility).toBeNull();
+    expect(valuationResult.alpha).toBeNull();
+    expect(valuationResult.beta).toBeNull();
+
+    const rebalancingResult = await portfolioApi.getRebalancing("1");
+    expect(rebalancingResult.items[1].recommendedQuantity).toBeNull();
+    expect(rebalancingResult.items[1].expectedTradeAmount).toBeNull();
+    expect(rebalancingResult.items[2].recommendedQuantity).toBe(0);
+    expect(rebalancingResult.items[2].expectedTradeAmount).toBe(0);
+
+    const summaryResult = await portfolioApi.getAnalysisSummary("1");
+    expect(summaryResult.valuation.mdd).toBeNull();
+    expect(summaryResult.diversification.totalValue).toBeNull();
+    expect(summaryResult.rebalancing.items[1].recommendedQuantity).toBeNull();
+    expect(summaryResult.rebalancing.items[2].expectedTradeAmount).toBe(0);
+
+    const zeroValuationResult = await portfolioApi.getValuation("1");
+    expect(zeroValuationResult.mdd).toBe(0);
+    expect(zeroValuationResult.sharpeRatio).toBe(0);
+    expect(zeroValuationResult.cagr).toBe(0);
+    expect(zeroValuationResult.volatility).toBe(0);
+    expect(zeroValuationResult.alpha).toBe(0);
+    expect(zeroValuationResult.beta).toBe(0);
+  });
 });

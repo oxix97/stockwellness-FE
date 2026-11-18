@@ -60,6 +60,23 @@ describe("apiClient 응답 인터셉터 — 봉투 언래핑", () => {
     expect(result).toBeNull();
   });
 
+  it("API 성공 봉투(success:true, code:S000)에서 data 키가 생략되면 null 반환", () => {
+    const responseInterceptor = (apiClient.interceptors.response as any).handlers[0].fulfilled;
+    const response = {
+      data: {
+        success: true,
+        status: 200,
+        code: "S000",
+        message: "요청이 성공적으로 처리되었습니다.",
+        timestamp: "2026-11-18T16:21:08.874553",
+        errors: [],
+      },
+    };
+    const result = responseInterceptor(response);
+
+    expect(result).toBeNull();
+  });
+
   it("response.data.data 가 없으면 data 전체 반환", () => {
     const responseInterceptor = (apiClient.interceptors.response as any).handlers[0].fulfilled;
     const response = { data: [1, 2, 3] };

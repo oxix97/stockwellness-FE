@@ -8,10 +8,11 @@ interface Props {
   onSelect: (selection: InvestmentSelection) => void;
   onCreate: (trigger: HTMLButtonElement) => void;
   onRename: (account: Account, trigger: HTMLButtonElement) => void;
+  onCreateSimulation?: () => void;
   hasSimulation: boolean;
 }
 
-export function AccountSwitcher({ accounts, selection, onSelect, onCreate, onRename, hasSimulation }: Props) {
+export function AccountSwitcher({ accounts, selection, onSelect, onCreate, onRename, onCreateSimulation, hasSimulation }: Props) {
   const selectedName = selection?.type === "ACTUAL"
     ? accounts.find((account) => account.accountId === selection.id)?.name ?? "실제 계정"
     : selection?.type === "SIMULATION" ? "가상 포트폴리오" : "계정 선택";
@@ -23,6 +24,7 @@ export function AccountSwitcher({ accounts, selection, onSelect, onCreate, onRen
         {accounts.some((account) => selection?.type === "ACTUAL" && selection.id === account.accountId) && <Button className="min-h-11" size="sm" variant="ghost" onClick={(event) => onRename(accounts.find((account) => account.accountId === selection!.id)!, event.currentTarget)}>이름 변경</Button>}
         <Button className="min-h-11" size="sm" variant="outline" onClick={(event) => onCreate(event.currentTarget)}>실제 계정 추가</Button>
         {hasSimulation && <Button className="min-h-11" size="sm" variant={selection?.type === "SIMULATION" ? "default" : "outline"} onClick={() => onSelect({ type: "SIMULATION", id: "legacy" })}>가상 포트폴리오</Button>}
+        {!hasSimulation && onCreateSimulation && <Button className="min-h-11" size="sm" onClick={onCreateSimulation}>가상 포트폴리오 만들기</Button>}
       </div>
     </div>
   </section>;

@@ -204,6 +204,90 @@ describe("usePortfolioSummary — valuation 상태 계약", () => {
     expect(result.current.valuation?.asOfDate).toBe("2026-08-07");
     expect(result.current.valuation?.missingSymbols).toEqual(["000660"]);
   });
+
+  it("미산출 지표·권장 수량·예상 매매 금액의 명시적 null과 실제 0을 왜곡 없이 보존한다", async () => {
+    mockPortfolioApi.getAnalysisSummary.mockResolvedValueOnce({
+      valuation: makeValuation({
+        cagr: null,
+        volatility: null,
+        alpha: null,
+        mdd: null,
+        sharpeRatio: null,
+        beta: null,
+      }),
+      diversification: makeDiversification({ totalValue: null }),
+      rebalancing: makeRebalancing({
+        totalValue: 1_000_000,
+        items: [
+          {
+            symbol: "964003",
+            name: "영원종목",
+            currentWeight: 0,
+            targetWeight: 50,
+            diffWeight: 50,
+            currentQuantity: 10,
+            currentPrice: 0,
+            recommendedQuantity: null,
+            expectedTradeAmount: null,
+          },
+          {
+            symbol: "000660",
+            name: "무변동종목",
+            currentWeight: 50,
+            targetWeight: 50,
+            diffWeight: 0,
+            currentQuantity: 10,
+            currentPrice: 75_000,
+            recommendedQuantity: 0,
+            expectedTradeAmount: 0,
+          },
+        ],
+      }),
+      itemContributions: {},
+    });
+
+    const { result, unmount } = renderHookWithQuery(() => usePortfolioSummary());
+    await waitFor(() => expect(result.current.valuation).toBeDefined());
+
+    expect(result.current.valuation?.cagr).toBeNull();
+    expect(result.current.valuation?.volatility).toBeNull();
+    expect(result.current.valuation?.alpha).toBeNull();
+    expect(result.current.valuation?.mdd).toBeNull();
+    expect(result.current.valuation?.sharpeRatio).toBeNull();
+    expect(result.current.valuation?.beta).toBeNull();
+    expect(result.current.diversification?.totalValue).toBeNull();
+    expect(result.current.rebalancing?.items[0].recommendedQuantity).toBeNull();
+    expect(result.current.rebalancing?.items[0].expectedTradeAmount).toBeNull();
+    expect(result.current.rebalancing?.items[1].recommendedQuantity).toBe(0);
+    expect(result.current.rebalancing?.items[1].expectedTradeAmount).toBe(0);
+    unmount();
+
+    mockPortfolioApi.getAnalysisSummary.mockResolvedValueOnce({
+      valuation: makeValuation({
+        cagr: 0,
+        volatility: 0,
+        alpha: 0,
+        mdd: 0,
+        sharpeRatio: 0,
+        beta: 0,
+      }),
+      diversification: makeDiversification({ totalValue: 0 }),
+      rebalancing: makeRebalancing({ totalValue: 0, items: [] }),
+      itemContributions: {},
+    });
+
+    const zeroRender = renderHookWithQuery(() => usePortfolioSummary());
+    await waitFor(() => expect(zeroRender.result.current.valuation?.mdd).toBe(0));
+
+    expect(zeroRender.result.current.valuation?.cagr).toBe(0);
+    expect(zeroRender.result.current.valuation?.volatility).toBe(0);
+    expect(zeroRender.result.current.valuation?.alpha).toBe(0);
+    expect(zeroRender.result.current.valuation?.mdd).toBe(0);
+    expect(zeroRender.result.current.valuation?.sharpeRatio).toBe(0);
+    expect(zeroRender.result.current.valuation?.beta).toBe(0);
+    expect(zeroRender.result.current.diversification?.totalValue).toBe(0);
+    expect(zeroRender.result.current.rebalancing?.totalValue).toBe(0);
+  });
 });
 
 describe("useCreatePortfolio", () => {

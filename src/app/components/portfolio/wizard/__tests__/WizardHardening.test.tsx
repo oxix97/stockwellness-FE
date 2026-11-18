@@ -117,6 +117,35 @@ describe("simulated wizard hardening", () => {
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 
+  it("sends only one create request when submit is clicked twice before it settles", async () => {
+    setSearchResult(koreanStock);
+    let resolveMutation!: (result: { portfolioId: number; asOfDate: string }) => void;
+    mutateAsync.mockImplementation(
+      () => new Promise<{ portfolioId: number; asOfDate: string }>((resolve) => {
+        resolveMutation = resolve;
+      }),
+    );
+    const user = userEvent.setup();
+
+    renderWithQuery(<PortfolioWizard onClose={vi.fn()} />);
+
+    await user.type(screen.getByPlaceholderText("예) 은퇴 준비 포트폴리오"), "장기 투자");
+    await user.click(screen.getByRole("button", { name: "다음 →" }));
+    await screen.findByText("종목 검색");
+    await user.click(screen.getByRole("button", { name: /삼성전자.*005930.*KOSPI/ }));
+    await user.click(screen.getByRole("button", { name: "다음 →" }));
+    await screen.findByText("목표 비중 합계");
+    fireEvent.keyDown(screen.getByRole("slider", { name: "삼성전자 목표 비중" }), { key: "End" });
+
+    const submit = screen.getByRole("button", { name: "가상 포트폴리오 생성" });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+    resolveMutation({ portfolioId: 42, asOfDate: "2026-08-07" });
+    expect(await screen.findByText("포트폴리오가 생성되었습니다!")).toBeInTheDocument();
+  });
+
   it.each([0, -1])("fails closed for non-positive total amount (%s)", (totalAmount) => {
     expect(
       canProceed({
