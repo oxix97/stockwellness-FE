@@ -13,7 +13,7 @@ const CHART_COLORS = [
 ];
 
 export function DiversificationWidget() {
-  const { diversification, isLoading } = usePortfolioSummary();
+  const { valuation, diversification, isLoading } = usePortfolioSummary();
 
   if (isLoading) {
     return (
@@ -27,6 +27,30 @@ export function DiversificationWidget() {
   const assetData = diversification?.assetRatios ?? [];
   const sectorData = diversification?.sectorRatios ?? [];
   const countryData = diversification?.countryRatios ?? [];
+  const hasAnyChartData = assetData.length > 0 || sectorData.length > 0 || countryData.length > 0;
+
+  if (!hasAnyChartData) {
+    const isValuationUnavailable =
+      valuation?.valuationStatus === "PARTIAL" ||
+      valuation?.valuationStatus === "UNAVAILABLE" ||
+      diversification?.totalValue == null;
+    const missingLabel = valuation?.missingSymbols?.length
+      ? `(${valuation.missingSymbols.join(", ")})`
+      : "";
+
+    return (
+      <div className="bg-card rounded-2xl p-8 border border-dashed border-border text-center space-y-2">
+        <p className="text-sm font-semibold text-foreground">
+          {isValuationUnavailable ? "분산도를 계산할 수 없습니다" : "표시할 분산도 데이터가 없습니다"}
+        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {isValuationUnavailable
+            ? `가격을 확인할 수 없는 종목${missingLabel}이 있어 분산도를 계산할 수 없습니다.`
+            : "자산 평가액이 0원이거나 분산도 차트를 표시할 자산 비중 데이터가 없습니다."}
+        </p>
+      </div>
+    );
+  }
 
   const renderPieChart = (title: string, data: AssetRatio[]) => {
     if (data.length === 0) return null;

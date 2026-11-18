@@ -75,7 +75,7 @@ export function BacktestResult() {
     );
   }
 
-  if (isError || (hasRun.current && !data)) {
+  if (isError) {
     const isMissingEod = errorCode === "S002";
     return (
       <div className="page-shell page-content flex min-h-screen flex-col items-center justify-center p-6 text-center">
@@ -116,6 +116,13 @@ export function BacktestResult() {
   const strategyMetricLabel = config.strategy === "DCA" ? "현금흐름 연환산 수익률" : "연평균 복리 수익률";
   const strategyMetricCode = config.strategy === "DCA" ? "XIRR" : "CAGR";
   const finalValue = metrics.finalValue == null ? "데이터 없음" : `₩ ${metrics.finalValue.toLocaleString()}`;
+  const lastDaily = data.dailyResults[data.dailyResults.length - 1];
+  const totalInvested =
+    typeof lastDaily?.totalInvested === "number" &&
+    Number.isFinite(lastDaily.totalInvested) &&
+    lastDaily.totalInvested > 0
+      ? lastDaily.totalInvested
+      : null;
 
   return (
     <div className="min-h-screen bg-background pb-8 print:bg-white print:pb-0">
@@ -140,10 +147,30 @@ export function BacktestResult() {
             <Badge variant="outline" className="border-primary/20 bg-background/50 text-primary">{benchmarkLabel}</Badge>
             {config.dividendReinvested && <Badge variant="outline" className="border-primary/20 bg-background/50 text-primary">배당금 재투자</Badge>}
           </div>
-          <div className="mb-2 font-medium text-muted-foreground">{config.amount.toLocaleString()}원이</div>
-          <div className="mb-3 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">{finalValue}</div>
-          <div className="mb-4 text-[2rem] font-bold md:text-3xl">{metricValue(metrics.totalReturn)}</div>
-          <div className="font-medium text-muted-foreground">되었을 거예요!</div>
+          {config.strategy === "DCA" ? (
+            <>
+              <div className="mb-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-medium text-muted-foreground">
+                <span>월 적립액 {config.amount.toLocaleString()}원</span>
+                {totalInvested != null && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>총 납입액 {totalInvested.toLocaleString()}원</span>
+                  </>
+                )}
+              </div>
+              <div className="mb-1 text-xs font-medium text-muted-foreground">최종 평가액</div>
+              <div className="mb-3 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">{finalValue}</div>
+              <div className="mb-4 text-[2rem] font-bold md:text-3xl">{metricValue(metrics.totalReturn)}</div>
+              <div className="text-sm font-medium text-muted-foreground">시간가중수익률(TWR) 기준 시뮬레이션 결과예요</div>
+            </>
+          ) : (
+            <>
+              <div className="mb-2 font-medium text-muted-foreground">{config.amount.toLocaleString()}원이</div>
+              <div className="mb-3 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">{finalValue}</div>
+              <div className="mb-4 text-[2rem] font-bold md:text-3xl">{metricValue(metrics.totalReturn)}</div>
+              <div className="font-medium text-muted-foreground">되었을 거예요!</div>
+            </>
+          )}
 
           <div className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-center justify-between gap-4">
@@ -202,6 +229,44 @@ function MetricCard({ label, value, sub }: { label: string; value: ReactNode; su
   );
 }
 
+export interface BacktestChartPoint {
+  date: string;
+  returnRate: number | null;
+  benchmarkReturnRate: number | null;
+}
+
+export function buildBacktestChartData(
+  backtestData: BacktestDailyResult[],
+  primaryBenchmark: BenchmarkCode,
+): BacktestChartPoint[] {
+  let cumulativeFactor = 1;
+
+  return backtestData.map((daily) => {
+    const rawDailyReturn = daily.returnRate;
+    const explicitCumulative = (daily as BacktestDailyResult & { cumulativeReturnRate?: number | null })
+      .cumulativeReturnRate;
+
+    let cumulativeReturnRate: number | null = null;
+    if (typeof explicitCumulative === "number" && Number.isFinite(explicitCumulative)) {
+      cumulativeReturnRate = explicitCumulative;
+      cumulativeFactor = 1 + explicitCumulative / 100;
+    } else if (typeof rawDailyReturn === "number" && Number.isFinite(rawDailyReturn)) {
+      cumulativeFactor *= 1 + rawDailyReturn / 100;
+      cumulativeReturnRate = (cumulativeFactor - 1) * 100;
+    }
+
+    const rawBenchmark = daily.benchmarkReturnRates?.[primaryBenchmark] ?? daily.benchmarkReturnRate ?? null;
+    const benchmarkReturnRate =
+      typeof rawBenchmark === "number" && Number.isFinite(rawBenchmark) ? rawBenchmark : null;
+
+    return {
+      date: daily.date,
+      returnRate: cumulativeReturnRate,
+      benchmarkReturnRate,
+    };
+  });
+}
+
 function ChartSection({
   backtestData,
   primaryBenchmark,
@@ -211,11 +276,10 @@ function ChartSection({
   primaryBenchmark: BenchmarkCode;
   primaryBenchmarkLabel: string;
 }) {
-  const chartData = useMemo(() => backtestData.map((daily) => ({
-    date: daily.date,
-    returnRate: daily.returnRate,
-    benchmarkReturnRate: daily.benchmarkReturnRates?.[primaryBenchmark] ?? daily.benchmarkReturnRate,
-  })), [backtestData, primaryBenchmark]);
+  const chartData = useMemo(
+    () => buildBacktestChartData(backtestData, primaryBenchmark),
+    [backtestData, primaryBenchmark],
+  );
 
   if (chartData.length === 0) return null;
 
@@ -235,7 +299,7 @@ function ChartSection({
             <Tooltip
               content={({ active, payload }) => {
                 if (!active || !payload || payload.length === 0) return null;
-                const point = payload[0].payload as { date: string; returnRate: number; benchmarkReturnRate: number | null };
+                const point = payload[0].payload as BacktestChartPoint;
                 return (
                   <div className="rounded-2xl border border-border bg-card/90 p-3 shadow-xl backdrop-blur-md">
                     <div className="mb-1 text-xs text-muted-foreground">{formatDate(point.date)}</div>
@@ -245,8 +309,8 @@ function ChartSection({
                 );
               }}
             />
-            <Line type="monotone" dataKey="returnRate" name="내 포트폴리오" stroke="var(--color-primary)" strokeWidth={3} dot={false} />
-            <Line type="monotone" dataKey="benchmarkReturnRate" name={primaryBenchmarkLabel} stroke="var(--color-muted-foreground)" strokeWidth={2} strokeDasharray="5 5" dot={false} opacity={0.5} />
+            <Line type="monotone" dataKey="returnRate" name="내 포트폴리오" stroke="var(--color-primary)" strokeWidth={3} dot={false} isAnimationActive={false} />
+            <Line type="monotone" dataKey="benchmarkReturnRate" name={primaryBenchmarkLabel} stroke="var(--color-muted-foreground)" strokeWidth={2} strokeDasharray="5 5" dot={false} opacity={0.5} isAnimationActive={false} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

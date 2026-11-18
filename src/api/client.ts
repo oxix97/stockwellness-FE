@@ -73,9 +73,25 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
+const isApiEnvelope = (value: unknown): value is Partial<SuccessEnvelope<unknown>> =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  typeof (value as { success?: unknown }).success === "boolean" &&
+  typeof (value as { code?: unknown }).code === "string";
+
 // 응답 인터셉터: 토큰 갱신 또는 글로벌 에러 처리
-const unwrapSuccessResponse = (response: AxiosResponse<SuccessEnvelope<unknown>>) =>
-  response.data?.data !== undefined ? response.data.data : response.data;
+const unwrapSuccessResponse = (response: AxiosResponse<SuccessEnvelope<unknown>>) => {
+  const payload = response.data as unknown;
+  if (isApiEnvelope(payload)) {
+    return payload.data !== undefined ? payload.data : null;
+  }
+  if (typeof payload === "object" && payload !== null && "data" in payload) {
+    const record = payload as { data?: unknown };
+    return record.data !== undefined ? record.data : payload;
+  }
+  return payload;
+};
 
 axiosClient.interceptors.response.use(
   unwrapSuccessResponse as unknown as (response: AxiosResponse) => AxiosResponse,

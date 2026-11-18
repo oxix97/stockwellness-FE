@@ -109,9 +109,15 @@ export interface MarketWeatherResult {
   asOfDate: string;
 }
 
+export type MarketWeatherMarketType = "KOSPI" | "KOSDAQ";
+
+export type MarketWeatherLatestResponse = OperationData<"market-weather-latest">;
+
+export type SectorWeatherSummary = MarketWeatherLatestResponse["topSectors"][number];
+
 export interface MarketDashboardResult {
   indexes: MarketIndexResult[];
-  weather: MarketWeatherResult;
+  weather: MarketWeatherResult | null;
 }
 
 /**
@@ -197,28 +203,13 @@ export type E2eAttestationResponse = OperationData<"test-support-e2e-attestation
 type GeneratedPortfolioValuation = OperationData<"portfolio-analysis-value">;
 
 /**
- * Valuation is allowed to be partial while one or more EOD prices are absent.
- * Keep the nullable fields explicit because OpenAPI generators differ in how
- * they render `oneOf: [number, null]`.
+ * Valuation allows partial/uncomputed metrics as explicit `number | null`.
+ * Narrow `valuationStatus` from generated `string` to the closed union.
  */
 export type PortfolioValuationResponse = Omit<
   GeneratedPortfolioValuation,
-  | "currentTotalValue"
-  | "totalProfitLoss"
-  | "totalReturnRate"
-  | "dailyProfitLoss"
-  | "dailyReturnRate"
-  | "asOfDate"
-  | "missingSymbols"
-  | "valuationStatus"
+  "valuationStatus"
 > & {
-  currentTotalValue: number | null;
-  totalProfitLoss: number | null;
-  totalReturnRate: number | null;
-  dailyProfitLoss: number | null;
-  dailyReturnRate: number | null;
-  asOfDate: string | null;
-  missingSymbols: string[];
   valuationStatus: ValuationStatus;
 };
 
@@ -238,17 +229,7 @@ export type CountryRatio = NonNullable<PortfolioDiversificationResponse["country
 export type PortfolioRebalancingResponse = OperationData<"portfolio-analysis-rebalancing">;
 
 /** 리밸런싱 아이템 정보 (추출) */
-export type RebalancingItem = {
-  symbol: string;
-  name: string;
-  currentWeight: number;
-  targetWeight: number;
-  diffWeight: number;
-  recommendedQuantity: number;
-  currentPrice: number;
-  expectedTradeAmount: number;
-  currentQuantity: number;
-};
+export type RebalancingItem = PortfolioRebalancingResponse["items"][number];
 
 export type AssetType = "STOCK" | "ETF" | "CRYPTO" | "BOND" | "CASH";
 
@@ -320,10 +301,17 @@ export interface SectorSupplyItem {
 export type SectorSupplyResponse = SectorSupplyItem[];
 
 /** 섹터 상세 정보 및 기술 지표 (추출) */
-export type TechnicalIndicators = NonNullable<OperationData<"sector-detail">["technicalIndicators"]>;
-export type SectorDetailResponse = Omit<OperationData<"sector-detail">, "leadingStocks" | "technicalIndicators"> & {
+export type TechnicalIndicators = NonNullable<OperationData<"sector-detail">["technicalIndicators"]> & {
+  bollingerUpper?: number | null;
+  bollingerMid?: number | null;
+  bollingerLower?: number | null;
+  isGoldenCross?: boolean | null;
+  isDeadCross?: boolean | null;
+};
+export type SectorDetailResponse = Omit<OperationData<"sector-detail">, "leadingStocks" | "technicalIndicators" | "aiOpinion"> & {
   leadingStocks: LeadingStock[];
   technicalIndicators?: TechnicalIndicators | null;
+  aiOpinion?: OperationData<"sector-detail">["aiOpinion"] | string | null;
 };
 // 중복된 LeadingStock 선언 제거
 

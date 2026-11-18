@@ -65,8 +65,16 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
       });
     });
 
-    // 3. 로그인 직후 포트폴리오 동기화도 mock한다.
+    // 3. 로그인 직후 포트폴리오·투자계좌 동기화도 mock한다.
     await page.route('**/api/v1/portfolios', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
+
+    await page.route('**/api/v1/investment-accounts', route => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -125,6 +133,10 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
         },
         version: 0,
       }));
+      localStorage.setItem('investment-selection-storage', JSON.stringify({
+        state: { byMember: { '1': { type: 'SIMULATION', id: '1' } } },
+        version: 0,
+      }));
     });
 
     // 2. 보호된 API 요청 시 401 에러 유도 (예: 포트폴리오 조회)
@@ -151,6 +163,14 @@ test.describe('Social Login (OAuth2) E2E Tests', () => {
             nickname: '테스터',
           },
         }),
+      });
+    });
+
+    await page.route('**/api/v1/investment-accounts', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
       });
     });
 
@@ -230,6 +250,9 @@ test.describe('OAuth 교환과 사용자 캐시 격리', () => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: success(null) });
     });
     await page.route('**/api/v1/portfolios', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: success([]) });
+    });
+    await page.route('**/api/v1/investment-accounts', async (route) => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: success([]) });
     });
     await page.route('**/api/v1/members/me', async (route) => {

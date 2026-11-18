@@ -30,15 +30,20 @@ function formatAmount(value: number) {
   }
 
   const absValue = Math.abs(value);
-  
-  // 백엔드 데이터(value)가 '백만원' 단위 (ex: 203727 = 2,037억)
-  // 100백만원(=1억원) 이상일 경우 억 단위로 표시
-  if (absValue >= 100) {
-    const inBillion = absValue / 100; 
+
+  // 백엔드 데이터(value)는 '원' 단위 (ex: 234567890 = 약 2.3억원)
+  // 1억원 이상일 경우 억 단위로 표시
+  if (absValue >= 100_000_000) {
+    const inBillion = absValue / 100_000_000;
     return `${inBillion.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}억원`;
   }
-  
-  return `${absValue.toLocaleString("ko-KR", { maximumFractionDigits: 0 })}백만원`;
+
+  if (absValue >= 10_000) {
+    const inTenThousand = Math.round(absValue / 10_000);
+    return `${inTenThousand.toLocaleString("ko-KR")}만원`;
+  }
+
+  return `${Math.round(absValue).toLocaleString("ko-KR")}원`;
 }
 
 function formatEffectiveDate(date: string) {

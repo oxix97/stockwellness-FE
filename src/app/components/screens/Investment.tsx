@@ -4,6 +4,7 @@ import { Portfolio } from "@/app/components/screens/Portfolio";
 import { ActualInvestment } from "@/app/components/screens/ActualInvestment";
 import { AccountSwitcher } from "@/app/components/actual/AccountSwitcher";
 import { ActualAccountSheet } from "@/app/components/actual/ActualAccountSheet";
+import { PortfolioWizard } from "@/app/components/portfolio/wizard/PortfolioWizard";
 import { useActualAccounts, useActualAccount } from "@/hooks/use-actual-accounts";
 import { useAuthStore } from "@/store/auth";
 import { useInvestmentSelection, type InvestmentSelection } from "@/store/investment-selection";
@@ -17,6 +18,7 @@ export function Investment() {
   const save = useInvestmentSelection((state) => state.select);
   const accounts = useActualAccounts();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [simulationWizardOpen, setSimulationWizardOpen] = useState(false);
   const [editing, setEditing] = useState<Account | undefined>();
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const [selection, setSelection] = useState<InvestmentSelection | null>(saved);
@@ -60,6 +62,7 @@ export function Investment() {
     <AccountSwitcher accounts={accounts.data ?? []} selection={selection} onSelect={choose}
       onCreate={(trigger) => { returnFocusRef.current = trigger; setEditing(undefined); setEditorOpen(true); }}
       onRename={(account, trigger) => { returnFocusRef.current = trigger; setEditing(account); setEditorOpen(true); }}
+      onCreateSimulation={() => setSimulationWizardOpen(true)}
       hasSimulation={!!legacyPortfolioId} />
     {isSimulation && <Portfolio />}
     {!isSimulation && accounts.isLoading && <div role="status" className="page-shell page-content py-8 text-sm text-muted-foreground">실제 계정 불러오는 중…</div>}
@@ -69,5 +72,6 @@ export function Investment() {
     {!isSimulation && !accounts.isError && selection?.type !== "ACTUAL" && <ActualInvestment />}
     {!isSimulation && !accounts.isError && selection?.type === "ACTUAL" && !detail.isError && !detail.isLoading && <ActualInvestment account={selectedAccount} />}
     <ActualAccountSheet open={editorOpen} onOpenChange={setEditorOpen} account={editing} returnFocusRef={returnFocusRef} onSaved={(account) => { onSaved(account); setEditing(undefined); }} />
+    {simulationWizardOpen && <PortfolioWizard onClose={() => setSimulationWizardOpen(false)} />}
   </main>;
 }

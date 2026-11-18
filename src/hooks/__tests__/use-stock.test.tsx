@@ -47,7 +47,7 @@ describe("useStock hook", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "3M", "DAILY");
+    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "3M", "DAILY", false);
   });
 
   it("useHistory — WEEKLY 주기로 getPriceHistory를 호출한다", async () => {
@@ -58,7 +58,7 @@ describe("useStock hook", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "1Y", "WEEKLY");
+    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "1Y", "WEEKLY", false);
   });
 
   it("useHistory — MONTHLY 주기로 getPriceHistory를 호출한다", async () => {
@@ -69,7 +69,18 @@ describe("useStock hook", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "5Y", "MONTHLY");
+    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "5Y", "MONTHLY", false);
+  });
+
+  it("useHistory — includeBenchmark=true 전달 시 true를 유지한다", async () => {
+    const mockData = { ticker: "005930", prices: [] };
+    (stockApi.getPriceHistory as any).mockResolvedValue(mockData);
+
+    const { result } = renderHook(() => useStock().useHistory("005930", "3M", "DAILY", true), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(stockApi.getPriceHistory).toHaveBeenCalledWith("005930", "3M", "DAILY", true);
   });
 
   it("useStockSupplyRanking — 기본값 BUY, limit 10으로 호출한다", async () => {

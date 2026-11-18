@@ -27,7 +27,12 @@ import { PortfolioWizard } from "@/app/components/portfolio/wizard/PortfolioWiza
 import { usePortfolioAdvice, usePortfolioDetails, usePortfolioHealth, usePortfolioSummary } from "@/hooks/use-portfolio";
 import { usePortfolioSimulation } from "@/hooks/use-backtest";
 import { useAuthStore } from "@/store/auth";
-import { PortfolioItemResponse, PortfolioValuationResponse, RebalancingItem, ValuationStatus } from "@/types/api";
+import {
+  getRebalancingAvailability,
+  getRebalancingItemDecision,
+  getValuationStatus,
+} from "@/app/components/portfolio/rebalancing-status";
+import { PortfolioItemResponse, RebalancingItem, ValuationStatus } from "@/types/api";
 import { calculateHealthBadge, calculateInvestorType } from "@/utils/calculate";
 import { formatCurrency, formatDate } from "@/utils/format";
 
@@ -46,9 +51,19 @@ const BENCHMARK_LABELS: Record<string, string> = {
  * 핵심 인사이트를 메인에서 먼저 보여주고, 상세 분석은 바텀시트로 연결한다.
  */
 export function Portfolio() {
+  const [showWizard, setShowWizard] = useState(false);
+
+  return (
+    <>
+      <PortfolioContent onCreatePortfolio={() => setShowWizard(true)} />
+      {showWizard && <PortfolioWizard onClose={() => setShowWizard(false)} />}
+    </>
+  );
+}
+
+function PortfolioContent({ onCreatePortfolio }: { onCreatePortfolio: () => void }) {
   const navigate = useNavigate();
   const portfolioId = useAuthStore((state) => state.portfolioId);
-  const [showWizard, setShowWizard] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showHoldings, setShowHoldings] = useState(false);
   const [analysisType, setAnalysisType] = useState<AnalysisType | null>(null);
@@ -76,13 +91,12 @@ export function Portfolio() {
             내 전략의 과거 성과를 확인하세요
           </p>
           <button
-            onClick={() => setShowWizard(true)}
+            onClick={onCreatePortfolio}
             className="bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold"
           >
             포트폴리오 만들기
           </button>
         </div>
-        {showWizard && <PortfolioWizard onClose={() => setShowWizard(false)} />}
       </>
     );
   }
@@ -128,7 +142,8 @@ export function Portfolio() {
   }
 
   const valuation = summary.valuation;
-  const rebalancingItems = summary.rebalancing?.items ?? [];
+  const rebalancing = summary.rebalancing;
+  const rebalancingItems = rebalancing?.items ?? [];
   const holdings = details.data?.items ?? [];
   const score = healthQuery.data?.overallScore;
   const healthBadge = score === undefined
@@ -137,24 +152,31 @@ export function Portfolio() {
   const investorType = calculateInvestorType(score);
   const valuationStatus = getValuationStatus(valuation);
   const valuationUnavailable = valuationStatus !== "COMPLETE" || valuation?.currentTotalValue == null;
+  const rebalancingAvailability = getRebalancingAvailability({ valuation, rebalancing });
+  const rebalancingUnavailable = rebalancingAvailability.status === "unavailable";
+  const rebalancingZeroTotal = rebalancingAvailability.status === "zero_total";
   const asOfDateLabel = formatEodDate(valuation?.asOfDate);
   const topHoldings = [...holdings]
-    .sort((a, b) => (b.currentValue ?? 0) - (a.currentValue ?? 0))
+    .sort((a, b) => (b.currentValue ?? -1) - (a.currentValue ?? -1))
     .slice(0, 4);
 
   const symbolNames = Object.fromEntries(holdings.map((item) => [item.symbol, item.name || item.symbol]));
 
   const adviceSummary = getAdviceSummary(adviceQuery.data?.content);
+  const rebalancingCard = getRebalancingSummaryCard({
+    rebalancingUnavailable,
+    rebalancingZeroTotal,
+    rebalancingItems,
+    valuationStatus,
+    missingSymbols: valuation?.missingSymbols ?? [],
+  });
   const insightCards = [
     {
       key: "rebalancing" as const,
       icon: Target,
       title: "리밸런싱 필요",
-      value: `${rebalancingItems.length}개 종목`,
-      description:
-        rebalancingItems.length > 0
-          ? `${rebalancingItems[0].name} ${rebalancingItems[0].recommendedQuantity > 0 ? "비중 확대" : "비중 축소"} 권장`
-          : "현재 목표 비중과 큰 차이가 없습니다",
+      value: rebalancingCard.value,
+      description: rebalancingCard.description,
       tone: "bg-card border-border md:bg-amber-50/70 md:border-amber-200/70 dark:bg-card dark:border-border",
     },
     {
@@ -390,7 +412,10 @@ export function Portfolio() {
                       key={item.symbol}
                       item={item}
                       contribution={summary.itemContributions?.[item.symbol]}
-                      rebalancingNote={getRebalancingNote(item.symbol, rebalancingItems)}
+                      rebalancingNote={getRebalancingNote(item.symbol, rebalancingItems, {
+                        rebalancingUnavailable,
+                        rebalancingZeroTotal,
+                      })}
                       fallbackAsOfDate={asOfDateLabel}
                     />
                 ))}
@@ -439,17 +464,8 @@ export function Portfolio() {
 
       {showEdit && <PortfolioEditSheet isOpen={showEdit} onClose={() => setShowEdit(false)} />}
       {showHoldings && <PortfolioHoldingsSheet isOpen={showHoldings} onClose={() => setShowHoldings(false)} />}
-      {showWizard && <PortfolioWizard onClose={() => setShowWizard(false)} />}
     </div>
   );
-}
-
-function getValuationStatus(valuation: PortfolioValuationResponse | undefined): ValuationStatus {
-  if (valuation?.valuationStatus) return valuation.valuationStatus;
-  if (!valuation) return "UNAVAILABLE";
-  if ((valuation.missingSymbols?.length ?? 0) > 0) return "PARTIAL";
-  if (valuation.currentTotalValue == null || valuation.totalReturnRate == null) return "UNAVAILABLE";
-  return "COMPLETE";
 }
 
 function formatEodDate(date: string | null | undefined): string | null {
@@ -459,11 +475,15 @@ function formatEodDate(date: string | null | undefined): string | null {
 }
 
 function formatNullableNumber(value: number | null | undefined, fractionDigits: number): string {
-  return value == null ? "—" : value.toFixed(fractionDigits);
+  if (value == null || !Number.isFinite(value)) return "—";
+  const normalized = value === 0 ? 0 : value;
+  return normalized.toFixed(fractionDigits);
 }
 
 function formatNullablePercent(value: number | null | undefined, fractionDigits: number): string {
-  return value == null ? "—" : `${value.toFixed(fractionDigits)}%`;
+  if (value == null || !Number.isFinite(value)) return "—";
+  const normalized = value === 0 ? 0 : value;
+  return `${normalized.toFixed(fractionDigits)}%`;
 }
 
 function NullableSignedValue({
@@ -691,8 +711,85 @@ function getAdviceSummary(content: string | undefined) {
   return firstSentence.length > 72 ? `${firstSentence.slice(0, 72)}…` : firstSentence;
 }
 
-function getRebalancingNote(symbol: string, rebalancingItems: RebalancingItem[] | undefined) {
+function getRebalancingSummaryCard({
+  rebalancingUnavailable,
+  rebalancingZeroTotal,
+  rebalancingItems,
+  valuationStatus,
+  missingSymbols,
+}: {
+  rebalancingUnavailable: boolean;
+  rebalancingZeroTotal: boolean;
+  rebalancingItems: RebalancingItem[];
+  valuationStatus: ValuationStatus;
+  missingSymbols: string[];
+}): { value: string; description: string } {
+  if (rebalancingUnavailable) {
+    return {
+      value: "계산 불가",
+      description:
+        valuationStatus === "PARTIAL" && missingSymbols.length > 0
+          ? `${missingSymbols.join(", ")} 가격을 확인할 수 없어 리밸런싱을 계산할 수 없습니다`
+          : "평가 금액을 확인할 수 없어 리밸런싱을 계산할 수 없습니다",
+    };
+  }
+  if (rebalancingZeroTotal) {
+    return {
+      value: "비중 판단 불가",
+      description: "총 평가액이 0원(₩0)이므로 비중과 매매 수량을 판단할 수 없습니다",
+    };
+  }
+  if (rebalancingItems.length === 0) {
+    return {
+      value: "0개 종목",
+      description: "현재 목표 비중과 큰 차이가 없습니다",
+    };
+  }
+
+  const actionableItems = rebalancingItems.filter((item) => {
+    const decision = getRebalancingItemDecision(item);
+    return decision === "buy" || decision === "sell";
+  });
+  if (actionableItems.length > 0) {
+    const primaryItem = actionableItems[0];
+    const primaryDecision = getRebalancingItemDecision(primaryItem);
+    return {
+      value: `${actionableItems.length}개 종목`,
+      description: `${primaryItem.name} ${primaryDecision === "buy" ? "비중 확대" : "비중 축소"} 권장`,
+    };
+  }
+
+  const uncomputableItem = rebalancingItems.find((item) => getRebalancingItemDecision(item) === "unavailable");
+  if (uncomputableItem) {
+    return {
+      value: "수량 계산 불가",
+      description: `${uncomputableItem.name} 수량 계산 불가`,
+    };
+  }
+  const firstItem = rebalancingItems[0];
+  return {
+    value: "매매 권고 없음",
+    description: `${firstItem.name} 추가 매매 없음`,
+  };
+}
+
+function getRebalancingNote(
+  symbol: string,
+  rebalancingItems: RebalancingItem[] | undefined,
+  options?: { rebalancingUnavailable?: boolean; rebalancingZeroTotal?: boolean },
+) {
+  if (options?.rebalancingUnavailable) return "계산 불가";
+  if (options?.rebalancingZeroTotal) return "비중 산출 불가";
   const target = rebalancingItems?.find((item) => item.symbol === symbol);
   if (!target) return "비중 유지";
-  return target.recommendedQuantity > 0 ? "비중 확대" : "비중 축소";
+  switch (getRebalancingItemDecision(target)) {
+    case "unavailable":
+      return "수량 계산 불가";
+    case "none":
+      return "추가 매매 없음";
+    case "buy":
+      return "비중 확대";
+    case "sell":
+      return "비중 축소";
+  }
 }

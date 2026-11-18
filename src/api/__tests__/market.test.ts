@@ -38,4 +38,50 @@ describe("marketApi", () => {
     expect(mockClient.get).toHaveBeenCalledWith("/v1/market/indexes");
     expect(result).toEqual(mockData);
   });
+
+  it("getLatestWeather — 기본 KOSPI와 명시 KOSDAQ, 빈 null 응답을 처리한다", async () => {
+    const kospiWeather = {
+      baseDate: "2026-11-16",
+      marketType: "KOSPI",
+      weatherScore: 48,
+      weatherState: "CLOUDY",
+      weatherEmoji: "⛅",
+      aiSummary: null,
+      topSectors: [],
+      bottomSectors: [],
+    };
+    mockClient.get.mockResolvedValueOnce(kospiWeather);
+    const defaultResult = await marketApi.getLatestWeather();
+    expect(mockClient.get).toHaveBeenCalledWith("/v1/market-weather/latest", {
+      params: { marketType: "KOSPI" },
+    });
+    expect(defaultResult).toEqual(kospiWeather);
+
+    mockClient.get.mockResolvedValueOnce(null);
+    const emptyKosdaqResult = await marketApi.getLatestWeather("KOSDAQ");
+    expect(mockClient.get).toHaveBeenCalledWith("/v1/market-weather/latest", {
+      params: { marketType: "KOSDAQ" },
+    });
+    expect(emptyKosdaqResult).toBeNull();
+  });
+
+  it("getLatestWeather — 요청 시장과 다른 marketType 응답이나 undefined는 null로 처리한다", async () => {
+    mockClient.get.mockResolvedValueOnce({
+      baseDate: "2026-11-16",
+      marketType: "KOSPI",
+      weatherScore: 48,
+      weatherState: "CLOUDY",
+      weatherEmoji: "⛅",
+      aiSummary: null,
+      topSectors: [],
+      bottomSectors: [],
+    });
+
+    const mismatched = await marketApi.getLatestWeather("KOSDAQ");
+    expect(mismatched).toBeNull();
+
+    mockClient.get.mockResolvedValueOnce(undefined);
+    const undefinedResult = await marketApi.getLatestWeather("KOSPI");
+    expect(undefinedResult).toBeNull();
+  });
 });

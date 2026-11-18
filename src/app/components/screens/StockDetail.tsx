@@ -7,7 +7,7 @@ import { useStock } from "@/hooks/use-stock";
 import { usePortfolio, useUpdatePortfolio } from "@/hooks/use-portfolio";
 import { useWatchlist } from "@/hooks/use-watchlist";
 import { useAuthStore } from "@/store/auth";
-import { Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui";
+import { Button, Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui";
 import { PageHeader, AdUnit } from "@/app/components/shared";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
 import { formatCurrency } from "@/utils/format";
@@ -47,11 +47,13 @@ interface CandleEntry {
 interface PriceSectionProps {
   ticker: string;
   stockName: string | undefined;
+  sectorName: string | undefined;
   marketType: string | undefined;
   currency: string | undefined;
   latestPrice: number | null;
   latestDate: string | null;
   dailyRate: number | null;
+  isPriceLoadError?: boolean;
 }
 
 type RechartsScaleFn = ((value: string | number) => number | undefined) & {
@@ -69,6 +71,9 @@ interface ChartSectionProps {
   periodLabel: string;
   benchmarkName: string | undefined;
   currencySymbol: "₩" | "$";
+  isError?: boolean;
+  isMissingPrice?: boolean;
+  onRetry?: () => void;
 }
 
 interface CandleTooltipProps {
@@ -173,10 +178,10 @@ export function StockDetail() {
   };
   const { period: apiPeriod, frequency: apiFrequency } = PERIOD_CONFIG[periodLabel] || PERIOD_CONFIG["일봉"];
 
-  const history = useHistory(ticker, apiPeriod, apiFrequency);
+  const history = useHistory(ticker, apiPeriod, apiFrequency, true);
   const stockDetail = useDetail(ticker);
-  // 어제 대비 오늘 계산용 — 항상 최근 일봉 2개 필요
-  const dailyHistory = useHistory(ticker, "1M", "DAILY");
+  // 어제 대비 오늘 계산용 — 항상 최근 일봉 2개 필요 (벤치마크 제외)
+  const dailyHistory = useHistory(ticker, "1M", "DAILY", false);
 
   // 수익률 비교: 기간 고정 호출
   const returns1W = useReturns(ticker, "1W");
@@ -184,8 +189,18 @@ export function StockDetail() {
   const returns3M = useReturns(ticker, "3M");
   const returns1Y = useReturns(ticker, "1Y");
 
-  const stockName = history.data?.stockName;
+  const stockName = history.data?.stockName ?? stockDetail.data?.name;
   const benchmarkName = history.data?.benchmarkName;
+  const detailError = stockDetail.isError ? getStockApiErrorInfo(stockDetail.error) : null;
+  const historyError = history.isError ? getStockApiErrorInfo(history.error) : null;
+  const isNotFoundStock =
+    (detailError?.status === 404 && detailError.code === "S001") ||
+    (!stockDetail.data && historyError?.status === 404 && historyError.code === "S001");
+  const isMissingPriceHistory = historyError?.status === 404 && historyError.code === "S002";
+  const isRecoverableDetailError = Boolean(stockDetail.isError && !isNotFoundStock);
+  const isRecoverableHistoryError = Boolean(
+    history.isError && !isNotFoundStock && !isMissingPriceHistory,
+  );
   const currencySymbol = getCurrencySymbol(
     ticker,
     stockDetail.data?.marketType ?? benchmarkName,
@@ -259,6 +274,21 @@ export function StockDetail() {
     };
   }, [history.data]);
 
+  const effectiveLatestPrice =
+    latestPrice ?? (isRecoverableHistoryError ? null : stockDetail.data?.currentPrice ?? null);
+  const effectiveLatestDate =
+    latestDate ?? (effectiveLatestPrice != null ? stockDetail.data?.baseDate ?? null : null);
+
+  const handleRetryAll = () => {
+    void stockDetail.refetch?.();
+    void history.refetch?.();
+    void dailyHistory.refetch?.();
+    void returns1W.refetch?.();
+    void returns1M.refetch?.();
+    void returns3M.refetch?.();
+    void returns1Y.refetch?.();
+  };
+
   const handleAddClick = () => {
     if (!accessToken) {
       toast.info("로그인 후 포트폴리오에 담을 수 있어요.");
@@ -266,7 +296,7 @@ export function StockDetail() {
       return;
     }
 
-    if (latestPrice == null) {
+    if (effectiveLatestPrice == null) {
       toast.info("가격 정보를 확인할 수 없습니다.");
       return;
     }
@@ -286,7 +316,7 @@ export function StockDetail() {
       toast.info("이미 포트폴리오에 있는 종목입니다.");
       return;
     }
-    setPurchasePrice(String(latestPrice || ""));
+    setPurchasePrice(String(effectiveLatestPrice));
     setShowAddDialog(true);
   };
 
@@ -322,12 +352,50 @@ export function StockDetail() {
     );
   };
 
-  if (history.isLoading) {
+  if (history.isLoading || (stockDetail.isLoading && !history.data)) {
     return (
       <div className="p-6 space-y-8">
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-40 w-full rounded-3xl" />
         <Skeleton className="h-64 w-full rounded-3xl" />
+      </div>
+    );
+  }
+
+  if (isNotFoundStock) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PageHeader showBack title="종목 상세" description={`${ticker} 종목 정보`} />
+        <div className="page-shell page-content py-10">
+          <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-sm">
+            <p className="text-base font-bold text-foreground">존재하지 않는 종목입니다</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {ticker}는 등록되지 않은 종목 코드입니다. 종목명이나 티커를 다시 확인해 주세요.
+            </p>
+            <Button type="button" className="mt-5 min-h-11 w-full" onClick={() => navigate("/search")}>
+              종목 검색으로 이동
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isRecoverableDetailError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PageHeader showBack title="종목 상세" description={`${ticker} 종목 정보`} />
+        <div className="page-shell page-content py-10">
+          <div role="alert" aria-live="assertive" className="rounded-3xl border border-destructive/30 bg-card p-6 text-center shadow-sm">
+            <p className="text-base font-bold text-foreground">종목 정보를 불러오지 못했습니다</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.
+            </p>
+            <Button type="button" className="mt-5 min-h-11 w-full" onClick={handleRetryAll}>
+              다시 시도
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -355,11 +423,13 @@ export function StockDetail() {
       <PriceSection
         ticker={ticker}
         stockName={stockName}
+        sectorName={stockDetail.data?.sectorName}
         marketType={stockDetail.data?.marketType ?? history.data?.benchmarkName}
         currency={history.data?.currency}
-        latestPrice={latestPrice}
-        latestDate={latestDate}
+        latestPrice={effectiveLatestPrice}
+        latestDate={effectiveLatestDate}
         dailyRate={dailyRate}
+        isPriceLoadError={isRecoverableHistoryError && effectiveLatestPrice == null}
       />
 
       <div className="bg-card px-6 py-4 flex gap-2 border-b border-border">
@@ -376,7 +446,15 @@ export function StockDetail() {
         ))}
       </div>
 
-      <ChartSection data={candleData} periodLabel={periodLabel} benchmarkName={benchmarkName} currencySymbol={currencySymbol} />
+      <ChartSection
+        data={candleData}
+        periodLabel={periodLabel}
+        benchmarkName={benchmarkName}
+        currencySymbol={currencySymbol}
+        isError={isRecoverableHistoryError}
+        isMissingPrice={isMissingPriceHistory}
+        onRetry={handleRetryAll}
+      />
 
       <AdUnit type="detail-in-article" className="px-6 my-4" />
 
@@ -454,6 +532,25 @@ function findClosestDate(dates: string[], targetDate: string) {
   return undefined;
 }
 
+function getStockApiErrorInfo(error: unknown): { status: number | null; code: string | null } {
+  if (!error || typeof error !== "object") {
+    return { status: null, code: null };
+  }
+  const response = (
+    error as { response?: { status?: unknown; data?: { code?: unknown; error?: { code?: unknown } } } }
+  ).response;
+  const status = typeof response?.status === "number" ? response.status : null;
+  const code =
+    typeof response?.data?.code === "string"
+      ? response.data.code
+      : typeof response?.data?.error?.code === "string"
+        ? response.data.error.code
+        : "code" in error && typeof (error as { code?: unknown }).code === "string"
+          ? (error as { code: string }).code
+          : null;
+  return { status, code };
+}
+
 const KRW_MARKETS = new Set(["KOSPI", "KOSDAQ"]);
 const USD_MARKETS = new Set(["NASDAQ", "NYSE", "NYSEARCA", "AMEX"]);
 
@@ -476,7 +573,17 @@ export function getCurrencySymbol(ticker: string, marketType?: string, currency?
   return "₩";
 }
 
-function PriceSection({ ticker, stockName, marketType, currency, latestPrice, latestDate, dailyRate }: PriceSectionProps) {
+function PriceSection({
+  ticker,
+  stockName,
+  sectorName,
+  marketType,
+  currency,
+  latestPrice,
+  latestDate,
+  dailyRate,
+  isPriceLoadError = false,
+}: PriceSectionProps) {
   const currencySymbol = getCurrencySymbol(ticker, marketType, currency);
   return (
     <section className="page-shell page-content py-6">
@@ -485,10 +592,15 @@ function PriceSection({ ticker, stockName, marketType, currency, latestPrice, la
           <Sparkles className="h-3.5 w-3.5" />
           Stock overview
         </div>
-        <div className="mt-4 mb-1 text-sm font-medium text-muted-foreground">{ticker}</div>
+        <div className="mt-4 mb-1 text-sm font-medium text-muted-foreground">
+          {ticker}
+          {sectorName ? ` · ${sectorName}` : ""}
+        </div>
         {stockName && <div className="mb-2 text-lg font-bold text-foreground">{stockName}</div>}
         {latestPrice == null ? (
-          <div className="mb-2 text-base font-semibold text-muted-foreground">가격 정보를 확인할 수 없습니다</div>
+          <div className="mb-2 text-base font-semibold text-muted-foreground">
+            {isPriceLoadError ? "가격 정보를 불러오지 못했습니다" : "가격 정보를 확인할 수 없습니다"}
+          </div>
         ) : (
           <>
             <div className="mb-1 text-[length:var(--mobile-number-xl)] font-bold text-foreground md:text-5xl">{currencySymbol}{formatCurrency(latestPrice)}</div>
@@ -556,11 +668,33 @@ function CandleWicks({ data, xAxisMap, yAxisMap }: CandleWicksProps) {
   );
 }
 
-function ChartSection({ data, periodLabel, benchmarkName, currencySymbol }: ChartSectionProps) {
+function ChartSection({
+  data,
+  periodLabel,
+  benchmarkName,
+  currencySymbol,
+  isError = false,
+  isMissingPrice = false,
+  onRetry,
+}: ChartSectionProps) {
+  if (isError) {
+    return (
+      <div role="alert" className="bg-card px-6 py-10 h-[320px] flex flex-col items-center justify-center gap-3 text-center">
+        <p className="text-sm font-semibold text-foreground">차트 데이터를 불러오지 못했습니다.</p>
+        <p className="text-xs text-muted-foreground">잠시 후 다시 시도해 주세요.</p>
+        {onRetry && (
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            다시 시도
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   if (data.length === 0) {
     return (
       <div className="bg-card px-6 py-10 h-[320px] flex items-center justify-center text-muted-foreground font-medium">
-        데이터가 없습니다.
+        {isMissingPrice ? "확인된 가격 이력 데이터가 없습니다." : "데이터가 없습니다."}
       </div>
     );
   }

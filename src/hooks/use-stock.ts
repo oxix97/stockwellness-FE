@@ -23,8 +23,8 @@ export const stockKeys = {
     }) => ["stocks", "ranking", "supply", params] as const,
   },
   detail: (ticker: string) => ["stocks", ticker, "detail"] as const,
-  history: (ticker: string, period: ChartPeriod, frequency: ChartFrequency) =>
-    ["stocks", ticker, "history", period, frequency] as const,
+  history: (ticker: string, period: ChartPeriod, frequency: ChartFrequency, includeBenchmark = false) =>
+    ["stocks", ticker, "history", period, frequency, includeBenchmark] as const,
   returns: (ticker: string, period: string) => ["stocks", ticker, "returns", period] as const,
 };
 
@@ -59,9 +59,14 @@ export function useStock() {
    * @param ticker 종목 티커
    * @param period 조회 기간
    */
-  const useHistory = (ticker: string, period: ChartPeriod, frequency: ChartFrequency = "DAILY") => useQuery<StockPriceHistoryResponse>({
-    queryKey: stockKeys.history(ticker, period, frequency),
-    queryFn: () => stockApi.getPriceHistory(ticker, period, frequency),
+  const useHistory = (
+    ticker: string,
+    period: ChartPeriod,
+    frequency: ChartFrequency = "DAILY",
+    includeBenchmark = false,
+  ) => useQuery<StockPriceHistoryResponse>({
+    queryKey: stockKeys.history(ticker, period, frequency, includeBenchmark),
+    queryFn: () => stockApi.getPriceHistory(ticker, period, frequency, includeBenchmark),
     enabled: !!ticker,
   });
 

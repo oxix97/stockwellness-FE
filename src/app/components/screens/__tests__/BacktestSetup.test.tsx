@@ -88,4 +88,22 @@ describe("BacktestSetup", () => {
     fireEvent.change(amountInput, { target: { value: "-1" } });
     expect(startButton).toBeDisabled();
   });
+
+  it("배당금 재투자 스위치를 끄면 dividendReinvested false를 전달한다", () => {
+    renderWithQuery(
+      <MemoryRouter>
+        <BacktestSetup />
+      </MemoryRouter>,
+    );
+
+    const toggle = screen.getByRole("switch", { name: "배당금 재투자" });
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole("button", { name: "시뮬레이션 시작하기" }));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/backtest/result", {
+      state: expect.objectContaining({
+        dividendReinvested: false,
+      }),
+    });
+  });
 });

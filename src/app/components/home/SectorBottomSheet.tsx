@@ -13,7 +13,13 @@ import {
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, Skeleton } from "@/app/components/ui";
 import { SignedValueLabel } from "@/app/components/shared/label/SignedValueLabel";
-import { LeadingStock, TechnicalIndicators, SectorComparisonPoint, SectorComparisonResponse } from "@/types/api";
+import {
+  LeadingStock,
+  TechnicalIndicators,
+  SectorComparisonPoint,
+  SectorComparisonResponse,
+  SectorDetailResponse,
+} from "@/types/api";
 import { formatCurrency, formatSignedCurrency } from "@/utils/format";
 import { getTrendClassName } from "@/utils/trend";
 import { useSectorDetail, useSector } from "@/hooks/use-sector";
@@ -30,7 +36,9 @@ export interface SectorData {
   sectorCode: string;
   sectorName: string;
   fluctuationRate: number;
-  currentPrice?: number;
+  baseDate?: string | null;
+  currentPrice?: number | null;
+  isOverheated?: boolean;
   diagnosisMessage?: string;
   leadingStocks?: LeadingStock[];
   technicalIndicators?: Partial<TechnicalIndicators> | null;
@@ -38,7 +46,8 @@ export interface SectorData {
   weatherScore?: number;
   weatherState?: string;
   weatherEmoji?: string;
-  aiInsight?: string;
+  aiInsight?: string | null;
+  aiOpinion?: SectorDetailResponse["aiOpinion"];
 }
 
 interface SectorBottomSheetProps {
@@ -79,11 +88,24 @@ function SheetBody({
   isComparisonLoading 
 }: { 
   sector: SectorData, 
-  comparison?: SectorComparisonResponse,
+  comparison?: SectorComparisonResponse | null,
   isComparisonLoading: boolean
 }) {
   const navigate = useNavigate();
   const isUp = (sector.fluctuationRate ?? 0) >= 0;
+  const ti = sector.technicalIndicators;
+  const hasAnyIndicator = Boolean(
+    ti && (
+      ti.ma5 != null ||
+      ti.ma20 != null ||
+      ti.rsi14 != null ||
+      ti.isGoldenCross != null ||
+      ti.isDeadCross != null
+    )
+  );
+  const formattedBaseDate = sector.baseDate
+    ? sector.baseDate.replace(/-/g, ".")
+    : null;
 
   const handleViewAll = () => {
     navigate(`/search?sectorName=${encodeURIComponent(sector.sectorName)}`);
@@ -97,6 +119,8 @@ function SheetBody({
     const end = (data[data.length - 1].date ?? "").replace(/-/g, ".");
     return `${start} ~ ${end}`;
   }, [comparison]);
+
+  const formattedAiInsight = sector.aiInsight || formatAiOpinion(sector.aiOpinion);
 
   return (
     <div className="overflow-y-auto max-h-[85vh] scrollbar-hide">
@@ -115,16 +139,34 @@ function SheetBody({
             isUp ? "bg-up" : "bg-down"
           }`} />
           
-          <div className="relative z-10 flex items-center gap-3 mb-4">
-            <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center text-2xl shadow-inner shrink-0">
-              {getSectorIcon(sector.sectorName)}
+          <div className="relative z-10 flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center text-2xl shadow-inner shrink-0">
+                {getSectorIcon(sector.sectorName)}
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-foreground font-extrabold text-lg truncate">{sector.sectorName}</h2>
+                {formattedBaseDate && (
+                  <p className="text-[11px] font-medium text-muted-foreground">{formattedBaseDate} 종가 기준</p>
+                )}
+              </div>
             </div>
-            <h2 className="text-foreground font-extrabold text-lg">{sector.sectorName}</h2>
+            {sector.isOverheated !== undefined && (
+              <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
+                sector.isOverheated
+                  ? "border-up/30 bg-up/10 text-up"
+                  : "border-border bg-background/70 text-muted-foreground"
+              }`}>
+                {sector.isOverheated ? "과열 신호" : "과열 아님"}
+              </span>
+            )}
           </div>
 
           <div className="relative z-10 space-y-1">
             <p className="text-foreground font-black text-3xl tabular-nums leading-none font-mono">
-              {(sector.currentPrice ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              {sector.currentPrice == null
+                ? "—"
+                : sector.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
             <div className="flex items-center gap-2">
               <SignedValueLabel
@@ -142,12 +184,12 @@ function SheetBody({
           </div>
         </div>
 
-        {/* 2. AI 인사이트 (컴팩트 카드) */}
-        {(sector.diagnosisMessage || sector.aiInsight || sector.detailLoading) && (
+        {/* 2. 진단 및 AI 인사이트 (컴팩트 카드) */}
+        {(sector.diagnosisMessage || sector.aiInsight || sector.aiOpinion !== undefined || sector.detailLoading) && (
           <div className="bg-card rounded-2xl p-4 border border-border/70 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" /> AI Weather Insight
+                <Sparkles className="h-3 w-3" /> 업종 진단 & AI Insight
               </h3>
               {sector.weatherScore !== undefined && (
                 <div className="flex items-center gap-1 bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
@@ -162,12 +204,49 @@ function SheetBody({
               </div>
             ) : (
               <div className="space-y-2">
-                {sector.aiInsight ? (
-                  <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.aiInsight}</p>
-                ) : (
+                {sector.diagnosisMessage && (
                   <p className="text-[13px] text-foreground font-medium leading-relaxed">{sector.diagnosisMessage}</p>
                 )}
+                {formattedAiInsight ? (
+                  <p className="text-xs text-muted-foreground leading-relaxed">{formattedAiInsight}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground leading-relaxed">AI 업종 요약은 아직 제공되지 않습니다.</p>
+                )}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* 2-1. 기술적 지표 상태 (isOverheated=false + 지표 null 공존 대응) */}
+        {!sector.detailLoading && (
+          <div className="bg-card rounded-2xl p-4 border border-border/70 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-foreground">기술적 지표 (EOD)</span>
+              {!hasAnyIndicator && (
+                <span className="text-[11px] font-medium text-muted-foreground">지표 데이터 미산출</span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <SummaryItem
+                label="RSI(14)"
+                value={ti?.rsi14 != null ? ti.rsi14.toFixed(1) : "—"}
+                color="neutral"
+              />
+              <SummaryItem
+                label="MA5"
+                value={ti?.ma5 != null ? ti.ma5.toLocaleString(undefined, { maximumFractionDigits: 1 }) : "—"}
+                color="neutral"
+              />
+              <SummaryItem
+                label="MA20"
+                value={ti?.ma20 != null ? ti.ma20.toLocaleString(undefined, { maximumFractionDigits: 1 }) : "—"}
+                color="neutral"
+              />
+            </div>
+            {!hasAnyIndicator && (
+              <p className="mt-2.5 text-[11px] text-muted-foreground leading-relaxed">
+                기술적 지표가 아직 집계되지 않아 과열 여부를 확정할 수 없습니다.
+              </p>
             )}
           </div>
         )}
@@ -180,16 +259,16 @@ function SheetBody({
               <span className="text-[11px] text-muted-foreground ml-2">최근 30일</span>
             </div>
             <div className="text-[10px] font-bold text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
-              {dateRange}
+              {dateRange || "기간 데이터 없음"}
             </div>
           </div>
 
           <div className="h-44 w-full mb-5">
             {isComparisonLoading ? (
               <Skeleton className="w-full h-full rounded-xl" />
-            ) : (
+            ) : comparison?.historicalComparison?.length ? (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={comparison?.historicalComparison}>
+                <ComposedChart data={comparison.historicalComparison}>
                   <defs>
                     <linearGradient id="sectorGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor={isUp ? CHART_COLORS.up : CHART_COLORS.down} stopOpacity={0.15} />
@@ -206,14 +285,18 @@ function SheetBody({
                     strokeWidth={2.5}
                     fill="url(#sectorGradient)"
                     dot={false}
-                    isAnimationActive={true}
+                    isAnimationActive={false}
                   />
                   {/* MA 라인 (데이터가 있을 경우) */}
-                  {sector.technicalIndicators?.ma5 && (
+                  {sector.technicalIndicators?.ma5 != null && (
                     <ReferenceLine y={sector.technicalIndicators.ma5} stroke={CHART_COLORS.ma5} strokeWidth={1} strokeDasharray="3 3" />
                   )}
                 </ComposedChart>
               </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-xl bg-secondary/20 text-xs text-muted-foreground">
+                비교 차트 데이터가 없습니다.
+              </div>
             )}
           </div>
 
@@ -253,10 +336,12 @@ function SheetBody({
                   </div>
                 </div>
               ))
-            ) : (
-              sector.leadingStocks?.slice(0, 5).map((stock) => (
+            ) : sector.leadingStocks && sector.leadingStocks.length > 0 ? (
+              sector.leadingStocks.slice(0, 5).map((stock) => (
                 <LeadingStockItem key={stock.ticker} stock={stock} />
               ))
+            ) : (
+              <p className="p-6 text-center text-xs text-muted-foreground">주요 구성 종목 데이터가 없습니다.</p>
             )}
           </div>
         </div>
@@ -339,6 +424,29 @@ function LeadingStockItem({ stock }: { stock: LeadingStock }) {
   );
 }
 
+function formatAiOpinion(aiOpinion: SectorData["aiOpinion"]): string | null {
+  if (!aiOpinion) return null;
+  if (typeof aiOpinion === "string") {
+    const trimmed = aiOpinion.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  if (typeof aiOpinion === "object" && "keyReasons" in aiOpinion && Array.isArray(aiOpinion.keyReasons)) {
+    const reasons = aiOpinion.keyReasons
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const record = item as Record<string, unknown>;
+          const candidate = record.reason ?? record.description ?? record.title ?? record.summary;
+          return typeof candidate === "string" ? candidate : null;
+        }
+        return null;
+      })
+      .filter((v): v is string => Boolean(v && v.trim()));
+    return reasons.length > 0 ? reasons.join(" · ") : null;
+  }
+  return null;
+}
+
 function getSectorIcon(name: string) {
   if (name.includes("IT") || name.includes("전자") || name.includes("반도체")) return "💻";
   if (name.includes("금융") || name.includes("은행") || name.includes("증권")) return "🏦";
@@ -353,9 +461,9 @@ function getSectorIcon(name: string) {
 }
 
 function getStats(data?: SectorComparisonPoint[]) {
-  if (!data || data.length === 0) return { max: "-", min: "-", change: "0", isUp: true };
+  if (!data || data.length === 0) return { max: "-", min: "-", change: "-", isUp: true };
   const values = data.map(d => d.indexValue).filter(v => typeof v === 'number');
-  if (values.length === 0) return { max: "-", min: "-", change: "0", isUp: true };
+  if (values.length === 0) return { max: "-", min: "-", change: "-", isUp: true };
   
   const max = Math.max(...values);
   const min = Math.min(...values);
